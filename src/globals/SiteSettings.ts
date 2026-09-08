@@ -12,6 +12,23 @@ export const SiteSettings: GlobalConfig = {
   access: { read: () => true, update: authenticated },
   fields: [
     {
+      name: "businessName",
+      type: "text",
+      required: true,
+      admin: {
+        description:
+          "Legal entity name. This is interpolated into the consent text stored with every lead, so it must be the business that actually does the contacting — not a trading name.",
+      },
+    },
+    {
+      name: "leadNotificationEmails",
+      type: "text",
+      admin: {
+        description:
+          "Comma-separated addresses notified when a lead comes in. Changing this takes effect immediately, with no redeploy.",
+      },
+    },
+    {
       name: "nav",
       type: "array",
       fields: [

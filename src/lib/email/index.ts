@@ -86,11 +86,18 @@ const INTEREST_LABELS: Record<string, string> = {
 };
 
 /** Tells the agency a lead arrived. Reply-to is the lead, so hitting reply works. */
-export async function sendLeadNotification(lead: LeadSummary) {
-  const to = (process.env["LEAD_NOTIFICATION_EMAILS"] ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+export async function sendLeadNotification(
+  lead: LeadSummary,
+  business?: { name?: string; notificationEmails?: string[] },
+) {
+  // Recipients come from site settings so they can be changed without a
+  // redeploy; the env var is only a fallback.
+  const to = business?.notificationEmails?.length
+    ? business.notificationEmails
+    : (process.env["LEAD_NOTIFICATION_EMAILS"] ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
 
   return sendEmail({
     to,
@@ -117,9 +124,12 @@ export async function sendLeadNotification(lead: LeadSummary) {
 }
 
 /** Confirms to the visitor that a human has their request. */
-export async function sendLeadConfirmation(lead: LeadSummary) {
-  const business = process.env["BUSINESS_NAME"] ?? "our team";
-  const phone = process.env["BUSINESS_PHONE"];
+export async function sendLeadConfirmation(
+  lead: LeadSummary,
+  identity?: { name?: string; phone?: string },
+) {
+  const business = identity?.name ?? process.env["BUSINESS_NAME"] ?? "our team";
+  const phone = identity?.phone ?? process.env["BUSINESS_PHONE"];
 
   return sendEmail({
     to: [lead.email],

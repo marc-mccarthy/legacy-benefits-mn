@@ -174,6 +174,54 @@ Required GitHub repository variables: `AWS_REGION`, `AWS_DEPLOY_ROLE_ARN`, `ECR_
 Running cost is roughly **$90–130/month** at low traffic (ALB, Fargate, RDS, NAT). The NAT gateway
 and ALB dominate; both are per-hour regardless of traffic.
 
+## Migrating DNS into Route 53
+
+Terraform can create the hosted zone and every record, but it **cannot repoint
+the registrar** — no provider exists for Google or Squarespace domains. That one
+step is manual, and the ordering below is what keeps the client's email working.
+
+In `terraform.tfvars`:
+
+```hcl
+domain_name     = "legacybenefitsmn.com"
+create_dns_zone = true
+
+# Copy from the CURRENT DNS host. Do not type these from memory.
+google_workspace_mx = true
+spf_record          = "v=spf1 include:_spf.google.com include:amazonses.com ~all"
+dmarc_record        = "v=DMARC1; p=none; rua=mailto:dmarc@legacybenefitsmn.com"
+
+dns_records = [
+  { name = "google._domainkey", type = "TXT",   records = ["v=DKIM1; k=rsa; p=..."] },
+  { name = "www",               type = "CNAME", records = ["legacybenefitsmn.com"] },
+]
+```
+
+Then:
+
+1. `terraform apply` — creates the zone and records. **Nothing is live yet**; the
+   registrar still points at the old nameservers, so email keeps flowing.
+2. Verify the new zone answers correctly, before switching anything:
+   ```bash
+   terraform output dns_verify_command   # prints the dig command to run
+   ```
+   Confirm MX matches the current provider exactly. **If MX is wrong or missing,
+   stop** — switching now would bounce his mail.
+3. `terraform output route53_nameservers` and paste those four into the
+   registrar.
+4. Propagation takes up to 48 hours. Once it resolves, ACM validates and
+   CloudFront serves the domain automatically.
+
+Leave `create_dns_zone = false` and set `hosted_zone_id` instead if the zone
+already exists.
+
+### What to collect from the client first
+
+A full export of the current DNS records — MX, all TXT (SPF, DKIM, DMARC, domain
+verification), CNAMEs, and any A records. A zone-file export is ideal; screenshots
+of the DNS panel work. Missing a verification TXT record silently breaks whatever
+service depended on it.
+
 ## Switching from demo to live
 
 Everything works as-is for review. To point it at a real business:

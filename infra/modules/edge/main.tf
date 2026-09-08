@@ -14,6 +14,16 @@ locals {
   # default certificate, so no ACM certificate and no Route 53 records are
   # created at all.
   has_domain = var.domain_name != "" && var.hosted_zone_id != ""
+
+  # People type "www" whether or not it is advertised, so it is covered by
+  # default: added to the certificate, aliased on the distribution, and given
+  # its own record.
+  www_domain = "www.${var.domain_name}"
+  alternate_names = compact(concat(
+    var.include_www ? [local.www_domain] : [],
+    var.subject_alternative_names,
+  ))
+  all_domains = local.has_domain ? concat([var.domain_name], local.alternate_names) : []
 }
 
 # ACM certificates for CloudFront must live in us-east-1 regardless of where
@@ -22,7 +32,7 @@ resource "aws_acm_certificate" "this" {
   count                     = local.has_domain ? 1 : 0
   provider                  = aws.us_east_1
   domain_name               = var.domain_name
-  subject_alternative_names = var.subject_alternative_names
+  subject_alternative_names = local.alternate_names
   validation_method         = "DNS"
 
   lifecycle {
@@ -32,8 +42,11 @@ resource "aws_acm_certificate" "this" {
 
 resource "aws_route53_record" "validation" {
   for_each = local.has_domain ? {
+    # Keyed by the record name, not the domain: a certificate covering both
+    # example.com and www.example.com can emit the same validation record
+    # twice, which would be a duplicate map key.
     for opt in aws_acm_certificate.this[0].domain_validation_options :
-    opt.domain_name => {
+    opt.resource_record_name => {
       name   = opt.resource_record_name
       record = opt.resource_record_value
       type   = opt.resource_record_type
@@ -164,7 +177,7 @@ resource "aws_cloudfront_distribution" "this" {
   enabled         = true
   is_ipv6_enabled = true
   comment         = var.name
-  aliases         = local.has_domain ? concat([var.domain_name], var.subject_alternative_names) : []
+  aliases         = local.all_domains
   price_class     = var.price_class
   web_acl_id      = aws_wafv2_web_acl.this.arn
 
@@ -272,11 +285,30 @@ resource "aws_s3_bucket_policy" "media" {
   policy = data.aws_iam_policy_document.media_bucket.json
 }
 
-resource "aws_route53_record" "apex" {
-  count   = local.has_domain ? 1 : 0
+# Apex and www both alias the distribution. An alias A record is used rather
+# than a CNAME because the apex of a zone cannot hold a CNAME.
+resource "aws_route53_record" "site" {
+  for_each = local.has_domain ? toset(local.all_domains) : toset([])
+
   zone_id = var.hosted_zone_id
-  name    = var.domain_name
+  name    = each.value
   type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.this.domain_name
+    zone_id                = aws_cloudfront_distribution.this.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+# IPv6. Without this, visitors on IPv6-only networks cannot reach the site at
+# all, and CloudFront already serves IPv6.
+resource "aws_route53_record" "site_ipv6" {
+  for_each = local.has_domain ? toset(local.all_domains) : toset([])
+
+  zone_id = var.hosted_zone_id
+  name    = each.value
+  type    = "AAAA"
 
   alias {
     name                   = aws_cloudfront_distribution.this.domain_name

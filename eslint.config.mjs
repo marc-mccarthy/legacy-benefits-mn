@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "src/payload-types.ts",
     "src/app/(payload)/admin/importMap.js",
     "drizzle/**",
+    // Vitest coverage report — generated HTML/JS, regenerated every run.
+    "coverage/**",
   ]),
 ]);
 

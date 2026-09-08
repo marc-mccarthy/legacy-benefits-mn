@@ -31,13 +31,19 @@ function retentionDate(): Date {
  */
 export async function captureLead(
   input: LeadInput,
-  meta: { ip?: string; userAgent?: string } = {},
+  meta: {
+    ip?: string;
+    userAgent?: string;
+    /** Business identity, resolved by the caller from site settings. */
+    business?: { name?: string; phone?: string };
+  } = {},
 ): Promise<{ leadId: number; suppressed: boolean }> {
   const ipHash = meta.ip ? hashIp(meta.ip) : null;
   // Someone who previously revoked contact is never auto-pushed to the CRM.
   const suppressed = await isSuppressed(input.email, input.phone);
-  const businessName = process.env["BUSINESS_NAME"] ?? "this agency";
-  const businessPhone = process.env["BUSINESS_PHONE"];
+  const businessName =
+    meta.business?.name ?? process.env["BUSINESS_NAME"] ?? "this agency";
+  const businessPhone = meta.business?.phone ?? process.env["BUSINESS_PHONE"];
   const consentText = tcpaConsentText(businessName, businessPhone);
 
   return db.transaction(async (tx) => {

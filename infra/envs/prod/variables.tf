@@ -61,3 +61,41 @@ variable "db_instance_class" {
   type    = string
   default = "db.t4g.small"
 }
+
+variable "create_dns_zone" {
+  description = "Create the Route 53 hosted zone here, for migrating DNS in from another provider. Leave false to use an existing zone via hosted_zone_id."
+  type        = bool
+  default     = false
+}
+
+variable "dns_records" {
+  description = "Existing records to carry over when creating the zone. Export them from the current DNS host first."
+  type = list(object({
+    name    = string
+    type    = string
+    ttl     = optional(number, 3600)
+    records = list(string)
+  }))
+  default = []
+}
+
+variable "google_workspace_mx" {
+  description = "Add Google Workspace MX records to the new zone"
+  type        = bool
+  default     = false
+}
+
+variable "google_workspace_mx_legacy" {
+  type    = bool
+  default = false
+}
+
+variable "spf_record" {
+  type    = string
+  default = ""
+}
+
+variable "dmarc_record" {
+  type    = string
+  default = ""
+}

@@ -55,3 +55,14 @@ media/
 # playwright run artifacts
 test-results/
 playwright-report/
+
+# terraform — never commit state or real variable values
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+*.auto.tfvars
+crash.log
+override.tf
+override_*.tf
+!terraform.tfvars.example

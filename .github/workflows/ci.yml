@@ -56,7 +56,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
-      - run: pnpm test
+      - run: pnpm test:coverage
+      - run: pnpm test:integration
 
   e2e:
     name: End-to-end, accessibility, compliance

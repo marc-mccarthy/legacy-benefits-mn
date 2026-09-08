@@ -1010,6 +1010,14 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface SiteSetting {
   id: number;
+  /**
+   * Legal entity name. This is interpolated into the consent text stored with every lead, so it must be the business that actually does the contacting — not a trading name.
+   */
+  businessName: string;
+  /**
+   * Comma-separated addresses notified when a lead comes in. Changing this takes effect immediately, with no redeploy.
+   */
+  leadNotificationEmails?: string | null;
   nav?:
     | {
         label: string;
@@ -1109,6 +1117,8 @@ export interface SiteSetting {
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
+  businessName?: T;
+  leadNotificationEmails?: T;
   nav?:
     | T
     | {

@@ -3,6 +3,7 @@ import { leadInputSchema } from "@/lib/leads/schema";
 import { captureLead } from "@/lib/leads/service";
 import { verifyTurnstile } from "@/lib/security/turnstile";
 import { clientIp } from "@/lib/security/request";
+import { getBusinessIdentity } from "@/lib/business";
 import { sendLeadConfirmation, sendLeadNotification } from "@/lib/email";
 
 export const runtime = "nodejs";
@@ -40,9 +41,12 @@ export async function POST(req: Request) {
     );
   }
 
+  const business = await getBusinessIdentity();
+
   const { leadId, suppressed } = await captureLead(input, {
     ip,
     userAgent: req.headers.get("user-agent") ?? undefined,
+    business,
   });
 
   // Notify the agency and acknowledge to the visitor. The lead is already
@@ -58,9 +62,9 @@ export async function POST(req: Request) {
     sourcePath: input.sourcePath,
   };
   await Promise.allSettled([
-    sendLeadNotification(summary),
+    sendLeadNotification(summary, business),
     // A suppressed contact asked not to hear from us; do not email them.
-    suppressed ? Promise.resolve() : sendLeadConfirmation(summary),
+    suppressed ? Promise.resolve() : sendLeadConfirmation(summary, business),
   ]);
 
   // Delivery to MedicarePRO is deliberately not awaited here — it is queued in

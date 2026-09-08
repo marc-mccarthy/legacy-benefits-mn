@@ -21,7 +21,10 @@ export default async function SiteLayout({
   children: ReactNode;
 }) {
   const settings = await getSiteSettings().catch(() => null);
-  const brand = process.env["BUSINESS_NAME"] ?? "Medicare Advisors";
+  const brand =
+    settings?.businessName ??
+    process.env["BUSINESS_NAME"] ??
+    "Medicare Advisors";
 
   const nav = (
     settings?.nav?.length

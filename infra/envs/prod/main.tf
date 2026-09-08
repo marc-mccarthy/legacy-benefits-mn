@@ -39,8 +39,26 @@ locals {
   # A custom domain is optional. Without one the stack still comes up and is
   # served on the CloudFront distribution's own *.cloudfront.net URL, which is
   # what `terraform output site_url` reports.
-  has_domain = var.domain_name != "" && var.hosted_zone_id != ""
+  #
+  # The zone is either created here (create_dns_zone, for migrating DNS into
+  # Route 53) or referenced by id if one already exists.
+  zone_id    = var.create_dns_zone ? module.dns[0].zone_id : var.hosted_zone_id
+  has_domain = var.domain_name != "" && local.zone_id != ""
   site_url   = local.has_domain ? "https://${var.domain_name}" : ""
+}
+
+# Creates the hosted zone and carries over the existing records. Run this,
+# verify, and only then repoint the registrar's nameservers — see the module.
+module "dns" {
+  count  = var.create_dns_zone ? 1 : 0
+  source = "../../modules/dns"
+
+  domain_name                = var.domain_name
+  records                    = var.dns_records
+  google_workspace_mx        = var.google_workspace_mx
+  google_workspace_mx_legacy = var.google_workspace_mx_legacy
+  spf_record                 = var.spf_record
+  dmarc_record               = var.dmarc_record
 }
 
 module "network" {
@@ -118,7 +136,7 @@ module "edge" {
 
   name                              = local.name
   domain_name                       = var.domain_name
-  hosted_zone_id                    = var.hosted_zone_id
+  hosted_zone_id                    = local.zone_id
   alb_has_certificate               = local.has_domain
   alb_dns_name                      = module.app.alb_dns_name
   media_bucket                      = module.app.media_bucket
@@ -133,7 +151,7 @@ module "email" {
 
   name           = local.name
   domain_name    = var.domain_name
-  hosted_zone_id = var.hosted_zone_id
+  hosted_zone_id = local.zone_id
   region         = var.region
 }
 

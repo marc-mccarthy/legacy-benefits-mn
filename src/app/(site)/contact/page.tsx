@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 
 export default async function ContactPage() {
   const settings = await getSiteSettings().catch(() => null);
-  const brand = process.env["BUSINESS_NAME"] ?? "this agency";
+  const brand =
+    settings?.businessName ?? process.env["BUSINESS_NAME"] ?? "this agency";
   const phone = settings?.contact?.phone ?? process.env["BUSINESS_PHONE"];
   const calendlyUrl = process.env["NEXT_PUBLIC_CALENDLY_URL"];
 

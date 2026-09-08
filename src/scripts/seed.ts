@@ -7,9 +7,36 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { getPayload } from "payload";
 import config from "../payload.config";
+import { env, envAny } from "../lib/env";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const MEDIA_DIR = path.resolve(dirname, "../../.seed-media");
+
+/**
+ * Owner and business details come from the environment so that real names,
+ * emails, and phone numbers never land in git. Without them the seed produces
+ * obviously-fictional placeholder data, which is what a public repo should
+ * contain. The real values live in the CMS once entered at /admin.
+ */
+const OWNER = {
+  name: env("OWNER_NAME") ?? "Alex Placeholder",
+  // A one-person practice: the owner's address and the business address are
+  // the same, so OWNER_EMAIL may be left blank and falls back to the business
+  // one. `env` is used rather than `??` because a blank var is "" not undefined.
+  email: envAny("OWNER_EMAIL", "BUSINESS_EMAIL") ?? "owner@example.com",
+  phone: envAny("OWNER_PHONE", "BUSINESS_PHONE") ?? "(555) 555-0142",
+};
+
+const BUSINESS = {
+  name: env("BUSINESS_NAME") ?? "Example Benefits",
+  email: env("BUSINESS_EMAIL") ?? "hello@example.com",
+  phone: env("BUSINESS_PHONE") ?? "(555) 555-0142",
+  address:
+    env("BUSINESS_ADDRESS") ??
+    "1200 Example Street\nSuite 400\nMinneapolis, MN 55403",
+  leadEmails:
+    envAny("LEAD_NOTIFICATION_EMAILS", "BUSINESS_EMAIL") ?? "leads@example.com",
+};
 
 const lexical = (text: string) => ({
   root: {
@@ -119,21 +146,21 @@ const ARTICLES = [
 
 const TEAM = [
   {
-    name: "Nate Halvorsen",
-    slug: "nate-halvorsen",
+    name: OWNER.name,
+    slug: "owner",
     role: "Founder & Licensed Agent",
-    email: "nate@northstarmedicare.com",
-    phone: "(612) 555-0143",
+    email: OWNER.email,
+    phone: OWNER.phone,
     order: 1,
     licenses: ["Licensed in MN, WI, IA", "AHIP certified", "NPN 19472086"],
-    bio: "Nate has spent eleven years helping people in the Twin Cities sort out Medicare. He started the practice after watching his own parents get pushed toward a plan that did not cover their prescriptions.",
+    bio: "Eleven years helping people across the Twin Cities sort out Medicare. The practice started after watching his own parents get pushed toward a plan that did not cover their prescriptions.",
   },
   {
     name: "Renata Cruz",
     slug: "renata-cruz",
     role: "Licensed Agent, Part D Specialist",
-    email: "renata@northstarmedicare.com",
-    phone: "(612) 555-0144",
+    email: "renata@example.com",
+    phone: "(555) 555-0144",
     order: 2,
     licenses: ["Licensed in MN, WI", "AHIP certified"],
     bio: "Renata builds the drug cost comparisons that most people find the most useful part of a review. She works in English and Spanish.",
@@ -142,8 +169,8 @@ const TEAM = [
     name: "Marcus Bell",
     slug: "marcus-bell",
     role: "Client Service Manager",
-    email: "marcus@northstarmedicare.com",
-    phone: "(612) 555-0145",
+    email: "marcus@example.com",
+    phone: "(555) 555-0145",
     order: 3,
     licenses: ["Licensed in MN"],
     bio: "Marcus handles claims questions, ID card problems, and the follow-up that usually goes missing after enrollment.",
@@ -176,7 +203,7 @@ const EVENTS = [
     slug: "annual-enrollment-clinic",
     summary:
       "Bring your medication list and current plan. We will run the comparison with you, one on one.",
-    venue: "Northstar Medicare Office",
+    venue: `${BUSINESS.name} Office`,
     address: "1200 Nicollet Mall, Suite 400, Minneapolis, MN 55403",
     daysOut: 40,
     cost: "free" as const,
@@ -281,6 +308,8 @@ async function seed() {
   await payload.updateGlobal({
     slug: "site-settings",
     data: {
+      businessName: BUSINESS.name,
+      leadNotificationEmails: BUSINESS.leadEmails,
       nav: [
         { label: "Services", href: "/services" },
         { label: "Events", href: "/events" },
@@ -308,9 +337,9 @@ async function seed() {
         href: "https://www.medicareproapp.com/",
       },
       contact: {
-        phone: "(612) 555-0142",
-        email: "hello@northstarmedicare.com",
-        address: "1200 Nicollet Mall\nSuite 400\nMinneapolis, MN 55403",
+        phone: BUSINESS.phone,
+        email: BUSINESS.email,
+        address: BUSINESS.address,
       },
       compliance: {
         orgCount: 8,
@@ -383,7 +412,7 @@ async function seed() {
   payload.logger.info(`Seeded ${ARTICLES.length} articles`);
 
   const TEAM_AVATARS: Record<string, string> = {
-    "nate-halvorsen": "avatar-Felix.png",
+    owner: "avatar-Felix.png",
     "renata-cruz": "avatar-Aria.png",
     "marcus-bell": "avatar-Jasper.png",
   };
@@ -463,7 +492,7 @@ async function seed() {
   const TESTIMONIALS = [
     {
       quote:
-        "I had three plans in front of me and no idea which one covered my heart medication. Renata ran the numbers and showed me one of them would have cost me $2,400 more a year. That was the whole conversation.",
+        "I had three plans in front of me and no idea which one covered my heart medication. He ran the numbers and showed me one of them would have cost me $2,400 more a year. That was the whole conversation.",
       author: "Harold R.",
       location: "Roseville, MN",
       avatar: "avatar-River.png",
@@ -471,7 +500,7 @@ async function seed() {
     },
     {
       quote:
-        "My husband and I turned 65 four months apart and it was genuinely confusing. Nate walked us through it twice without making us feel slow about it. We still call him first.",
+        "My husband and I turned 65 four months apart and it was genuinely confusing. He walked us through it twice without ever making us feel slow about it. We still call him first.",
       author: "Jean & Bill M.",
       location: "Edina, MN",
       avatar: "avatar-Sage.png",

@@ -35,3 +35,9 @@ variable "alb_has_certificate" {
   type        = bool
   default     = false
 }
+
+variable "include_www" {
+  description = "Also serve www.<domain>, covered by the certificate and aliased to the distribution"
+  type        = bool
+  default     = true
+}

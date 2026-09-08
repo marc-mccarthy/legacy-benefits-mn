@@ -50,6 +50,6 @@ variable "dkim_records" {
     usually "google". Pass the complete value including the "v=DKIM1; k=rsa; p="
     prefix; it is split into 255-character strings automatically.
   EOT
-  type    = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }

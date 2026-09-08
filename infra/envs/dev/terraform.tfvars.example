@@ -1,15 +1,23 @@
-# Copy to terraform.tfvars and fill in. Do not commit terraform.tfvars.
-# Optional. Leave both empty to be served on the CloudFront URL that
-# `terraform output site_url` prints after apply.
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
 #
-# hosted_zone_id must be a Route 53 zone. If DNS is hosted elsewhere (Google,
-# Squarespace, GoDaddy), create the zone in Route 53 first and repoint the
-# registrar's nameservers at it — Terraform then handles certificate
-# validation and records automatically.
-# domain_name    = "dev.legacybenefitsmn.com"
-# hosted_zone_id = "Z000000000000000000000"
-image             = "public.ecr.aws/nginx/nginx:latest" # placeholder for first apply
-business_name     = "Legacy Benefits MN"
+# Dev is intended to run WITHOUT a custom domain: it is served over HTTPS on
+# the CloudFront URL that `terraform output site_url` prints after apply. That
+# avoids certificates, DNS records, and any chance of colliding with the
+# production zone.
+#
+# Only give dev a hostname if you genuinely need one, and if you do, delegate a
+# subdomain from the production zone rather than creating a second zone for the
+# same domain — two zones for one domain break resolution in ways that are hard
+# to diagnose.
+
+domain_name     = ""
+hosted_zone_id  = ""
+create_dns_zone = false
+
+business_name     = "Example Benefits"
 business_phone    = "(555) 555-0142"
-github_repository = "marc-mccarthy/legacy-benefits-mn"
-alert_emails      = ["alerts@legacybenefitsmn.com"]
+github_repository = "your-org/your-repo"
+alert_emails      = ["alerts@example.com"]
+
+# Placeholder for the first apply; CI replaces it with a real image afterwards.
+image = "public.ecr.aws/nginx/nginx:latest"

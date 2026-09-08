@@ -43,9 +43,10 @@ next-env.d.ts
 # playwright mcp output + reference screenshots
 .playwright-mcp/
 
-# env
+# env — real values never ship, but the documented template must.
 .env
 .env*.local
+!.env.example
 
 # seeded demo media (downloaded, not source)
 .seed-media/

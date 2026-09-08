@@ -1,0 +1,115 @@
+import type {
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
+import { cn } from "@/lib/utils";
+
+const controlClasses =
+  "border-border-subtle rounded-(--radius-control) bg-surface text-on-surface w-full border px-4 py-3 text-base " +
+  "focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-1 " +
+  "aria-[invalid=true]:border-red-600";
+
+/**
+ * Wraps a control with its label and error. The error is tied to the input by
+ * id and announced politely, so a screen-reader user is told what failed
+ * rather than just that the form did not submit.
+ */
+export function Field({
+  label,
+  htmlFor,
+  error,
+  required,
+  hint,
+  children,
+}: {
+  label?: string;
+  htmlFor: string;
+  error?: string;
+  required?: boolean;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      {label ? (
+        <label htmlFor={htmlFor} className="block text-sm font-semibold">
+          {label}
+          {/* The asterisk is hidden from assistive tech and "required" is
+              conveyed by the control's own required/aria-required attribute.
+              Putting "(required)" inside the label would append it to the
+              accessible name, e.g. "Email * (required)". */}
+          {required ? (
+            <span className="text-red-600" aria-hidden>
+              {" "}
+              *
+            </span>
+          ) : null}
+        </label>
+      ) : null}
+      {hint ? (
+        <p id={`${htmlFor}-hint`} className="text-muted text-sm">
+          {hint}
+        </p>
+      ) : null}
+      {children}
+      {error ? (
+        <p
+          id={`${htmlFor}-error`}
+          role="alert"
+          className="text-sm text-red-700"
+        >
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function Input({
+  className,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>) {
+  return <input className={cn(controlClasses, className)} {...props} />;
+}
+
+export function Textarea({
+  className,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea className={cn(controlClasses, className)} {...props} />;
+}
+
+export function Select({
+  className,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select className={cn(controlClasses, className)} {...props} />;
+}
+
+export function FormStatus({
+  tone,
+  title,
+  children,
+}: {
+  tone: "success" | "error";
+  title: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "rounded-(--radius-card) border p-5",
+        tone === "success"
+          ? "border-green-700/30 bg-green-50 text-green-900"
+          : "border-red-700/30 bg-red-50 text-red-900",
+      )}
+    >
+      <p className="font-semibold">{title}</p>
+      {children ? <p className="mt-1 text-sm">{children}</p> : null}
+    </div>
+  );
+}

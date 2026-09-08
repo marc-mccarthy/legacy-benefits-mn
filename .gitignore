@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright mcp output + reference screenshots
+.playwright-mcp/
+
+# env
+.env
+.env*.local
+
+# seeded demo media (downloaded, not source)
+.seed-media/
+media/
+
+# playwright run artifacts
+test-results/
+playwright-report/

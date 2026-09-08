@@ -1,0 +1,145 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  quality:
+    name: Lint, types, unit tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nates_website
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/nates_website
+      PAYLOAD_SECRET: ci-secret-not-used-in-production
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      BUSINESS_NAME: CI Test Agency
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations
+        run: |
+          pnpm migrate
+          pnpm drizzle:migrate
+
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  e2e:
+    name: End-to-end, accessibility, compliance
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nates_website
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/nates_website
+      PAYLOAD_SECRET: ci-secret-not-used-in-production
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+      BUSINESS_NAME: CI Test Agency
+      BUSINESS_PHONE: "(555) 555-0142"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Prepare database and content
+        run: |
+          pnpm migrate
+          pnpm drizzle:migrate
+          pnpm seed
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      # The compliance and accessibility specs are release gates: a failure
+      # here means the site is not fit to publish.
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  terraform:
+    name: Terraform validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.1"
+
+      - name: Format check
+        run: terraform fmt -check -recursive infra
+
+      - name: Validate each environment
+        run: |
+          for env in dev prod; do
+            echo "== $env =="
+            terraform -chdir="infra/envs/$env" init -backend=false -input=false
+            terraform -chdir="infra/envs/$env" validate
+          done
+
+      - uses: bridgecrewio/checkov-action@master
+        with:
+          directory: infra
+          framework: terraform
+          quiet: true
+          soft_fail: true

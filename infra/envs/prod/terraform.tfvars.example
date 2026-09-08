@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars and fill in. Do not commit terraform.tfvars.
+# Optional. Leave both empty to be served on the CloudFront URL that
+# `terraform output site_url` prints after apply.
+# domain_name    = "www.example.com"
+# hosted_zone_id = "Z000000000000000000000"
+image             = "public.ecr.aws/nginx/nginx:latest" # placeholder for first apply
+business_name     = "Example Medicare Advisors LLC"
+business_phone    = "(555) 555-0142"
+github_repository = "your-org/nates-website"
+alert_emails      = ["alerts@example.com"]

@@ -1,26 +1,191 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------------------
+ * Design tokens
+ *
+ * Two tiers, following the model measured on greatwatersfinancial.com:
+ *   1. Primitives  — raw brand values. Never referenced directly in components.
+ *   2. Semantic    — role-based aliases (surface, accent, ...) that components
+ *                    use. Re-pointed per section via [data-scheme], so a band
+ *                    can go dark without duplicating utility classes.
+ *
+ * The spacing scale uses the named steps measured on ethnocare.ca rather than
+ * a numeric ramp, so section rhythm is chosen by intent, not by pixel count.
+ *
+ * NOTE: brand colours below are PLACEHOLDERS pending Nate's real palette and
+ * licensed fonts (see plan, Part 9 item 2). Swap the primitives block only —
+ * nothing downstream references these values directly.
+ * ------------------------------------------------------------------------- */
+
+@theme {
+  /* -- Primitives: brand ------------------------------------------------- */
+  --color-navy-900: #0f2536;
+  --color-navy-800: #1a3749;
+  --color-navy-600: #44637c;
+  --color-navy-300: #9ab4d4;
+  --color-navy-100: #c9cede;
+
+  --color-gold-500: #ffce34;
+  --color-gold-400: #ffd85f;
+  --color-gold-100: #ecdec7;
+
+  /* -- Primitives: neutrals ---------------------------------------------- */
+  --color-ink: #101418;
+  --color-slate: #4c4c4c;
+  --color-mist: #f6f7fa;
+  --color-line: #d8d8d8;
+
+  /* -- Radii (GWF: 12 / 20 / 32) ----------------------------------------- */
+  --radius-control: 0.75rem;
+  --radius-card: 1.25rem;
+  --radius-panel: 2rem;
+
+  /* -- Named spacing scale (Ethnocare model) ----------------------------- */
+  --spacing-micro: 0.5rem;
+  --spacing-tiny: 1.25rem;
+  --spacing-small: 1.875rem;
+  --spacing-medium: 2.5rem;
+  --spacing-large: 5rem;
+  --spacing-big: 9.375rem;
+  --spacing-huge: 12.5rem;
+
+  /* -- Typography -------------------------------------------------------- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* -- Motion (restrained: short, eased, never bouncy) ------------------- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-reveal: 600ms;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ---------------------------------------------------------------------------
+ * Semantic roles. Default (light) on :root; overridden per section by
+ * [data-scheme]. Components only ever use the semantic utilities.
+ * ------------------------------------------------------------------------- */
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --scheme-surface: #ffffff;
+    --scheme-on-surface: var(--color-navy-800);
+    --scheme-muted: var(--color-navy-600);
+    --scheme-border: color-mix(in oklab, var(--color-ink) 12%, transparent);
+    --scheme-accent: var(--color-gold-500);
+    --scheme-on-accent: var(--color-navy-900);
+  }
+
+  [data-scheme="muted"] {
+    --scheme-surface: var(--color-mist);
+    --scheme-on-surface: var(--color-navy-800);
+    --scheme-muted: var(--color-navy-600);
+    --scheme-border: color-mix(in oklab, var(--color-ink) 12%, transparent);
+  }
+
+  [data-scheme="dark"] {
+    --scheme-surface: var(--color-navy-800);
+    --scheme-on-surface: #ffffff;
+    --scheme-muted: var(--color-navy-100);
+    --scheme-border: color-mix(in oklab, #ffffff 20%, transparent);
+    --scheme-accent: var(--color-gold-500);
+    --scheme-on-accent: var(--color-navy-900);
+  }
+
+  body {
+    background-color: var(--scheme-surface);
+    color: var(--scheme-on-surface);
+  }
+
+  /* Every reveal animation must degrade to "visible", never to "hidden" —
+   * this is the failure mode observed on mcgillpartners.com, where a
+   * full-page capture rendered blank because content waits on scroll. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* Scroll-reveal elements carry inline opacity/transform from the
+     * animation library, which the rules above cannot reach. Force them
+     * visible so reduced-motion users get content, not blank bands. */
+    [data-reveal] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
+  /* The no-JavaScript equivalent is injected via <noscript> in the root
+   * layout — a class-based rule would need JS to add the class, which is
+   * precisely what is unavailable in that case. */
+
+  /* Editor-authored body copy. Kept as plain CSS rather than a utility
+   * plugin, because the markup comes from Lexical and has no class hooks. */
+  .rich-text {
+    line-height: 1.7;
+  }
+  .rich-text > * + * {
+    margin-top: 1.25em;
+  }
+  .rich-text h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-top: 2em;
+  }
+  .rich-text h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-top: 1.75em;
+  }
+  .rich-text a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .rich-text ul,
+  .rich-text ol {
+    padding-left: 1.5rem;
+  }
+  .rich-text ul {
+    list-style: disc;
+  }
+  .rich-text ol {
+    list-style: decimal;
+  }
+  .rich-text li + li {
+    margin-top: 0.5em;
+  }
+  .rich-text blockquote {
+    border-left: 3px solid var(--scheme-accent);
+    padding-left: 1rem;
+    font-style: italic;
+  }
+
+  /* Skip link, required for keyboard users (WCAG 2.4.1). */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+  }
+  .skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--scheme-surface);
+    color: var(--scheme-on-surface);
+    outline: 2px solid var(--scheme-accent);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Expose the semantic roles as Tailwind utilities (bg-surface, text-muted...).
+ * `inline` keeps the var reference live, so [data-scheme] overrides cascade. */
+@theme inline {
+  --color-surface: var(--scheme-surface);
+  --color-on-surface: var(--scheme-on-surface);
+  --color-muted: var(--scheme-muted);
+  --color-border-subtle: var(--scheme-border);
+  --color-accent: var(--scheme-accent);
+  --color-on-accent: var(--scheme-on-accent);
 }

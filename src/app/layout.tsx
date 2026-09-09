@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { getBusinessIdentity } from "@/lib/business";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -9,14 +10,24 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Medicare Planning & Insurance Advice",
-    template: "%s | Medicare Planning & Insurance Advice",
-  },
-  description:
-    "Independent Medicare and insurance guidance — plan comparisons, enrollment help, and ongoing support.",
-};
+/**
+ * Titles follow the business name from the CMS, so renaming the practice does
+ * not leave a stale name in every browser tab and search result.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const { name } = await getBusinessIdentity().catch(() => ({
+    name: "Medicare Advisors",
+  }));
+
+  return {
+    title: {
+      default: `${name} — Medicare Plans & Guidance`,
+      template: `%s | ${name}`,
+    },
+    description:
+      "Independent, licensed Medicare guidance — plan comparisons, enrollment help, and ongoing support.",
+  };
+}
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

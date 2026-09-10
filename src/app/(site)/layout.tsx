@@ -3,7 +3,6 @@ import { Footer } from "@/components/layout/footer";
 import { Header, type NavItem } from "@/components/layout/header";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { announcementIsLive } from "@/lib/announcement";
-import { SmoothScrollProvider } from "@/components/motion/smooth-scroll";
 import { Analytics } from "@/components/analytics/consent";
 import { getSiteSettings } from "@/lib/payload";
 
@@ -42,7 +41,6 @@ export default async function SiteLayout({
         Skip to main content
       </a>
       <Analytics gtmId={process.env["NEXT_PUBLIC_GTM_ID"]} />
-      <SmoothScrollProvider />
       {announcementIsLive(settings?.announcement) ? (
         <AnnouncementBar
           text={settings!.announcement!.text!}

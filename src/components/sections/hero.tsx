@@ -7,7 +7,6 @@ import { mediaProps } from "@/lib/media";
 type HeroProps = {
   heading: string;
   subheading?: string | null;
-  video?: { url?: string | null } | number | null;
   poster?: unknown;
   ctaLabel?: string | null;
   ctaHref?: string | null;
@@ -15,24 +14,21 @@ type HeroProps = {
 };
 
 /**
- * Full-bleed hero with an optional muted autoplay video — the device used by
- * four of the six reference sites.
+ * Full-bleed photographic hero — the device used by four of the six reference
+ * sites, minus the background video they pair it with.
  *
- * The poster image is always rendered underneath, so the hero is never blank
- * while the video loads, on a slow connection, or when the browser refuses to
- * autoplay. Video is decorative and carries no information the copy lacks.
+ * The photograph carries no information the copy lacks, so it is `alt=""`; the
+ * heading and subheading are the content.
  */
 export function Hero({
   heading,
   subheading,
-  video,
   poster,
   ctaLabel,
   ctaHref,
   scheme = "dark",
 }: HeroProps) {
   const posterImage = mediaProps(poster as never);
-  const videoUrl = video && typeof video !== "number" ? video.url : null;
 
   return (
     <Section scheme={scheme} className="relative isolate overflow-hidden py-0">
@@ -47,28 +43,28 @@ export function Hero({
             className="object-cover"
           />
         ) : null}
-        {videoUrl ? (
-          <video
-            className="absolute inset-0 size-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="none"
-            poster={posterImage?.src}
-            aria-hidden
-          />
-        ) : null}
-        <div className="absolute inset-0 bg-black/45" />
+        {/* No background video, by design. The element that used to sit here
+         * carried `autoPlay loop` but had no `src` and no <source> child, so it
+         * played nothing on any browser for as long as it existed. It was not
+         * repaired: a looping autoplay background is motion that starts without
+         * asking and runs indefinitely (WCAG 2.2.2 would then require a pause
+         * control), and it is a documented vestibular trigger. The CMS field
+         * that fed it has been dropped too, so nobody is offered a control that
+         * does nothing. The photograph is the hero. */}
+        {/* Scrim gradients live in globals.css (.hero-scrim) because they are
+         * viewport-dependent — the copy occupies a different share of the frame
+         * on a phone than on a desktop — and an inline style cannot hold a
+         * media query. */}
+        <div aria-hidden className="hero-scrim absolute inset-0" />
       </div>
 
       <Container className="flex min-h-[36rem] flex-col justify-center py-(--spacing-big)">
         <div className="max-w-2xl space-y-6 text-white">
-          <h1 className="text-4xl font-semibold tracking-tight text-balance md:text-6xl">
+          <h1 className="font-display text-4xl text-balance md:text-6xl">
             {heading}
           </h1>
           {subheading ? (
-            <p className="text-lg leading-relaxed text-pretty text-white/90">
+            <p className="text-xl leading-relaxed text-pretty text-white">
               {subheading}
             </p>
           ) : null}

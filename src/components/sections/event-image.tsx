@@ -28,7 +28,7 @@ export function EventImage({
           alt={photo.alt}
           fill
           sizes="(min-width: 768px) 33vw, 100vw"
-          className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+          className="object-cover"
         />
       ) : (
         <div

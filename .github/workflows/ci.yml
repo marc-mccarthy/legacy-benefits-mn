@@ -23,7 +23,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nates_website
+          POSTGRES_DB: legacybenefitsmn
         ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U postgres"
@@ -32,7 +32,7 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/nates_website
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/legacybenefitsmn
       PAYLOAD_SECRET: ci-secret-not-used-in-production
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       BUSINESS_NAME: CI Test Agency
@@ -69,7 +69,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nates_website
+          POSTGRES_DB: legacybenefitsmn
         ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U postgres"
@@ -78,7 +78,7 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/nates_website
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/legacybenefitsmn
       PAYLOAD_SECRET: ci-secret-not-used-in-production
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
       BUSINESS_NAME: CI Test Agency

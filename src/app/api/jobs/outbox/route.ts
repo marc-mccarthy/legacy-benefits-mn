@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
 import { countFailed, drainOutbox } from "@/lib/leads/outbox";
 
 export const runtime = "nodejs";
@@ -15,7 +16,11 @@ function tokenMatches(provided: string | null, expected: string): boolean {
 
 /** Invoked on a schedule by EventBridge; never exposed to visitors. */
 export async function POST(req: Request) {
-  const expected = process.env["OUTBOX_JOB_TOKEN"];
+  // Read through env(), which trims: HTTP strips whitespace from header
+  // values in transit, so a secret stored with a trailing newline would
+  // compare "tok" against "tok\n" and 401 forever, silently halting all CRM
+  // delivery with no signal beyond a flat sent count.
+  const expected = env("OUTBOX_JOB_TOKEN");
   if (!expected) {
     return NextResponse.json(
       { error: "OUTBOX_JOB_TOKEN is not configured" },

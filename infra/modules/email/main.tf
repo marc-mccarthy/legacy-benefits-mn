@@ -9,6 +9,28 @@ resource "aws_ses_domain_identity" "this" {
   domain = var.domain_name
 }
 
+# Without these two the apply reported success while the identity might never
+# verify. DKIM and MAIL FROM records were published, which looks complete, but
+# SES will not send from an unverified domain — every send fails with
+# MessageRejected, and src/lib/email/index.ts swallows that into a console.error
+# with no alarm behind it. Lead notification email would simply stop existing,
+# silently, with a green apply.
+#
+# The verification resource makes the apply block until SES confirms, so a
+# broken identity fails the deploy instead of surfacing weeks later.
+resource "aws_route53_record" "verification" {
+  zone_id = var.hosted_zone_id
+  name    = "_amazonses.${var.domain_name}"
+  type    = "TXT"
+  ttl     = 600
+  records = [aws_ses_domain_identity.this.verification_token]
+}
+
+resource "aws_ses_domain_identity_verification" "this" {
+  domain     = aws_ses_domain_identity.this.id
+  depends_on = [aws_route53_record.verification]
+}
+
 resource "aws_ses_domain_dkim" "this" {
   domain = aws_ses_domain_identity.this.domain
 }

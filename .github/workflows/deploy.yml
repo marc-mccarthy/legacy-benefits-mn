@@ -62,51 +62,35 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Migrations run as a one-off task inside the VPC, before the new image is
-      # rolled out. Running them from the runner would mean exposing the
-      # database publicly.
-      - name: Run database migrations
+      # Register the new revision BEFORE migrating, then migrate against that
+      # revision, then roll the service onto it.
+      #
+      # The order is the whole point. Previously this ran migrations against the
+      # service's CURRENT task definition with only `command` overridden, never
+      # `image`, which broke in two directions:
+      #
+      #   - On a first deploy the current definition is still the Terraform
+      #     bootstrap placeholder (nginx). nginx has no `node`, so the container
+      #     never started, exitCode came back `None`, and the job failed here —
+      #     before the deploy step. `terraform apply` plus a push to main could
+      #     never produce a working site, and nothing said why.
+      #   - On every later deploy it ran migrations from image N-1 and then
+      #     started image N against them, so any release carrying a migration
+      #     began on the pre-migration schema. That defeats the guarantee the
+      #     Dockerfile is built around: migrations ship with the image so a
+      #     release applies exactly the schema it was built against.
+      - name: Register new task definition
+        id: taskdef
         run: |
           set -euo pipefail
 
-          TASK_DEF=$(aws ecs describe-services \
-            --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
-            --query 'services[0].taskDefinition' --output text)
-
-          NETWORK=$(aws ecs describe-services \
-            --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
-            --query 'services[0].networkConfiguration' --output json)
-
-          TASK_ARN=$(aws ecs run-task \
-            --cluster "$ECS_CLUSTER" \
-            --task-definition "$TASK_DEF" \
-            --launch-type FARGATE \
-            --network-configuration "$NETWORK" \
-            --overrides '{"containerOverrides":[{"name":"web","command":["node","node_modules/.bin/payload","migrate"]}]}' \
-            --query 'tasks[0].taskArn' --output text)
-
-          echo "Migration task: $TASK_ARN"
-          aws ecs wait tasks-stopped --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN"
-
-          EXIT_CODE=$(aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN" \
-            --query 'tasks[0].containers[0].exitCode' --output text)
-
-          if [ "$EXIT_CODE" != "0" ]; then
-            echo "::error::Migration task exited with $EXIT_CODE — not deploying."
-            exit 1
-          fi
-
-      - name: Deploy new image
-        run: |
-          set -euo pipefail
-
-          TASK_DEF_ARN=$(aws ecs describe-services \
+          CURRENT=$(aws ecs describe-services \
             --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
             --query 'services[0].taskDefinition' --output text)
 
           IMAGE="${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${{ github.sha }}"
 
-          aws ecs describe-task-definition --task-definition "$TASK_DEF_ARN" \
+          aws ecs describe-task-definition --task-definition "$CURRENT" \
             --query 'taskDefinition' --output json > taskdef.json
 
           jq --arg IMAGE "$IMAGE" '
@@ -119,8 +103,54 @@ jobs:
             --cli-input-json file://new-taskdef.json \
             --query 'taskDefinition.taskDefinitionArn' --output text)
 
+          echo "arn=$NEW_ARN" >> "$GITHUB_OUTPUT"
+          echo "Registered $NEW_ARN"
+
+      # Runs inside the VPC rather than from the runner, which would mean
+      # exposing the database publicly.
+      - name: Run database migrations
+        run: |
+          set -euo pipefail
+
+          NETWORK=$(aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
+            --query 'services[0].networkConfiguration' --output json)
+
+          TASK_ARN=$(aws ecs run-task \
+            --cluster "$ECS_CLUSTER" \
+            --task-definition "${{ steps.taskdef.outputs.arn }}" \
+            --launch-type FARGATE \
+            --network-configuration "$NETWORK" \
+            --overrides '{"containerOverrides":[{"name":"web","command":["node","node_modules/.bin/payload","migrate"]}]}' \
+            --query 'tasks[0].taskArn' --output text)
+
+          echo "Migration task: $TASK_ARN"
+          aws ecs wait tasks-stopped --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN"
+
+          EXIT_CODE=$(aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN" \
+            --query 'tasks[0].containers[0].exitCode' --output text)
+
+          # `None` means the container never started at all — a pull failure, a
+          # bad command, an unreachable secret. Distinguished from a non-zero
+          # exit because the causes and the fixes are completely different.
+          if [ "$EXIT_CODE" = "None" ]; then
+            echo "::error::Migration container never started. Stopped reason:"
+            aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN" \
+              --query 'tasks[0].[stoppedReason,containers[0].reason]' --output text
+            exit 1
+          fi
+
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "::error::Migration task exited with $EXIT_CODE — not deploying."
+            exit 1
+          fi
+
+      - name: Deploy new image
+        run: |
+          set -euo pipefail
+
           aws ecs update-service --cluster "$ECS_CLUSTER" --service "$ECS_SERVICE" \
-            --task-definition "$NEW_ARN" >/dev/null
+            --task-definition "${{ steps.taskdef.outputs.arn }}" >/dev/null
 
           echo "Waiting for the service to stabilise…"
           aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE"

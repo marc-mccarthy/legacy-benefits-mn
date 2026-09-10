@@ -61,5 +61,10 @@ export function Prose({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={cn("max-w-[52rem]", className)}>{children}</div>;
+  // 65ch, not a fixed rem width. 52rem was ~92 characters at 18px, well past the
+  // 45–75 range readable-line-length research converges on, and older readers
+  // track toward the shorter half of it — long lines cost more when re-finding
+  // the start of the next line. `ch` also holds the measure if the base size or
+  // typeface changes.
+  return <div className={cn("max-w-[65ch]", className)}>{children}</div>;
 }

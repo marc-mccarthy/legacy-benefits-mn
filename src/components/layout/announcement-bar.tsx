@@ -48,7 +48,7 @@ export function AnnouncementBar({
 
   return (
     <div data-scheme="dark" className="bg-surface text-on-surface">
-      <Container className="flex items-center justify-center gap-4 py-2.5 text-sm">
+      <Container className="flex items-center justify-center gap-4 py-2.5">
         <p className="text-center">
           {text}
           {linkHref && linkLabel ? (

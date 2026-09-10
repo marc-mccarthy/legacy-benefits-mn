@@ -1,0 +1,12 @@
+# Toolchain pins for this repo. `mise install` provisions them.
+#
+# Terraform is pinned because infra/modules/* declare
+# `required_version = "~> 1.16"`. Anything older fails at `terraform init` with
+# "Unsupported Terraform Core version" before it can validate or plan, which
+# reads like a broken configuration rather than a stale toolchain.
+#
+# Pinned to an exact patch rather than "latest" so a `terraform apply` run by
+# CI, by a teammate, and locally all agree — a newer Terraform can rewrite
+# state in ways older versions then refuse to read.
+[tools]
+terraform = "1.16.1"

@@ -18,7 +18,10 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 locals {
-  oidc_arn = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : var.existing_oidc_provider_arn
+  # Derived, never passed in. GitHub's OIDC provider ARN is fully determined by
+  # the account id and a fixed issuer host, so when this root is not the one
+  # creating it there is still nothing for a human to look up or paste.
+  oidc_arn = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
 }
 
 data "aws_iam_policy_document" "assume" {
@@ -71,16 +74,51 @@ data "aws_iam_policy_document" "deploy" {
     resources = [var.ecr_repository_arn]
   }
 
+  # Scoped to THIS environment's cluster and service.
+  #
+  # These were on resources = ["*"], and dev's trust policy admits
+  # refs/heads/develop while prod's admits only main. Since both environments
+  # share an AWS account, a push to develop could register a task definition
+  # pointing at any image and UpdateService the production cluster — privilege
+  # escalation from the least-protected branch into the most protected one.
   statement {
     sid = "EcsDeploy"
     actions = [
       "ecs:DescribeServices",
-      "ecs:DescribeTaskDefinition",
-      "ecs:RegisterTaskDefinition",
       "ecs:UpdateService",
+    ]
+    resources = [var.service_arn]
+  }
+
+  statement {
+    sid = "EcsRunMigrationTask"
+    actions = [
+      "ecs:RunTask",
       "ecs:DescribeTasks",
       "ecs:ListTasks",
-      "ecs:RunTask",
+    ]
+    resources = ["*"]
+
+    # RunTask takes the task-definition ARN as its resource and DescribeTasks
+    # takes the task ARN, neither of which is known here — task definitions gain
+    # a revision on every deploy. The cluster condition is what actually bounds
+    # this: it cannot touch another environment's cluster.
+    condition {
+      test     = "ArnEquals"
+      variable = "ecs:cluster"
+      values   = [var.cluster_arn]
+    }
+  }
+
+  # Unavoidably account-wide: RegisterTaskDefinition and DescribeTaskDefinition
+  # take no resource ARN, and support no useful condition key. The real bound on
+  # the damage is PassTaskRoles below — a task definition that cannot pass a
+  # role cannot run anything.
+  statement {
+    sid = "EcsTaskDefinitions"
+    actions = [
+      "ecs:RegisterTaskDefinition",
+      "ecs:DescribeTaskDefinition",
     ]
     resources = ["*"]
   }

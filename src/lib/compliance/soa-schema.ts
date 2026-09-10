@@ -28,7 +28,25 @@ export const soaInputSchema = z.object({
   agentName: z.union([z.literal(""), z.string().trim().max(160)]).optional(),
   /** Typed signature. CMS accepts an electronic signature for a remote SOA. */
   signature: z.string().trim().min(2, "Please type your name to sign").max(160),
-  appointmentAt: z.string().optional(),
+  /**
+   * When the sales meeting is expected, used only to record whether the SOA
+   * met the CMS 48-hour guidance.
+   *
+   * Validated for parseability rather than for a fixed format: recordSoa feeds
+   * this to `new Date()`, and an unparseable string used to become an Invalid
+   * Date that Postgres rejected — a 500 with no SOA on file, where the correct
+   * answer was a 422 here. Kept permissive about shape so a future
+   * `<input type="datetime-local">` ("2026-09-10T14:30", no offset) still
+   * passes without another change.
+   */
+  appointmentAt: z
+    .union([
+      z.literal(""),
+      z.string().refine((value) => !Number.isNaN(Date.parse(value)), {
+        message: "Please enter a valid appointment date and time",
+      }),
+    ])
+    .optional(),
 });
 
 export type SoaInput = z.infer<typeof soaInputSchema>;

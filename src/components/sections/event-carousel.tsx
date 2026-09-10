@@ -64,13 +64,13 @@ export function EventCarousel({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h2
           id="events-heading"
-          className="text-3xl font-semibold tracking-tight md:text-5xl"
+          className="font-display text-3xl font-semibold tracking-tight md:text-5xl"
         >
           {heading ?? "Upcoming events"}
         </h2>
         <Link
           href="/events"
-          className="text-sm font-semibold underline underline-offset-4"
+          className="font-semibold underline underline-offset-4"
         >
           View all events
         </Link>
@@ -92,22 +92,22 @@ export function EventCarousel({
               <Card className="h-full">
                 <EventImage image={event.image} cost={event.cost} />
                 <CardBody>
-                  <p className="text-muted flex items-center gap-2 text-sm">
+                  <p className="text-muted flex items-center gap-2">
                     <CalendarDays aria-hidden className="size-4" />
                     <time dateTime={event.startsAt}>
                       {formatDate(event.startsAt)} ·{" "}
                       {formatTime(event.startsAt)}
                     </time>
                   </p>
-                  <p className="text-muted flex items-center gap-2 text-sm">
+                  <p className="text-muted flex items-center gap-2">
                     <MapPin aria-hidden className="size-4" />
                     {event.venue}
                   </p>
                   <h3 className="text-lg font-semibold">{event.title}</h3>
-                  <p className="text-muted flex-1 text-sm">{event.summary}</p>
+                  <p className="text-muted flex-1">{event.summary}</p>
                   <Link
                     href={`/events/${event.slug}`}
-                    className="text-sm font-semibold underline underline-offset-4"
+                    className="font-semibold underline underline-offset-4"
                   >
                     View event
                     <span className="sr-only">: {event.title}</span>
@@ -120,31 +120,39 @@ export function EventCarousel({
       </div>
 
       {snaps.length > 1 ? (
-        <div className="flex items-center justify-between">
-          <ul className="flex gap-2">
-            {snaps.map((_, i) => (
-              <li key={i}>
-                <button
-                  type="button"
-                  onClick={() => emblaApi?.scrollTo(i)}
-                  aria-label={`Go to slide ${i + 1} of ${snaps.length}`}
-                  aria-current={selected === i}
-                  // The dot is small for visual reasons, but the button itself
-                  // must be at least 24x24 to meet WCAG 2.2 target size.
-                  className="grid size-6 place-items-center rounded-full"
-                >
-                  <span
-                    aria-hidden
-                    className={
-                      selected === i
-                        ? "bg-on-surface block size-2.5 rounded-full"
-                        : "bg-on-surface/30 block size-2.5 rounded-full"
-                    }
-                  />
-                </button>
-              </li>
-            ))}
-          </ul>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <ul className="flex">
+              {snaps.map((_, i) => (
+                <li key={i}>
+                  <button
+                    type="button"
+                    onClick={() => emblaApi?.scrollTo(i)}
+                    aria-label={`Go to slide ${i + 1} of ${snaps.length}`}
+                    aria-current={selected === i}
+                    // 44px hit area with a small visual dot. 24px only just
+                    // clears WCAG 2.5.8, leaving no margin for a hand tremor,
+                    // and these sit close together where a mis-tap jumps the
+                    // carousel somewhere unintended.
+                    className="grid size-11 place-items-center rounded-full"
+                  >
+                    <span
+                      aria-hidden
+                      className={
+                        selected === i
+                          ? "bg-on-surface block size-2.5 rounded-full"
+                          : "bg-on-surface/30 block size-2.5 rounded-full"
+                      }
+                    />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {/* Counting small dots is harder than reading a number. */}
+            <p aria-hidden className="text-muted">
+              {selected + 1} of {snaps.length}
+            </p>
+          </div>
           <div className="flex gap-3">
             <button
               type="button"

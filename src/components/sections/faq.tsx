@@ -28,7 +28,7 @@ export function Faq({
       <Container className="grid gap-10 md:grid-cols-[1fr_2fr]">
         <h2
           id="faq-heading"
-          className="text-3xl font-semibold tracking-tight md:text-4xl"
+          className="font-display text-3xl font-semibold tracking-tight md:text-4xl"
         >
           {heading ?? "Common questions"}
         </h2>

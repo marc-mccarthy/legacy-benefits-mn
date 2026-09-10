@@ -53,3 +53,9 @@ variable "dkim_records" {
   type        = map(string)
   default     = {}
 }
+
+variable "deletion_protection" {
+  description = "Mirrors the switch used across the other modules. False lets `terraform destroy` remove the zone even if records were added outside Terraform."
+  type        = bool
+  default     = true
+}

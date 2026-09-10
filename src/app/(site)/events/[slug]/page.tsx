@@ -85,7 +85,7 @@ export default async function EventDetailPage({ params }: Props) {
           </p>
 
           <TpmoDisclaimer
-            className="text-muted border-border-subtle border-t pt-6 text-sm leading-relaxed"
+            className="text-muted border-border-subtle border-t pt-6 leading-relaxed"
             orgCount={settings?.compliance?.orgCount ?? undefined}
             planCount={settings?.compliance?.planCount ?? undefined}
           />

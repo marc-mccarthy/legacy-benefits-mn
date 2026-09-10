@@ -1,5 +1,6 @@
 import { or, eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
+import { normalizePhone } from "./phone";
 
 /**
  * True when this person has previously asked not to be contacted.
@@ -14,7 +15,9 @@ export async function isSuppressed(
   email?: string,
   phone?: string,
 ): Promise<boolean> {
-  const digits = phone?.replace(/\D/g, "");
+  // Must use the same canonical form recordDncRequest stored, or a number
+  // written differently on the way in would not match its own opt-out.
+  const digits = normalizePhone(phone);
   const clauses = [];
   if (email) clauses.push(eq(schema.dncRequests.email, email.toLowerCase()));
   if (digits) clauses.push(eq(schema.dncRequests.phone, digits));
@@ -29,8 +32,9 @@ export async function isSuppressed(
   return rows.length > 0;
 }
 
-/** Store phone numbers digits-only so formatting cannot defeat suppression. */
-export function normalizePhone(phone?: string): string | undefined {
-  const digits = phone?.replace(/\D/g, "");
-  return digits && digits.length >= 10 ? digits : undefined;
-}
+/**
+ * Re-exported so this module stays the one place server code reaches for
+ * suppression concerns. The implementation lives in ./phone because the
+ * validation schemas need it too and must not pull `pg` into a client bundle.
+ */
+export { normalizePhone };

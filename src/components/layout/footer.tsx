@@ -41,26 +41,49 @@ export function Footer({
         <div className="space-y-2">
           <p className="text-lg font-bold">{brand}</p>
           {address ? (
-            <p className="text-muted text-sm whitespace-pre-line">{address}</p>
+            <p className="text-muted whitespace-pre-line">{address}</p>
           ) : null}
+          {/* min-h-11 on every link in this footer, matching the floor argued
+           * for in button.tsx. At 390px these measured 22px tall — half the
+           * floor — and that included the phone number and, below, the
+           * do-not-contact and Scope of Appointment links. Those are the ones
+           * someone reaches for when they are already confused or annoyed, and
+           * a missed tap at that moment is the worst time to have one. */}
           {phone ? (
-            <p className="text-sm">
-              <a href={`tel:${phone.replace(/\D/g, "")}`}>{phone}</a>
-              <span className="text-muted"> · TTY 711</span>
+            <p className="flex items-center gap-2">
+              <a
+                href={`tel:${phone.replace(/\D/g, "")}`}
+                className="inline-flex min-h-11 items-center hover:underline"
+              >
+                {phone}
+              </a>
+              <span className="text-muted">· TTY 711</span>
             </p>
           ) : null}
           {email ? (
-            <p className="text-sm">
-              <a href={`mailto:${email}`}>{email}</a>
+            <p>
+              <a
+                href={`mailto:${email}`}
+                className="inline-flex min-h-11 items-center hover:underline"
+              >
+                {email}
+              </a>
             </p>
           ) : null}
         </div>
 
         <nav aria-label="Legal">
-          <ul className="space-y-2 text-sm">
+          {/* space-y-1 rather than the previous space-y-2: the 44px rows now
+           * supply most of the separation themselves, and a small gap is still
+           * worth keeping so a slightly-off tap lands on nothing rather than on
+           * the neighbouring link. */}
+          <ul className="space-y-1">
             {legalLinks.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="hover:underline">
+                <Link
+                  href={l.href}
+                  className="inline-flex min-h-11 items-center hover:underline"
+                >
                   {l.label}
                 </Link>
               </li>
@@ -68,7 +91,7 @@ export function Footer({
           </ul>
         </nav>
 
-        <div className="text-muted space-y-2 text-sm">
+        <div className="text-muted space-y-2">
           {npn ? <p>National Producer Number: {npn}</p> : null}
           {stateLicenses?.length ? (
             <p>
@@ -89,7 +112,7 @@ export function Footer({
             planCount={planCount ?? undefined}
             extra={extraDisclosure}
           />
-          <p className="text-muted text-xs">
+          <p className="text-muted text-sm">
             © {year} {brand}. All rights reserved.
           </p>
         </Container>

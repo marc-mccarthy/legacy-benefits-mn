@@ -3,6 +3,12 @@ variable "region" { type = string }
 variable "vpc_id" { type = string }
 variable "public_subnet_ids" { type = list(string) }
 variable "private_subnet_ids" { type = list(string) }
+variable "has_certificate" {
+  description = "Whether certificate_arn will be a real ARN. Passed explicitly because the ARN itself is unknown at plan time and this gates a count."
+  type        = bool
+  default     = false
+}
+
 variable "certificate_arn" {
   description = "ACM certificate for the ALB. Empty means no custom domain: the ALB serves HTTP and CloudFront terminates TLS with its default certificate."
   type        = string
@@ -48,12 +54,6 @@ variable "site_url" {
   default     = ""
 }
 
-variable "media_host" {
-  description = "CloudFront host serving media, used by next/image"
-  type        = string
-  default     = ""
-}
-
 variable "crm_transport" {
   description = "mock | webhook | zapier"
   type        = string
@@ -68,14 +68,41 @@ variable "business_phone" {
 }
 
 variable "ses_from_address" {
-  type    = string
-  default = ""
+  description = "Envelope sender. Empty makes the app skip sending rather than fail (src/lib/email/index.ts:41)."
+  type        = string
+  default     = ""
 }
 
-variable "outbox_schedule" {
-  description = "How often to drain queued leads to the CRM"
+# The four below are read at RUNTIME by server components, so they are plain
+# environment entries rather than Docker build args. Only NEXT_PUBLIC_SITE_URL
+# is baked at build time (see the Dockerfile), because it is the one a client
+# bundle needs inlined.
+#
+# All four were absent from the task definition entirely, so the container ran
+# without them regardless of what was configured anywhere else.
+
+variable "turnstile_site_key" {
+  description = "Cloudflare Turnstile PUBLIC site key. Pairs with the TURNSTILE_SECRET secret; without it the widget never renders and no token is produced."
   type        = string
-  default     = "rate(1 minute)"
+  default     = ""
+}
+
+variable "gtm_id" {
+  description = "Google Tag Manager container ID. Empty means the tag manager is never loaded, which is a valid state."
+  type        = string
+  default     = ""
+}
+
+variable "calendly_url" {
+  description = "Calendly scheduling URL. Empty hides the booking embed."
+  type        = string
+  default     = ""
+}
+
+variable "lead_notification_email" {
+  description = "Fallback recipient for lead notifications when Site Settings has none. Comma-separated."
+  type        = string
+  default     = ""
 }
 
 variable "log_retention_days" {

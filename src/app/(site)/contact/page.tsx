@@ -43,7 +43,7 @@ export default async function ContactPage() {
             </p>
           ) : null}
           <TpmoDisclaimer
-            className="text-muted border-border-subtle border-t pt-5 text-sm leading-relaxed"
+            className="text-muted border-border-subtle border-t pt-5 leading-relaxed"
             orgCount={settings?.compliance?.orgCount ?? undefined}
             planCount={settings?.compliance?.planCount ?? undefined}
           />

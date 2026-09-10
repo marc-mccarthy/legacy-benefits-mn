@@ -66,10 +66,10 @@ export function StatsBand({
             <div key={i} className="text-center">
               <dt className="sr-only">{stat.label}</dt>
               <dd>
-                <span className="block text-4xl font-semibold tracking-tight md:text-5xl">
+                <span className="font-display tabular block text-4xl md:text-5xl">
                   <CountUp value={stat.value} suffix={stat.suffix} />
                 </span>
-                <span aria-hidden className="text-muted mt-2 block text-sm">
+                <span aria-hidden className="text-muted mt-2 block">
                   {stat.label}
                 </span>
               </dd>

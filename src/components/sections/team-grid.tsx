@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Card, CardBody } from "@/components/ui/card";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { Reveal } from "@/components/motion/reveal";
+import { Monogram } from "@/components/ui/monogram";
 import { mediaProps } from "@/lib/media";
 
 export type TeamMember = {
@@ -29,7 +30,7 @@ export function TeamGrid({
       <Container className="space-y-10">
         <h2
           id="team-heading"
-          className="text-3xl font-semibold tracking-tight md:text-5xl"
+          className="font-display text-3xl font-semibold tracking-tight md:text-5xl"
         >
           {heading ?? "Meet the team"}
         </h2>
@@ -39,7 +40,7 @@ export function TeamGrid({
             return (
               <li key={member.id} className="flex">
                 <Reveal
-                  delay={Math.min(i * 0.06, 0.24)}
+                  delay={Math.min(i * 0.05, 0.15)}
                   className="flex w-full"
                 >
                   <Card className="w-full">
@@ -52,7 +53,15 @@ export function TeamGrid({
                         sizes="(min-width: 1024px) 25vw, 50vw"
                         className="aspect-[5/6] w-full object-cover"
                       />
-                    ) : null}
+                    ) : (
+                      // Without this the card collapsed to text while its
+                      // neighbours kept a portrait, breaking the row's rhythm.
+                      <Monogram
+                        name={member.name}
+                        className="aspect-[5/6] w-full"
+                        textClassName="text-5xl"
+                      />
+                    )}
                     <CardBody className="gap-1">
                       <h3 className="text-lg font-semibold">
                         <Link
@@ -62,7 +71,7 @@ export function TeamGrid({
                           {member.name}
                         </Link>
                       </h3>
-                      <p className="text-muted text-sm">{member.role}</p>
+                      <p className="text-muted">{member.role}</p>
                     </CardBody>
                   </Card>
                 </Reveal>

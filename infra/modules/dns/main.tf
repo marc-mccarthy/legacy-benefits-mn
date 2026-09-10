@@ -20,6 +20,13 @@ terraform {
 resource "aws_route53_zone" "this" {
   name    = var.domain_name
   comment = "Managed by Terraform"
+
+  # The hosted zone was the one teardown blocker not covered by the switch that
+  # governs the bucket, the registry, the ALB and the database. Any record added
+  # outside Terraform — a registrar automation hook, a third-party verification
+  # TXT, a Workspace re-verification — makes destroy fail with HostedZoneNotEmpty,
+  # in the module holding the client's live mail records.
+  force_destroy = !var.deletion_protection
 }
 
 # Arbitrary records carried over from the previous DNS host. Everything the

@@ -179,10 +179,22 @@ resource "aws_security_group" "app" {
   tags        = { Name = "${var.name}-app" }
 }
 
+# CloudFront's own egress ranges, maintained by AWS. Using the managed prefix
+# list rather than 0.0.0.0/0 is what makes the WAF actually enforceable.
+#
+# The ALB is internet-facing and its DNS name is an output, so while it accepted
+# traffic from anywhere it was a documented bypass straight past CloudFront: no
+# managed rule groups, no /api/* rate limiting, direct reach to the lead form,
+# the Scope of Appointment form and /admin. A WAF only attached at the edge
+# protects nothing if the origin answers the whole internet.
+data "aws_ec2_managed_prefix_list" "cloudfront" {
+  name = "com.amazonaws.global.cloudfront.origin-facing"
+}
+
 resource "aws_vpc_security_group_ingress_rule" "alb_https" {
   security_group_id = aws_security_group.alb.id
-  description       = "HTTPS from anywhere"
-  cidr_ipv4         = "0.0.0.0/0"
+  description       = "HTTPS from CloudFront edge locations only"
+  prefix_list_id    = data.aws_ec2_managed_prefix_list.cloudfront.id
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"
@@ -190,8 +202,8 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https" {
 
 resource "aws_vpc_security_group_ingress_rule" "alb_http" {
   security_group_id = aws_security_group.alb.id
-  description       = "HTTP, redirected to HTTPS at the listener"
-  cidr_ipv4         = "0.0.0.0/0"
+  description       = "HTTP from CloudFront edge locations only"
+  prefix_list_id    = data.aws_ec2_managed_prefix_list.cloudfront.id
   from_port         = 80
   to_port           = 80
   ip_protocol       = "tcp"

@@ -21,7 +21,7 @@ export default function ScopeOfAppointmentPage() {
             agreed to discuss before we meet. It takes a minute, and it protects
             you: we may only talk about what you tick below.
           </p>
-          <ul className="text-muted space-y-2 text-sm">
+          <ul className="text-muted space-y-2">
             <li>This does not enrol you in any plan.</li>
             <li>It does not change your current coverage.</li>
             <li>

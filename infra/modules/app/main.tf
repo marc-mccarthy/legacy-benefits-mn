@@ -14,6 +14,13 @@ resource "aws_ecr_repository" "this" {
   name                 = var.name
   image_tag_mutability = "IMMUTABLE"
 
+  # Tied to deletion_protection rather than given its own knob, so that one
+  # switch governs every teardown blocker in the stack: this repository, the
+  # media bucket below, the ALB, and the database. Without it `terraform
+  # destroy` fails here the moment CI has pushed a single image — and it pushes
+  # one per commit.
+  force_delete = !var.deletion_protection
+
   image_scanning_configuration {
     scan_on_push = true
   }
@@ -44,6 +51,15 @@ resource "aws_ecr_lifecycle_policy" "this" {
 
 resource "aws_s3_bucket" "media" {
   bucket = "${var.name}-media-${data.aws_caller_identity.current.account_id}"
+
+  # Same switch as the registry above. Note this bucket is versioned, so a
+  # destroy has to clear both objects AND every noncurrent version; without
+  # force_destroy the teardown fails on the first upload the client ever made.
+  #
+  # Left OFF in production on purpose. This holds the client's photography and
+  # documents, and an accidental `terraform destroy` that silently empties it is
+  # a worse outcome than a destroy that refuses to run.
+  force_destroy = !var.deletion_protection
 }
 
 resource "aws_s3_bucket_public_access_block" "media" {
@@ -57,6 +73,22 @@ resource "aws_s3_bucket_public_access_block" "media" {
 resource "aws_s3_bucket_versioning" "media" {
   bucket = aws_s3_bucket.media.id
   versioning_configuration { status = "Enabled" }
+}
+
+# Backstop for the same problem: even with the abort grant, an interrupted task
+# can leave parts behind with nothing left running to abort them.
+resource "aws_s3_bucket_lifecycle_configuration" "media" {
+  bucket = aws_s3_bucket.media.id
+
+  rule {
+    id     = "abort-incomplete-uploads"
+    status = "Enabled"
+    filter {}
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
@@ -170,12 +202,23 @@ resource "aws_lb_target_group" "this" {
 #
 # Without one, there is no certificate that matches the ALB's own hostname, so
 # the ALB serves plain HTTP and CloudFront terminates TLS at the edge using its
-# default *.cloudfront.net certificate. Visitors still get HTTPS; the
-# CloudFront-to-ALB hop is unencrypted inside AWS. That is a deliberate
-# trade-off for domainless preview environments — set a domain for production.
+# default *.cloudfront.net certificate. Visitors still get HTTPS.
+#
+# That hop is NOT "inside AWS", which this comment used to claim. The ALB is
+# internet-facing, so CloudFront reaches it across the public internet in
+# plaintext. Acceptable for a domainless preview carrying nothing; not for
+# production, which is why the prod root has a `check` warning about exactly
+# this state.
 
 locals {
-  has_certificate = var.certificate_arn != ""
+  # Taken as an explicit input, not inferred from certificate_arn.
+  #
+  # certificate_arn is module.edge.certificate_arn, which is unknown until the
+  # certificate is issued, so `var.certificate_arn != ""` was unknown at plan
+  # time — and it gates `count` on the HTTPS listener below. That made a
+  # greenfield apply with a domain fail with "Invalid count argument". The
+  # caller knows the answer statically; it should just say so.
+  has_certificate = var.has_certificate
 }
 
 resource "aws_lb_listener" "http" {
@@ -270,15 +313,43 @@ resource "aws_iam_role" "task" {
 # static access keys anywhere.
 data "aws_iam_policy_document" "task" {
   statement {
-    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    # AbortMultipartUpload matters because @payloadcms/storage-s3 uses
+    # @aws-sdk/lib-storage, which switches to multipart for larger uploads and
+    # calls Abort on failure. PutObject authorises create/upload/complete but
+    # NOT abort, so a failed large upload leaves orphaned parts billing forever.
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload",
+    ]
     resources = ["${aws_s3_bucket.media.arn}/*"]
   }
   statement {
     actions   = ["s3:ListBucket"]
     resources = [aws_s3_bucket.media.arn]
   }
+  # Scoped to the verified identity rather than "*". The app only ever sends as
+  # SES_FROM_ADDRESS on this domain, so an unbounded send grant is strictly
+  # larger than anything the code does.
   statement {
-    actions   = ["ses:SendEmail", "ses:SendRawEmail"]
+    actions = ["ses:SendEmail", "ses:SendRawEmail"]
+    resources = [
+      "arn:aws:ses:${var.region}:${data.aws_caller_identity.current.account_id}:identity/*",
+    ]
+  }
+
+  # Required by ECS Exec, which the service now enables. Granted on "*" because
+  # these channels are ephemeral and have no ARN to scope to — access is bounded
+  # by who is allowed to call ecs:ExecuteCommand in the first place.
+  statement {
+    sid = "EcsExec"
+    actions = [
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel",
+    ]
     resources = ["*"]
   }
 }
@@ -333,11 +404,14 @@ resource "aws_ecs_task_definition" "this" {
         { name = "AWS_REGION", value = var.region },
         { name = "S3_BUCKET", value = aws_s3_bucket.media.bucket },
         { name = "NEXT_PUBLIC_SITE_URL", value = var.site_url },
-        { name = "NEXT_PUBLIC_MEDIA_HOST", value = var.media_host },
         { name = "CRM_TRANSPORT", value = var.crm_transport },
         { name = "BUSINESS_NAME", value = var.business_name },
         { name = "BUSINESS_PHONE", value = var.business_phone },
         { name = "SES_FROM_ADDRESS", value = var.ses_from_address },
+        { name = "NEXT_PUBLIC_TURNSTILE_SITE_KEY", value = var.turnstile_site_key },
+        { name = "NEXT_PUBLIC_GTM_ID", value = var.gtm_id },
+        { name = "NEXT_PUBLIC_CALENDLY_URL", value = var.calendly_url },
+        { name = "LEAD_NOTIFICATION_EMAILS", value = var.lead_notification_email },
       ]
 
       # Injected at runtime by ECS. They are never baked into the image.
@@ -384,6 +458,13 @@ resource "aws_ecs_service" "this" {
     enable   = true
     rollback = true
   }
+
+  # Without this there is NO way to reach the database by hand: RDS is not
+  # publicly accessible and there is no bastion. The database_url_secret_arn
+  # output tells you to "run migrations by hand", which was not actually
+  # possible. It is also the only recovery path when a deploy fails in a way
+  # that needs a look inside a running task.
+  enable_execute_command = true
 
   health_check_grace_period_seconds = 60
   depends_on                        = [aws_lb_listener.http, aws_lb_listener.https]

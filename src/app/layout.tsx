@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Inter } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { getBusinessIdentity } from "@/lib/business";
 
@@ -8,6 +8,21 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+});
+
+/**
+ * Display face, used only at 36px and above.
+ *
+ * Newsreader is optical-size aware and holds moderate stroke contrast, which
+ * is the point: high-contrast display serifs (Playfair, Instrument) thin to
+ * hairlines that older eyes lose entirely, and that is a legibility failure no
+ * contrast ratio catches.
+ */
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  display: "swap",
+  style: ["normal", "italic"],
 });
 
 /**
@@ -31,7 +46,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${newsreader.variable} h-full antialiased`}
+    >
       <head>
         {/* Consent Mode v2 defaults. Everything denied until the visitor opts
             in. This must execute before the tag manager loads, so it is an

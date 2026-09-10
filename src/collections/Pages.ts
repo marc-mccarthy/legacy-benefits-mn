@@ -35,7 +35,12 @@ export const Pages: CollectionConfig = {
           fields: withScheme([
             { name: "heading", type: "text", required: true },
             { name: "subheading", type: "textarea" },
-            { name: "video", type: "upload", relationTo: "media" },
+            // No `video` field. The hero is a still photograph: a looping
+            // autoplay background is motion that starts unasked and runs
+            // indefinitely, which is the wrong default for this audience, and
+            // the field previously fed an element that had no `src` and so
+            // played nothing regardless. Removed rather than left in the admin
+            // UI as a control that silently does nothing.
             { name: "poster", type: "upload", relationTo: "media" },
             { name: "ctaLabel", type: "text" },
             { name: "ctaHref", type: "text" },

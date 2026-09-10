@@ -6,13 +6,16 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: nates_website
+      # Only applied when the volume below is first initialised. Renaming this
+      # against an existing pgdata volume does nothing — remove the volume, or
+      # createdb inside the running container.
+      POSTGRES_DB: legacybenefitsmn
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d nates_website"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d legacybenefitsmn"]
       interval: 5s
       timeout: 5s
       retries: 10

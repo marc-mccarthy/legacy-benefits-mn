@@ -41,7 +41,10 @@ export default async function EventsPage() {
           <ul className="grid gap-6 md:grid-cols-3">
             {events.map((event, i) => (
               <li key={event.id} className="flex">
-                <Reveal delay={Math.min(i * 0.05, 0.3)} className="flex w-full">
+                <Reveal
+                  delay={Math.min(i * 0.05, 0.15)}
+                  className="flex w-full"
+                >
                   <Card className="w-full">
                     <EventImage image={event.image} cost={event.cost} />
                     <CardBody>

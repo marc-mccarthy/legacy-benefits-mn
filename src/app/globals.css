@@ -21,7 +21,7 @@
   /* -- Primitives: brand ------------------------------------------------- */
   --color-navy-900: #0f2536;
   --color-navy-800: #1a3749;
-  --color-navy-600: #44637c;
+  --color-navy-600: #3d5a70;
   --color-navy-300: #9ab4d4;
   --color-navy-100: #c9cede;
 
@@ -35,10 +35,32 @@
   --color-mist: #f6f7fa;
   --color-line: #d8d8d8;
 
-  /* -- Radii (GWF: 12 / 20 / 32) ----------------------------------------- */
-  --radius-control: 0.75rem;
-  --radius-card: 1.25rem;
-  --radius-panel: 2rem;
+  /* -- Paper ------------------------------------------------------------- */
+  /* Warm off-white, not pure white. Established large-print practice: white
+   * reflects more light back at the reader, which is worse for the glare
+   * sensitivity that comes with cataracts. Measured at 11.35:1 against body
+   * text, so it costs nothing in contrast. */
+  --color-paper: #f7f4ef;
+  --color-paper-sunk: #efeae1;
+
+  /* -- Radii -------------------------------------------------------------- */
+  /* 14px, down from 20px. Above ~16px a card starts reading as a pill and the
+   * uniform soft rectangle is the cheapest-looking container on the web. */
+  --radius-control: 0.625rem;
+  --radius-card: 0.875rem;
+  --radius-panel: 1.25rem;
+
+  /* -- Elevation ---------------------------------------------------------- */
+  /* Tinted toward the brand navy and matte, never specular: a bright shine
+   * highlight is glare for the same eyes the warm paper is protecting.
+   * Cards carry shadow OR border, never both — a hairline under a soft shadow
+   * is the ghost-card look. */
+  --shadow-resting:
+    0 1px 2px color-mix(in oklab, var(--color-navy-900) 6%, transparent),
+    0 4px 24px color-mix(in oklab, var(--color-navy-900) 8%, transparent);
+  --shadow-lifted:
+    0 2px 4px color-mix(in oklab, var(--color-navy-900) 8%, transparent),
+    0 8px 40px color-mix(in oklab, var(--color-navy-900) 14%, transparent);
 
   /* -- Named spacing scale (Ethnocare model) ----------------------------- */
   --spacing-micro: 0.5rem;
@@ -51,7 +73,15 @@
 
   /* -- Typography -------------------------------------------------------- */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Newsreader, and only at 36px and up — see the .font-display guard below. */
+  --font-display: var(--font-newsreader), ui-serif, Georgia, serif;
+
+  /* Fluid display sizes. Every clamp() keeps a rem term on purpose: a pure-vw
+   * value ignores browser zoom, and zoom is this audience's main way of
+   * compensating for their vision. A vw-only scale would silently break it. */
+  --text-display-xl: clamp(2.5rem, 1.9rem + 2.6vw, 4rem);
+  --text-display-lg: clamp(2rem, 1.6rem + 1.8vw, 3rem);
+  --text-display-md: clamp(1.75rem, 1.5rem + 1.1vw, 2.25rem);
 
   /* -- Motion (restrained: short, eased, never bouncy) ------------------- */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
@@ -64,20 +94,84 @@
  * ------------------------------------------------------------------------- */
 
 @layer base {
+  /* Display face, bound to a class so it can never leak below 36px. Newsreader
+   * at body size would be slower to read than Inter for this audience. */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+
+  /* Stats and any figure that animates need fixed-width digits, or the number
+   * visibly jitters as it counts. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Browser surfaces ship with defaults belonging to no design system. */
+  ::selection {
+    background-color: color-mix(
+      in oklab,
+      var(--color-gold-500) 45%,
+      transparent
+    );
+    color: var(--color-navy-900);
+  }
+
+  /*
+   * Two border tokens, not one.
+   *
+   * `--scheme-border` draws decoration: card outlines, section rules, the line
+   * under the header. WCAG 1.4.11 does not apply to those, and at 12% they read
+   * as a hairline rather than a cage, which is the intent.
+   *
+   * `--scheme-border-control` draws the edge of something you operate — a text
+   * input, a select, an outlined button. 1.4.11 requires 3:1 against what sits
+   * behind it, and these controls have no fill of their own to fall back on:
+   * measured, the input background was identical to the page (1:1), so the
+   * border was the ONLY thing marking where to type. At 12% that border came in
+   * at 1.28:1 against the paper, so the fields were effectively invisible — the
+   * single worst thing on the site for a reader with reduced contrast
+   * sensitivity, which is most of this audience.
+   *
+   * 50% measures 3.42:1. The intermediate values were checked rather than
+   * guessed: 25% -> 1.73, 40% -> 2.55, both still failing.
+   */
   :root {
-    --scheme-surface: #ffffff;
+    --scheme-surface: var(--color-paper);
+    caret-color: var(--color-navy-800);
+    accent-color: var(--color-navy-800);
     --scheme-on-surface: var(--color-navy-800);
     --scheme-muted: var(--color-navy-600);
     --scheme-border: color-mix(in oklab, var(--color-ink) 12%, transparent);
+    --scheme-border-control: color-mix(
+      in oklab,
+      var(--color-ink) 50%,
+      transparent
+    );
     --scheme-accent: var(--color-gold-500);
+    /* Edge for the filled gold button. Derived from the accent rather than
+     * hard-coded, so re-branding the gold carries the edge with it. */
+    --scheme-accent-edge: color-mix(
+      in oklab,
+      var(--color-gold-500) 50%,
+      var(--color-ink)
+    );
     --scheme-on-accent: var(--color-navy-900);
   }
 
   [data-scheme="muted"] {
-    --scheme-surface: var(--color-mist);
+    --scheme-surface: var(--color-paper-sunk);
     --scheme-on-surface: var(--color-navy-800);
     --scheme-muted: var(--color-navy-600);
     --scheme-border: color-mix(in oklab, var(--color-ink) 12%, transparent);
+    --scheme-border-control: color-mix(
+      in oklab,
+      var(--color-ink) 50%,
+      transparent
+    );
   }
 
   [data-scheme="dark"] {
@@ -85,13 +179,23 @@
     --scheme-on-surface: #ffffff;
     --scheme-muted: var(--color-navy-100);
     --scheme-border: color-mix(in oklab, #ffffff 20%, transparent);
+    /* White on navy clears 3:1 far sooner than ink on paper does. */
+    --scheme-border-control: color-mix(in oklab, #ffffff 60%, transparent);
     --scheme-accent: var(--color-gold-500);
+    /* Gold on navy already clears 3:1 on its own, so the edge matches the fill
+     * and simply does not draw. Darkening it here would ring the button. */
+    --scheme-accent-edge: var(--color-gold-500);
     --scheme-on-accent: var(--color-navy-900);
   }
 
   body {
     background-color: var(--scheme-surface);
     color: var(--scheme-on-surface);
+    /* 18px rather than the inherited 16px browser default. The audience reads
+     * this site with presbyopia and often at arm's length from a laptop; 16px
+     * is a floor for small UI here, not a sensible default for body copy. */
+    font-size: 1.125rem;
+    line-height: 1.6;
   }
 
   /* Every reveal animation must degrade to "visible", never to "hidden" —
@@ -156,10 +260,34 @@
   .rich-text li + li {
     margin-top: 0.5em;
   }
+  /* Editorial pull quote, not a callout card. A thick gold bar is the loudest
+   * option available and reads as a UI accent tab rather than a quotation.
+   * Italic is dropped deliberately: extended italic body copy is measurably
+   * slower to read and the penalty lands hardest on the low-vision readers this
+   * site is built for. The quotation earns its emphasis from the indent and
+   * the rule, which is how it is done in print. */
   .rich-text blockquote {
-    border-left: 3px solid var(--scheme-accent);
-    padding-left: 1rem;
-    font-style: italic;
+    border-left: 2px solid var(--scheme-border);
+    padding-left: 1.25rem;
+    color: var(--scheme-muted);
+  }
+
+  /* A focus ring is the one piece of UI a keyboard user navigates by; the
+   * browser default is a thin outline that disappears at high zoom. Bold,
+   * offset, and drawn from the palette. */
+  :focus-visible {
+    outline: 3px solid var(--color-navy-800);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  [data-scheme="dark"] :focus-visible {
+    outline-color: var(--color-gold-500);
+  }
+
+  /* Underlines sit clear of descenders rather than cutting through them. */
+  a {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: from-font;
   }
 
   /* Skip link, required for keyboard users (WCAG 2.4.1). */
@@ -177,6 +305,126 @@
     color: var(--scheme-on-surface);
     outline: 2px solid var(--scheme-accent);
   }
+
+  /* Hero scrim. Tinted toward the brand navy rather than a flat black wash —
+   * flat black desaturates the photograph, and a single percentage tuned to
+   * today's image will not hold when Nate swaps the photo through the CMS.
+   *
+   * This lives here rather than as an inline style because it needs a media
+   * query: the copy column occupies a completely different share of the frame
+   * at each size, and a scrim tuned for one is a contrast failure at the other.
+   * Measured against the real composited pixels, not estimated. */
+  .hero-scrim {
+    /* Narrow viewports: the copy spans ~95% of the width, so there is no clear
+     * side left to protect and a horizontal ramp is the wrong axis entirely.
+     * The desktop ramp measured 1.43:1 here — white text on a bright, blown-out
+     * region of the photo. Ramping down the vertical instead keeps the top of
+     * the frame readable as a photograph and covers the copy, which sits
+     * between 23% and 77% of the hero's height. */
+    background: linear-gradient(
+      to bottom,
+      rgb(15 37 54 / 0.42) 0%,
+      rgb(15 37 54 / 0.8) 18%,
+      rgb(15 37 54 / 0.88) 100%
+    );
+  }
+
+  @media (width >= 48rem) {
+    .hero-scrim {
+      /* One directional gradient, not a stack. Two layers multiplied out to
+       * ~90% coverage even on the "clear" side and flattened the photograph
+       * into a navy panel. The 0.74 stop sits at 62% because the copy column
+       * ends at ~59% of the width; falling off any earlier drops the last words
+       * of each line onto a bright photo. Past that it falls away fast enough
+       * that the subject stays a photograph rather than a texture. */
+      background: linear-gradient(
+        to right,
+        rgb(15 37 54 / 0.84) 0%,
+        rgb(15 37 54 / 0.78) 40%,
+        rgb(15 37 54 / 0.74) 62%,
+        rgb(15 37 54 / 0.26) 82%,
+        rgb(15 37 54 / 0.06) 100%
+      );
+    }
+  }
+}
+
+/* --- Print -----------------------------------------------------------------
+ *
+ * Not a nicety for this audience. Medicare decisions get made on paper: people
+ * print a plan comparison to read at the kitchen table, or bring the Scope of
+ * Appointment to a meeting. Before this block the site had no print rules at
+ * all, so a printed page carried the sticky header, the cookie banner and a
+ * navy footer that empties a colour cartridge.
+ *
+ * The first rule is a bug fix rather than styling. Scroll-reveal wrappers are
+ * server-rendered at opacity 0 and only animate in when scrolled into view.
+ * Measured on the homepage at scrollY 0: 13 of 13 were still invisible. Print
+ * without scrolling to the bottom first and everything below the hero comes out
+ * BLANK. The reduced-motion and noscript escape hatches both already cover this
+ * failure; print was the third door and it was unlocked.
+ */
+@media print {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Ink, not brand. Navy panels and photographs are someone else's toner. */
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Navigation, calls to action and consent UI do nothing on paper. The phone
+   * number and the disclosures are the two things that must survive, so the
+   * utility bar and the footer's compliance block are deliberately NOT hidden. */
+  nav[aria-label="Main"],
+  #mobile-nav,
+  [role="dialog"],
+  .skip-link,
+  button,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* A link is useless in print unless the address comes with it. Content only:
+   * expanding every nav and footer href would bury the page in URLs. */
+  main a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 10pt;
+    word-break: break-all;
+  }
+
+  /* Never strand a heading at the foot of a page, and never split a disclosure
+   * across a page break — a half-printed legal notice is worse than none. */
+  h1,
+  h2,
+  h3 {
+    break-after: avoid-page;
+  }
+
+  [data-compliance],
+  figure,
+  img {
+    break-inside: avoid;
+  }
+
+  img {
+    max-width: 100% !important;
+  }
+
+  @page {
+    margin: 15mm;
+  }
 }
 
 /* Expose the semantic roles as Tailwind utilities (bg-surface, text-muted...).
@@ -186,6 +434,10 @@
   --color-on-surface: var(--scheme-on-surface);
   --color-muted: var(--scheme-muted);
   --color-border-subtle: var(--scheme-border);
+  /* border-border-control — for anything the visitor operates. See the note by
+   * the token definitions for why this is not the same value as above. */
+  --color-border-control: var(--scheme-border-control);
   --color-accent: var(--scheme-accent);
+  --color-accent-edge: var(--scheme-accent-edge);
   --color-on-accent: var(--scheme-on-accent);
 }

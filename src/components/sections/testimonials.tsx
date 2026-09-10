@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Quote } from "lucide-react";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { Reveal } from "@/components/motion/reveal";
+import { Monogram } from "@/components/ui/monogram";
 import { mediaProps } from "@/lib/media";
 
 export type Testimonial = {
@@ -29,7 +30,7 @@ export function Testimonials({
         <Reveal>
           <h2
             id="testimonials-heading"
-            className="text-3xl font-semibold tracking-tight md:text-5xl"
+            className="font-display text-3xl font-semibold tracking-tight md:text-5xl"
           >
             {heading ?? "What clients say"}
           </h2>
@@ -41,7 +42,7 @@ export function Testimonials({
             return (
               <li key={item.id} className="flex">
                 <Reveal
-                  delay={Math.min(i * 0.08, 0.32)}
+                  delay={Math.min(i * 0.05, 0.15)}
                   className="flex w-full"
                 >
                   <figure className="border-border-subtle flex w-full flex-col gap-5 rounded-(--radius-card) border p-6">
@@ -58,13 +59,18 @@ export function Testimonials({
                           height={48}
                           className="size-12 rounded-full object-cover"
                         />
-                      ) : null}
+                      ) : (
+                        <Monogram
+                          name={item.author}
+                          className="size-12 rounded-full"
+                        />
+                      )}
                       <span>
-                        <span className="block text-sm font-semibold">
+                        <span className="block font-semibold">
                           {item.author}
                         </span>
                         {item.location ? (
-                          <span className="text-muted block text-sm">
+                          <span className="text-muted block">
                             {item.location}
                           </span>
                         ) : null}

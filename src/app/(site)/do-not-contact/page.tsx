@@ -21,7 +21,7 @@ export default function DoNotContactPage() {
             sale or sharing of your personal information, or to ask us to delete
             what we hold about you.
           </p>
-          <p className="text-muted text-sm">
+          <p className="text-muted">
             You can also reply STOP to any text message from us. We honour
             Global Privacy Control signals sent by your browser automatically.
           </p>

@@ -93,7 +93,7 @@ export function LearningGrid({
         <Reveal className="max-w-2xl space-y-4">
           <h2
             id="learn-heading"
-            className="text-3xl font-semibold tracking-tight md:text-5xl"
+            className="font-display text-3xl font-semibold tracking-tight md:text-5xl"
           >
             {heading ?? "Learning center"}
           </h2>
@@ -111,7 +111,7 @@ export function LearningGrid({
               return (
                 <li key={article.id} className="flex">
                   <Reveal
-                    delay={Math.min(i * 0.06, 0.3)}
+                    delay={Math.min(i * 0.05, 0.15)}
                     className="flex w-full"
                   >
                     <Card className="w-full">
@@ -122,7 +122,7 @@ export function LearningGrid({
                             alt={cover.alt}
                             width={cover.width}
                             height={cover.height}
-                            className="size-full object-cover transition duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+                            className="size-full object-cover"
                             sizes="(min-width: 768px) 33vw, 100vw"
                           />
                         </div>
@@ -148,12 +148,10 @@ export function LearningGrid({
                             {article.title}
                           </Link>
                         </h3>
-                        <p className="text-muted flex-1 text-sm">
-                          {article.excerpt}
-                        </p>
+                        <p className="text-muted flex-1">{article.excerpt}</p>
                         <time
                           dateTime={article.publishedAt}
-                          className="text-muted text-xs"
+                          className="text-muted text-sm"
                         >
                           {formatDate(article.publishedAt)}
                         </time>

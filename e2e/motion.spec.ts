@@ -11,19 +11,15 @@ test.describe("scroll reveal", () => {
   test("content becomes visible when scrolled into view", async ({ page }) => {
     await page.goto("/");
 
-    const heading = page.getByRole("heading", { name: "How we help" });
-    await heading.scrollIntoViewIfNeeded();
-    await expect(heading).toBeVisible();
-
-    // A reveal only fires once the element is meaningfully inside the
-    // viewport (the wrapper uses a -10% margin), so assert on elements that
-    // have been scrolled fully into view rather than every partially
-    // intersecting one.
+    // Each heading is scrolled to the centre and asserted individually below.
+    // A `scrollIntoViewIfNeeded` preamble here used to duplicate that and was
+    // the one flaky step: it ran during hydration and could act on a node
+    // Motion had already re-rendered.
     for (const name of ["How we help", "Learning center"]) {
       const target = page.getByRole("heading", { name });
       // Centre it deliberately: scrollIntoViewIfNeeded treats a sliver at the
-      // viewport edge as "already visible" and does not scroll, which leaves
-      // the element outside the reveal's -10% margin on short viewports.
+      // viewport edge as "already visible" and does not scroll, which would
+      // leave the element short of the reveal's trigger on small viewports.
       await target.evaluate((el) =>
         el.scrollIntoView({
           block: "center",
@@ -81,5 +77,35 @@ test.describe("scroll reveal", () => {
     await expect(page.getByText("We do not offer every plan")).toBeVisible();
 
     await context.close();
+  });
+
+  test("nothing prints blank", async ({ page }) => {
+    // The third door into the same failure, after reduced-motion and noscript.
+    // Reveals are served at opacity 0 and only animate in on scroll, so hitting
+    // Print without first scrolling to the bottom used to put 13 of 13 sections
+    // on paper as blank space. This audience prints — a plan comparison for the
+    // kitchen table, a Scope of Appointment for a meeting.
+    await page.goto("/");
+    await page.emulateMedia({ media: "print" });
+
+    const invisible = await page.evaluate(
+      () =>
+        [...document.querySelectorAll("[data-reveal]")].filter(
+          (el) => Number(getComputedStyle(el).opacity) < 1,
+        ).length,
+    );
+    expect(invisible).toBe(0);
+
+    // The disclosures are the reason the page is worth printing at all, so they
+    // must survive print styling even though the navigation does not.
+    const kept = await page.evaluate(() => ({
+      disclosures: [...document.querySelectorAll("[data-compliance]")].every(
+        (el) => getComputedStyle(el).display !== "none",
+      ),
+      mainNavHidden:
+        getComputedStyle(document.querySelector('nav[aria-label="Main"]')!)
+          .display === "none",
+    }));
+    expect(kept).toEqual({ disclosures: true, mainNavHidden: true });
   });
 });

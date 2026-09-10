@@ -30,7 +30,7 @@ export function ServiceGrid({
         <Reveal className="max-w-2xl space-y-4">
           <h2
             id="services-heading"
-            className="text-3xl font-semibold tracking-tight text-balance md:text-5xl"
+            className="font-display text-3xl font-semibold tracking-tight text-balance md:text-5xl"
           >
             {heading ?? "How we help"}
           </h2>
@@ -40,16 +40,16 @@ export function ServiceGrid({
         <ul className="grid gap-6 md:grid-cols-3">
           {services.map((service, i) => (
             <li key={service.id} className="flex">
-              <Reveal delay={Math.min(i * 0.08, 0.32)} className="flex w-full">
+              <Reveal delay={Math.min(i * 0.05, 0.15)} className="flex w-full">
                 <Card className="w-full">
                   <CardBody>
                     <h3 className="text-xl font-semibold">{service.title}</h3>
-                    <p className="text-muted flex-1 text-sm leading-relaxed">
+                    <p className="text-muted flex-1 leading-relaxed">
                       {service.summary}
                     </p>
                     <Link
                       href={`/services/${service.slug}`}
-                      className="mt-2 inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4"
+                      className="mt-2 inline-flex items-center gap-2 font-semibold underline underline-offset-4"
                     >
                       Learn more
                       <ArrowRight aria-hidden className="size-4" />

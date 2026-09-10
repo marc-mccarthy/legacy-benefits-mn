@@ -1,4 +1,4 @@
-# Legacy Benefits MN
+# Legacy Benefits MN Website
 
 Marketing site and lead-capture system for a Medicare insurance practice in
 Minnesota. Next.js 16 / React 19 on the front, Payload CMS on PostgreSQL for
@@ -8,6 +8,9 @@ content and compliance records, deployed to AWS with Terraform.
 > the CMS and in a gitignored `.env`, never in this repository. Lead capture works
 > end to end, and delivery to MedicarePRO runs on a mock transport until a
 > credential is added — one environment variable.
+>
+> **The testimonials are invented placeholders and must be replaced or removed
+> before this goes live.** See [Switching from demo to live](#switching-from-demo-to-live).
 
 ---
 
@@ -34,7 +37,7 @@ decisions:
 | Styling       | Tailwind CSS v4, CSS-first `@theme` tokens            |
 | Content + API | Payload CMS 3 (embedded, same app)                    |
 | Database      | PostgreSQL 17 — Payload tables + Drizzle app tables   |
-| Motion        | Motion + Lenis, both reduced-motion aware             |
+| Motion        | Motion, reduced-motion aware                          |
 | Carousel      | Embla                                                 |
 | Forms         | React Hook Form + Zod, Cloudflare Turnstile           |
 | Email         | AWS SES                                               |
@@ -91,7 +94,7 @@ src/
 │  ├─ compliance/       required disclosure blocks
 │  ├─ sections/         page sections, 1:1 with page-builder blocks
 │  ├─ forms/            contact, Scope of Appointment, do-not-contact
-│  └─ motion/           reveal + smooth scroll
+│  └─ motion/           scroll reveal
 ├─ lib/
 │  ├─ business.ts       resolves identity from the CMS, env as fallback
 │  ├─ env.ts            treats a blank env var as absent (see note below)
@@ -201,24 +204,51 @@ CloudFront + WAF ─▶ ALB ─▶ ECS Fargate (ARM64) ─▶ RDS PostgreSQL
 ```
 
 ```bash
+set -a; source .env; set +a                    # exports TF_VAR_name
+
 cd infra/envs/dev
-cp terraform.tfvars.example terraform.tfvars   # create the state bucket first, see backend.tf
+cp terraform.tfvars.example terraform.tfvars   # fill in the three required values
 terraform init
-terraform apply
+terraform apply                                 # ~86 resources
 terraform output site_url                       # the URL to open
+
+terraform destroy                               # and all of it goes away
 ```
 
-**A custom domain is optional.** Leave `domain_name` empty and the stack still
-comes up, served over HTTPS on the CloudFront distribution's own
+The `source .env` line is not optional. `TF_VAR_name` is the prefix on every AWS
+resource name, and `name` is declared with no default precisely so a missing
+value stops the apply instead of silently inheriting one — which is how the
+stack previously ended up named after this repository's folder rather than the
+client. Terraform reads `TF_VAR_*` from the environment natively; there is no
+wrapper involved.
+
+Everything is in Terraform. There is no bootstrap step, no state bucket to
+create first, and nothing to set up in the AWS console — `apply` on a clean
+account builds the whole stack and `destroy` removes it. State is local, in
+`infra/envs/<env>/terraform.tfstate`, and gitignored: it holds the generated
+database password and `PAYLOAD_SECRET` in plaintext. **Back it up somewhere
+private.** Lose it and `destroy` can no longer see what it created, which means
+cleaning up by hand — the one thing this layout exists to avoid.
+
+The layout assumes **one environment per AWS account**, which is what lets each
+root own the account-level GitHub OIDC provider outright. To put dev and prod in
+the same account, set `create_oidc_provider = false` on whichever you apply
+second; its ARN is derived from the account id, so there is still nothing to
+copy between them.
+
+**A custom domain is optional.** Set `use_domain = false` and the stack still
+comes up in full, served over HTTPS on the CloudFront distribution's own
 `*.cloudfront.net` URL — useful for showing a client the site before a domain
 exists. That is how `envs/dev` is configured, deliberately: giving dev a
 subdomain would mean either delegating from the production zone or running a
 second zone for the same domain, and the latter breaks resolution.
 
-Setting a domain adds an ACM certificate, Route 53 records for the apex and
-`www` (A and AAAA), and switches the CloudFront-to-ALB hop to HTTPS. Without a
-domain that hop is plain HTTP inside AWS — visitors still get HTTPS at the edge —
-and SES is skipped, since it needs a verified domain.
+`use_domain = true` adds an ACM certificate, Route 53 records for the apex and
+`www` (A and AAAA), and switches the CloudFront-to-ALB hop to HTTPS. With it
+false that hop is plain HTTP inside AWS — visitors still get HTTPS at the edge —
+and SES is skipped, since it needs a verified domain. See
+[Migrating DNS into Route 53](#migrating-dns-into-route-53) for why it is a
+separate switch from `create_dns_zone`.
 
 The app is never told its own URL: `NEXT_PUBLIC_SITE_URL` is used when set, and
 otherwise the origin is derived per request, so canonical links, the sitemap, and
@@ -228,8 +258,23 @@ CI deploys via GitHub OIDC — no AWS keys stored in GitHub. Each deploy builds 
 immutable image tagged with the commit SHA, runs migrations as a one-off ECS task
 inside the VPC, then rolls the service. Rollback is redeploying an earlier SHA.
 
-Required GitHub repository variables: `AWS_REGION`, `AWS_DEPLOY_ROLE_ARN`,
-`ECR_REPOSITORY`, `ECS_CLUSTER`, `ECS_SERVICE`, `SITE_URL`.
+**Which environment a deploy targets** is decided in `.github/workflows/deploy.yml`:
+a push to `main` goes to **dev**, and **prod** is manual only — Actions → Deploy →
+Run workflow → choose `prod`. That choice selects a GitHub **Environment**, and
+every AWS target is read from that environment's variables: `AWS_REGION`,
+`AWS_DEPLOY_ROLE_ARN`, `ECR_REPOSITORY`, `ECS_CLUSTER`, `ECS_SERVICE`,
+`SITE_URL`. Take them from `terraform output` in the matching `infra/envs`
+directory.
+
+Set them per **environment**, not as repository-wide variables — repository
+variables are visible to both, so dev and prod would deploy to the same place.
+A required reviewer on the `prod` environment adds a human gate to the manual
+dispatch.
+
+Which branches may deploy at all is enforced in AWS rather than in the workflow,
+by `allowed_refs` on the `ci` module: prod trusts `main` only, dev also trusts
+`develop`. Dispatching prod from a feature branch fails at
+`sts:AssumeRoleWithWebIdentity`.
 
 Running cost is roughly **$90–130/month** at low traffic. The NAT gateway and ALB
 dominate; both bill per hour regardless of traffic.
@@ -244,15 +289,17 @@ manual, and the ordering below is what keeps the client's email working.
 
 Verified by live lookup on 2026-09-08:
 
-|                 |                                                           |
-| --------------- | --------------------------------------------------------- |
-| Registrar       | **Squarespace Domains II LLC** (expires 2027-01-19)       |
-| DNS host        | **Google Cloud DNS** (`ns-cloud-a{1..4}`)                 |
-| MX              | Legacy Google five-record set (`aspmx.l` + `alt1`–`alt4`) |
-| SPF             | `v=spf1 include:_spf.google.com ~all`                     |
-| DKIM            | selector `google`, present                                |
-| DMARC           | **none** — `p=none` staged in `envs/prod`                 |
-| Website records | **none** — no apex A, no AAAA, no www, no CAA             |
+|                 |                                                                |
+| --------------- | -------------------------------------------------------------- |
+| Registrar       | **Squarespace Domains II LLC** (expires 2027-01-19)            |
+| DNS host        | **Google Cloud DNS** (`ns-cloud-a{1..4}`)                      |
+| MX              | Legacy Google five-record set (`aspmx.l` + `alt1`–`alt4`)      |
+| SPF             | `v=spf1 include:_spf.google.com ~all`                          |
+| DKIM            | selector `google`, present                                     |
+| DMARC           | **none** — `p=none` staged in `envs/prod`                      |
+| Verification    | `isqbop7e6zek` CNAME → `gv-g4wgakmz3yjmin.dv.googlehosted.com` |
+| DNSSEC          | **enabled** — DS `37879` published at `.com`, TTL 86400        |
+| Website records | **none** — no apex A, no AAAA, no www, no CAA                  |
 
 Registrar and DNS host are **two different logins**. DNS is edited in the Google
 Cloud console (Network Services → Cloud DNS), not `admin.google.com`, which has
@@ -261,23 +308,76 @@ no zone editor. Nameservers are changed at Squarespace.
 Because no website records exist today, this is an **email-only** migration —
 there is no live site to break.
 
+Two rows above are the ones that bite. Workspace verified this domain by
+**CNAME** rather than the more familiar TXT record, so it looks like noise and
+is easy to leave behind; losing it un-verifies the domain. And **DNSSEC is on** —
+Squarespace enables it automatically, so nobody chose it. Both are carried in
+`envs/prod/terraform.tfvars`; the DNSSEC one cannot be, and is why the sequence
+below has a step 0.
+
+### The two knobs
+
+`create_dns_zone` answers _who is authoritative_. `use_domain` answers _is the
+site attached to the hostname_. They are deliberately separate, because ACM
+validates a certificate by reading a record over public DNS — so the certificate
+cannot be issued until the registrar already points at Route 53. Setting both at
+once would hang the apply until the validation resource times out, then fail.
+
+| phase | `create_dns_zone` | `use_domain` | result                                                         |
+| ----- | ----------------- | ------------ | -------------------------------------------------------------- |
+| 1     | `true`            | `false`      | zone and records exist, nothing live. Nameservers switch here. |
+| 2     | `true`            | `true`       | certificate validates, CloudFront serves the domain            |
+
+Set `create_dns_zone = false` with `hosted_zone_id` if the zone already exists;
+a domain already delegated to Route 53 can go straight to `use_domain = true`.
+
+With `use_domain = false` the whole stack still comes up and is served on the
+CloudFront URL that `terraform output site_url` prints — no certificate, no
+Route 53 records, no SES identity.
+
 ### The sequence
 
-1. `terraform apply` — creates the zone and records. **Nothing is live yet**; the
-   registrar still points at the old nameservers, so email keeps flowing.
+**0. Disable DNSSEC at Squarespace** (Domains → the domain → DNSSEC). Do this
+first: it is harmless, changes nothing about resolution, and starts a 24-hour
+clock you otherwise wait out later.
+
+> ⚠️ The Route 53 zone this creates is **unsigned**. Switching the nameservers
+> while the DS record is still published at the `.com` registry makes validating
+> resolvers ask for signatures that do not exist and return SERVFAIL for the
+> entire domain — mail included. That is an outage, not a degradation, and the
+> DS TTL is 86400, so undoing it is not fast.
+
+1. `create_dns_zone = true`, `use_domain = false`, then `terraform apply` —
+   creates the zone, MX, SPF, DKIM, DMARC and the verification CNAME. **Nothing
+   is live yet**; the registrar still points at the old nameservers, so email
+   keeps flowing.
 2. Verify before switching anything:
    ```bash
-   terraform output dns_verify_command   # prints the dig command to run
+   bash infra/scripts/preflight-cutover.sh legacybenefitsmn.com
    ```
-   Confirm MX matches the current provider exactly. **If MX is wrong or missing,
-   stop** — switching now would bounce his mail.
+   It checks the DS is gone (asked at the `.com` servers, not a cache), then
+   compares every record the new zone serves against what the old nameservers
+   answer today. **Anything it fails on, stop.** A wrong or missing MX bounces
+   his mail.
 3. `terraform output route53_nameservers`, then paste those four into Squarespace
-   under Domains → DNS → Nameservers.
-4. Propagation takes up to 48 hours. Once it resolves, ACM validates and
-   CloudFront serves the domain automatically.
+   under Domains → DNS → Nameservers. `terraform output dns_cutover_runbook`
+   prints these steps next to them.
+4. Propagation takes up to 48 hours. Confirm mail still delivers and the
+   verification CNAME still resolves.
+5. `use_domain = true`, then `terraform apply` again. ACM validates against the
+   now-live zone, CloudFront serves the domain, SES finishes verifying.
 
-Set `create_dns_zone = false` and provide `hosted_zone_id` if the zone already
-exists.
+### DNSSEC afterwards
+
+The zone stays unsigned. Re-enabling DNSSEC is a deliberate separate change — a
+KMS asymmetric key in us-east-1, `aws_route53_key_signing_key`,
+`aws_route53_hosted_zone_dnssec`, and then publishing the **new** DS at the
+registrar in a second manual step.
+
+It is deferred on purpose. The appeal of this migration is that nothing is live
+to break; adding key management and a second registrar handoff during it trades
+that away, and DNSSEC does nothing for mail delivery here — the Google MX hosts
+are not DANE-validated. Worth doing once the zone has been stable for a while.
 
 ### What to collect from the client first
 
@@ -290,8 +390,10 @@ gcloud dns record-sets export zone.txt --zone=ZONE_NAME --zone-file-format
 ```
 
 A screenshot of the Cloud DNS record table works just as well — the zone is
-small. A forgotten verification TXT record silently breaks whatever depended on
-it, and nobody notices for weeks.
+small, though scroll to the bottom of the list rather than the bottom of the
+visible area. A forgotten verification record silently breaks whatever depended
+on it, and nobody notices for weeks. It will not announce itself either: this
+domain's is a CNAME named `isqbop7e6zek`, which reads as noise.
 
 ## Switching from demo to live
 
@@ -305,9 +407,18 @@ Everything works as-is for review. To point it at the real business:
 3. **Brand** — swap the primitives block at the top of `src/app/globals.css` for
    the real palette and fonts. Nothing downstream references those values.
 4. **Photography** — replace the sample imagery, especially the team headshots.
-   The seeded avatars are DiceBear placeholders.
-5. **Keys** — Turnstile site/secret, a GTM container ID, and a verified SES
+   The seeded avatars are DiceBear placeholders. Anyone without a photo falls
+   back to an initials monogram rather than an illustration, so a half-finished
+   roster never mixes cartoons with real portraits.
+5. **Testimonials — must be replaced or removed before launch.** ⚠️ The seeded
+   quotes, names and locations are **invented**. They exist so the section can
+   be seen in review. Publishing fabricated testimonials for an insurance
+   practice is a false-advertising problem and a CMS marketing-material problem,
+   not a cosmetic one. Either collect real, attributable quotes with the
+   client's permission, or delete the `testimonials` block from the page
+   layouts.
+6. **Keys** — Turnstile site/secret, a GTM container ID, and a verified SES
    sending domain (new SES accounts start in a sandbox that only mails verified
    addresses).
-6. **Copy review** — have whoever signs off marketing material read the
+7. **Copy review** — have whoever signs off marketing material read the
    disclosure and privacy text.

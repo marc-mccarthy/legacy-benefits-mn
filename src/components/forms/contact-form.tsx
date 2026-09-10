@@ -167,11 +167,17 @@ export function ContactForm({
       {/* The consent language is rendered in full, at body size. Summarising
           it would invalidate it as express written consent. */}
       <Field htmlFor="consent" error={errors.consent?.message}>
-        <label className="flex gap-3 text-sm leading-relaxed">
+        {/* No size class: this inherits the 18px body size. It is consent
+            language a court could be asked to read back, so it gets the same
+            size as the prose on the rest of the site, not UI-label size. */}
+        <label className="flex gap-3 leading-relaxed">
           <input
             id="consent"
             type="checkbox"
-            className="mt-1 size-4 shrink-0"
+            // 24px, up from 16px. This is the one control the form cannot be
+            // submitted without, and 16px is under the WCAG 2.5.8 floor before
+            // any allowance for a hand tremor.
+            className="mt-1 size-6 shrink-0"
             {...register("consent")}
           />
           <span>{consentText}</span>

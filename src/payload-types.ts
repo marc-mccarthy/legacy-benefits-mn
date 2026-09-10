@@ -150,7 +150,6 @@ export interface Page {
         | {
             heading: string;
             subheading?: string | null;
-            video?: (number | null) | Media;
             poster?: (number | null) | Media;
             ctaLabel?: string | null;
             ctaHref?: string | null;
@@ -670,7 +669,6 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               heading?: T;
               subheading?: T;
-              video?: T;
               poster?: T;
               ctaLabel?: T;
               ctaHref?: T;

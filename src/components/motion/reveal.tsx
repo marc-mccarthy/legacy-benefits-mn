@@ -25,20 +25,32 @@ export function Reveal({
   children,
   className,
   delay = 0,
-  distance = 16,
+  distance = 8,
 }: RevealProps) {
   const reduced = useReducedMotion();
 
-  if (reduced) return <div className={className}>{children}</div>;
-
+  // The element type stays the same whether or not motion is reduced.
+  // `useReducedMotion` is false during server rendering, so branching to a
+  // plain <div> here made the client replace the server's node on hydration —
+  // anything holding a reference to it (a test, a focus target, an anchor
+  // scroll) was left pointing at a detached element. Only the animation props
+  // are gated.
   return (
     <motion.div
       data-reveal
       className={className}
-      initial={{ opacity: 0, y: distance }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      initial={reduced ? false : { opacity: 0, y: distance }}
+      whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
+      // A POSITIVE margin grows the trigger area, so the reveal starts before
+      // the element scrolls fully into view and has finished by the time it is
+      // read. The previous "-10%" shrank it, firing the animation later — a
+      // careful scroller arrived at text that was still fading, and text at
+      // partial opacity is unreadable for exactly the people with reduced
+      // contrast sensitivity.
+      viewport={{ once: true, margin: "0px 0px 15% 0px" }}
+      // 320ms, not 600ms. Long enough to be perceived as motion rather than a
+      // jump, short enough that nobody waits on it.
+      transition={{ duration: 0.32, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -50,8 +62,10 @@ export function Reveal({
 export function StaggerList({
   children,
   className,
-  step = 0.08,
-  max = 0.4,
+  step = 0.05,
+  // Capped at 150ms total. A longer cascade means the last card in a row is
+  // still arriving after the eye has already moved to it.
+  max = 0.15,
 }: {
   children: ReactNode[];
   className?: string;

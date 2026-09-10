@@ -115,32 +115,32 @@ export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
       </Field>
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-semibold">
+        <legend className="text-base font-semibold">
           Which product types may we discuss?
           <span className="text-red-600" aria-hidden>
             {" "}
             *
           </span>
         </legend>
-        <p className="text-muted text-sm">
+        <p className="text-muted text-base">
           We may only discuss the products you select here.
         </p>
         {SOA_PRODUCT_TYPES.map((product) => (
-          <label
-            key={product.value}
-            className="flex gap-3 text-sm leading-relaxed"
-          >
+          <label key={product.value} className="flex gap-3 leading-relaxed">
             <input
               type="checkbox"
               value={product.value}
-              className="mt-1 size-4 shrink-0"
+              // 24px. These select which products a licensed agent is
+              // permitted to discuss — a mis-tap here is a compliance record
+              // that says something the beneficiary did not agree to.
+              className="mt-1 size-6 shrink-0"
               {...register("productTypes")}
             />
             <span>{product.label}</span>
           </label>
         ))}
         {errors.productTypes ? (
-          <p role="alert" className="text-sm text-red-700">
+          <p role="alert" className="text-base text-red-700">
             {errors.productTypes.message}
           </p>
         ) : null}
@@ -150,7 +150,9 @@ export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
         <Input id="agentName" {...register("agentName")} />
       </Field>
 
-      <div className="border-border-subtle rounded-(--radius-card) border p-5 text-sm leading-relaxed">
+      {/* The attestation is what the beneficiary is signing. It is read before
+          a signature, so it does not get to be the smallest text on the page. */}
+      <div className="border-border-subtle rounded-(--radius-card) border p-5 leading-relaxed">
         {SOA_ATTESTATION}
       </div>
 

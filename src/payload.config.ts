@@ -49,6 +49,13 @@ export default buildConfig({
     pool: { connectionString: process.env.DATABASE_URL || "" },
     // Schema changes ship as reviewed migrations, never as an implicit push.
     push: false,
+    // Payload creates a missing database by default and then, because push is
+    // off, skips the schema push that would fill it. The result is an empty
+    // database and `relation "site_settings" does not exist` on every query —
+    // an error that points at the schema instead of at the missing database,
+    // and sends you looking for a migration that never ran rather than for a
+    // `createdb` that never happened. Say what is actually wrong instead.
+    disableCreateDatabase: true,
     migrationDir: path.resolve(dirname, "migrations"),
   }),
   sharp,

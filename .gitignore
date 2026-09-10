@@ -66,3 +66,8 @@ crash.log
 override.tf
 override_*.tf
 !terraform.tfvars.example
+
+# State is local and NEVER committed. It holds the generated RDS password and
+# PAYLOAD_SECRET in plaintext. Losing it means orphaned AWS resources that
+# terraform destroy can no longer see — back up infra/envs/*/terraform.tfstate
+# somewhere private if the stack is real.

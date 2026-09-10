@@ -1,25 +1,87 @@
 # Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored, because
 # it holds the DKIM public key and other client-specific DNS values.
+#
+#   cd infra/envs/prod
+#   cp terraform.tfvars.example terraform.tfvars
+#   terraform init && terraform plan
+#
+# Anything not set here falls back to the default in variables.tf — read that
+# file for the full list, including region (us-east-1), vpc_cidr, name, and
+# db_instance_class (db.t4g.small).
+#
+# Terraform WARNS but does not fail on a variable that is set here and not
+# declared in variables.tf; it silently ignores the value. If something you
+# configured has no effect, check `terraform plan` output for
+# "Value for undeclared variable" before assuming the module is broken.
 
-business_name     = "Example Benefits"
-business_phone    = "(555) 555-0142"
+# --- Identity ---------------------------------------------------------------
+# The legal entity name. Passed to the container and interpolated into the TCPA
+# consent text stored verbatim with every lead, so it must be the name the
+# client actually does business as — not a trading shorthand.
+business_name = "Example Benefits"
+
+# Published contact number, shown alongside TTY 711 in confirmation emails.
+business_phone = "(555) 555-0142"
+
+# --- Deployment -------------------------------------------------------------
+# owner/repo allowed to assume the deploy role via GitHub OIDC. Must match the
+# repository exactly — this is the trust boundary for pushing to production, so
+# a typo either breaks deploys or, if it names a repo someone else controls,
+# hands them your AWS account.
 github_repository = "your-org/your-repo"
-alert_emails      = ["alerts@example.com"]
 
-# Placeholder for the first apply; CI replaces it with a real image afterwards.
+# Where CloudWatch alarms go: outbox delivery failures, ECS task crashes, RDS
+# pressure. Each address gets an SNS subscription-confirmation email that must
+# be clicked before it will ever receive an alarm.
+alert_emails = ["alerts@example.com"]
+
+# Placeholder for the first apply, because ECS will not create a service
+# without a resolvable image and ECR is empty until CI has pushed once. CI
+# replaces this on every deploy; leave it alone after bootstrap.
 image = "public.ecr.aws/nginx/nginx:latest"
 
 # --- DNS --------------------------------------------------------------------
-# Leave domain_name empty to be served on the CloudFront URL instead.
+# The public hostname. Ignored entirely unless use_domain is true.
 domain_name = "example.com"
+
+# Attach the site to domain_name.
+#
+# false = served on the CloudFront distribution's own *.cloudfront.net URL with
+#         CloudFront's certificate, which `terraform output site_url` prints
+#         after apply. No ACM certificate, no apex or www records, no SES
+#         identity. Everything else in this DNS section is inert, so real
+#         values can sit here ready without touching the domain.
+# true  = ACM certificate, apex and www aliases on CloudFront, SES identity.
+#
+# Deliberately NOT the same switch as create_dns_zone. ACM validates by reading
+# a record over public DNS, so the certificate cannot be issued while the
+# registrar still points at the old nameservers — the apply would hang until
+# the validation resource times out, then fail. Migrating a live domain
+# therefore runs in two phases:
+#
+#   phase 1   create_dns_zone = true, use_domain = false
+#             the zone and its records exist, nothing is live.
+#             switch the nameservers here.
+#   phase 2   create_dns_zone = true, use_domain = true
+#             the certificate validates immediately, CloudFront serves.
+#
+# A domain already delegated to Route 53 can go straight to true.
+use_domain = false
 
 # true  = create the Route 53 zone here, for migrating DNS in from another host
 # false = use an existing zone, set hosted_zone_id below
+#
+# Creating the zone means this configuration becomes authoritative for the
+# whole domain, including mail. Everything the domain answers for today must be
+# reproduced below BEFORE the nameservers are switched, or it disappears at
+# cutover.
 create_dns_zone = true
+# Find an existing zone id with:
+#   aws route53 list-hosted-zones-by-name --dns-name example.com
 # hosted_zone_id = "Z000000000000000000000"
 
 # Copy these from the CURRENT DNS host before switching nameservers. Read them
-# off live DNS rather than from memory:
+# off live DNS rather than from memory or from the registrar's UI:
 #
 #   dig +short MX example.com
 #   dig +short TXT example.com
@@ -28,6 +90,21 @@ create_dns_zone = true
 #   dig +short A example.com
 #   dig +short CAA example.com
 #
+# And check for DNSSEC, which is the one thing here that can take the domain
+# down rather than degrade it. Registrars like Squarespace enable it
+# automatically, so it is often on without anyone having chosen it:
+#
+#   dig DS example.com @$(dig +short NS com. | head -1)
+#
+# If that returns a record, the zone this configuration creates is unsigned and
+# switching nameservers would make validating resolvers ask for signatures that
+# do not exist — SERVFAIL for the whole domain, mail included, with a 24-hour
+# DS TTL before it can be undone. Disable DNSSEC at the registrar and wait for
+# the DS to disappear first. See: terraform output dns_cutover_runbook
+#
+# Lower the TTLs at the old host a day ahead of the cutover, so a mistake can
+# be rolled back in minutes rather than hours.
+
 # Google Workspace publishes MX in two shapes. Check which one is live —
 # applying the wrong one reroutes mail.
 #   legacy  = five records, aspmx.l.google.com + alt1-4
@@ -35,21 +112,48 @@ create_dns_zone = true
 google_workspace_mx        = true
 google_workspace_mx_legacy = true
 
-# A domain may publish only ONE SPF record; a second is itself a failure.
+# A domain may publish only ONE SPF record; a second is itself a failure, not a
+# merge. If the client also sends through another provider, add it as another
+# include: in this single string.
+#
+# SES is authenticated by DKIM (published automatically by the email module),
+# so it does not need an SPF include here.
 spf_record = "v=spf1 include:_spf.google.com ~all"
 
-# Full DKIM value including the "v=DKIM1; k=rsa; p=" prefix. It is split into
-# 255-character strings automatically — do not pre-chunk it.
+# Google Workspace DKIM, keyed by selector. Get the value from:
+#   admin.google.com -> Apps -> Google Workspace -> Gmail -> Authenticate email
+# or read the live record off DNS:
+#   dig +short TXT google._domainkey.example.com
+#
+# Paste the full value including the "v=DKIM1; k=rsa; p=" prefix. It is split
+# into 255-character strings automatically — do not pre-chunk it, and do not
+# strip the quotes' contents when copying from dig output.
+#
+# Omitting this while creating the zone unpublishes DKIM: mail keeps flowing
+# but starts failing authentication, which the DMARC reports below will show.
 dkim_records = {
   google = "v=DKIM1; k=rsa; p=REPLACE_WITH_FULL_KEY"
 }
 
 # p=none is monitoring only: it changes nothing about delivery, and the reports
 # show whether SPF and DKIM actually pass before considering enforcement.
+# Point rua= at a mailbox someone reads. Move to p=quarantine only after the
+# reports have been clean for a few weeks.
 dmarc_record = "v=DMARC1; p=none; rua=mailto:dmarc@example.com; fo=1"
 
-# Everything else the domain answers for today. Apex and www A/AAAA records are
-# ignored here — the edge module owns those and points them at CloudFront.
+# Everything else the domain answers for today — verification records,
+# third-party CNAMEs, subdomains. Apex and www A/AAAA records are ignored here:
+# the edge module owns those and points them at CloudFront.
+#
+# ttl defaults to 3600 and can be omitted.
+#
+# Domain-ownership verification is the easiest thing to lose, because it does
+# not look like anything. Google Workspace verifies by TXT for some domains and
+# by a random-looking CNAME for others; the CNAME form gives no hint of what it
+# is for. Losing it un-verifies the domain, and nobody notices for weeks.
 dns_records = [
   # { name = "shop", type = "CNAME", records = ["shops.example.net"] },
+  # { name = "",     type = "TXT",   records = ["google-site-verification=..."] },
+  # { name = "abc123def456", type = "CNAME", records = ["gv-xxxxxxxx.dv.googlehosted.com"] },
 ]
+

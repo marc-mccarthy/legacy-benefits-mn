@@ -63,6 +63,16 @@ output "medicarepro_webhook_secret_arn" {
   value       = aws_secretsmanager_secret.medicarepro_webhook.arn
 }
 
+# Surfaced for the same reason as the one above: it ships as REPLACE_ME with
+# ignore_changes, so nothing will ever tell you it is still a placeholder. An
+# unpopulated Turnstile secret does not break the page — the form renders and
+# submits, and verification simply fails, which reads as "the form is broken"
+# rather than "a secret was never filled in".
+output "turnstile_secret_arn" {
+  description = "Populate this secret by hand with the Cloudflare Turnstile secret key"
+  value       = aws_secretsmanager_secret.turnstile.arn
+}
+
 output "outbox_token" {
   description = "Bearer token the scheduler presents to the outbox drain endpoint"
   value       = random_password.outbox_token.result
@@ -71,4 +81,17 @@ output "outbox_token" {
 
 output "has_certificate" {
   value = local.has_certificate
+}
+
+output "target_group_name" {
+  description = "Used to look up target health, which is how you check the app now that the ALB itself only answers CloudFront."
+  value       = aws_lb_target_group.this.name
+}
+
+output "cluster_arn" {
+  value = aws_ecs_cluster.this.arn
+}
+
+output "service_arn" {
+  value = aws_ecs_service.this.id
 }

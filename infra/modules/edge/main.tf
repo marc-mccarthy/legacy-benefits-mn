@@ -13,7 +13,18 @@ locals {
   # No domain: CloudFront serves on its own *.cloudfront.net hostname with the
   # default certificate, so no ACM certificate and no Route 53 records are
   # created at all.
-  has_domain = var.domain_name != "" && var.hosted_zone_id != ""
+  #
+  # Keyed on domain_name alone. hosted_zone_id is module.dns[0].zone_id whenever
+  # the zone is created in the same run, so it is unknown until apply — and this
+  # local gates `count` on the ACM certificate. Terraform cannot plan a count it
+  # cannot resolve, which made a greenfield apply with a domain fail with
+  # "Invalid count argument". The caller already guarantees the pairing: it
+  # passes an empty domain_name whenever there is no domain, and its own
+  # variable validations require a zone whenever there is one.
+  #
+  # hosted_zone_id is still used below, but only as an attribute on records,
+  # where an apply-time value is perfectly fine.
+  has_domain = var.domain_name != ""
 
   # People type "www" whether or not it is advertised, so it is covered by
   # default: added to the certificate, aliased on the distribution, and given
@@ -41,22 +52,33 @@ resource "aws_acm_certificate" "this" {
 }
 
 resource "aws_route53_record" "validation" {
-  for_each = local.has_domain ? {
-    # Keyed by the record name, not the domain: a certificate covering both
-    # example.com and www.example.com can emit the same validation record
-    # twice, which would be a duplicate map key.
-    for opt in aws_acm_certificate.this[0].domain_validation_options :
-    opt.resource_record_name => {
-      name   = opt.resource_record_name
-      record = opt.resource_record_value
-      type   = opt.resource_record_type
-    }
-  } : {}
+  # Keyed by domain name, which is an input and therefore known at plan time.
+  #
+  # This used to key on opt.resource_record_name, taken from the certificate's
+  # domain_validation_options. Those are only populated once ACM issues the
+  # request, so for a NEW certificate the map keys were unknown and the plan
+  # failed with "Invalid for_each argument" — Terraform will tolerate unknown
+  # for_each *values*, never unknown *keys*.
+  #
+  # The original comment worried about a duplicate key when the apex and a SAN
+  # emit the same validation record. That case is why allow_overwrite is set:
+  # two instances writing one record is a harmless overwrite rather than a
+  # planning error. Distinct SANs like www get distinct records anyway.
+  for_each = local.has_domain ? toset(local.all_domains) : toset([])
 
-  zone_id         = var.hosted_zone_id
-  name            = each.value.name
-  type            = each.value.type
-  records         = [each.value.record]
+  zone_id = var.hosted_zone_id
+  name = one([
+    for opt in aws_acm_certificate.this[0].domain_validation_options :
+    opt.resource_record_name if opt.domain_name == each.value
+  ])
+  type = one([
+    for opt in aws_acm_certificate.this[0].domain_validation_options :
+    opt.resource_record_type if opt.domain_name == each.value
+  ])
+  records = [one([
+    for opt in aws_acm_certificate.this[0].domain_validation_options :
+    opt.resource_record_value if opt.domain_name == each.value
+  ])]
   ttl             = 60
   allow_overwrite = true
 }
@@ -90,6 +112,31 @@ resource "aws_wafv2_web_acl" "this" {
       managed_rule_group_statement {
         vendor_name = "AWS"
         name        = "AWSManagedRulesCommonRuleSet"
+
+        # SizeRestrictions_BODY blocks request bodies over 8 KB, which is every
+        # real photograph. Left on, the CMS is effectively read-only for images:
+        # the upload 403s at the edge, the admin shows a generic failure, and
+        # nothing appears in the ECS logs because the request never reaches the
+        # origin. Counted rather than removed, so the hits are still visible in
+        # the WAF metrics.
+        #
+        # Payload's own limits remain the real bound on upload size.
+        rule_action_override {
+          name = "SizeRestrictions_BODY"
+          action_to_use {
+            count {}
+          }
+        }
+
+        # Same class of problem: rich-text content from the Lexical editor is
+        # HTML-shaped by nature, and this rule reads legitimate CMS bodies as
+        # reflected XSS. It fires on saving a page, not on visitor traffic.
+        rule_action_override {
+          name = "CrossSiteScripting_BODY"
+          action_to_use {
+            count {}
+          }
+        }
       }
     }
     visibility_config {
@@ -223,9 +270,20 @@ resource "aws_cloudfront_distribution" "this" {
     cache_policy_id        = data.aws_cloudfront_cache_policy.optimized.id
   }
 
+  # /api/media/file/*, not /media/*.
+  #
+  # The old pattern could never match. Payload's s3Storage is configured without
+  # generateFileURL or disablePayloadAccessControl, so uploads are served from
+  # /api/media/file/<name> — verified against the rendered page. Every image
+  # therefore fell through to the default behaviour, which uses CachingDisabled,
+  # so each one streamed S3 -> ECS task -> ALB -> CloudFront on every request,
+  # uncached, burning Fargate CPU on a photograph-heavy site.
+  #
+  # Pointed at the ALB rather than the S3 origin because that is genuinely where
+  # these URLs resolve: Payload applies its own access control on the way past.
   ordered_cache_behavior {
-    path_pattern           = "/media/*"
-    target_origin_id       = local.media_origin_id
+    path_pattern           = "/api/media/file/*"
+    target_origin_id       = local.alb_origin_id
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]

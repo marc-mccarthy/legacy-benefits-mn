@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import type {
   InputHTMLAttributes,
   ReactNode,
@@ -6,8 +9,12 @@ import type {
 } from "react";
 import { cn } from "@/lib/utils";
 
+// border-border-control, not border-border-subtle. These controls share the
+// page's background, so the border is the only thing marking where to type;
+// measured against the paper it was 1.28:1, well under the 3:1 WCAG 1.4.11
+// asks for the boundary of a control. See the token note in globals.css.
 const controlClasses =
-  "border-border-subtle rounded-(--radius-control) bg-surface text-on-surface w-full border px-4 py-3 text-base " +
+  "border-border-control rounded-(--radius-control) bg-surface text-on-surface w-full border px-4 py-3 text-base " +
   "focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-1 " +
   "aria-[invalid=true]:border-red-600";
 
@@ -34,7 +41,11 @@ export function Field({
   return (
     <div className="space-y-2">
       {label ? (
-        <label htmlFor={htmlFor} className="block text-sm font-semibold">
+        // 16px, matching the input. Labels, hints and errors were 14px against
+        // a 16px control, which put the instruction below the thing it
+        // instructs — backwards for readers with presbyopia, and worst on the
+        // error text, which is the one message that has to land.
+        <label htmlFor={htmlFor} className="block text-base font-semibold">
           {label}
           {/* The asterisk is hidden from assistive tech and "required" is
               conveyed by the control's own required/aria-required attribute.
@@ -49,7 +60,7 @@ export function Field({
         </label>
       ) : null}
       {hint ? (
-        <p id={`${htmlFor}-hint`} className="text-muted text-sm">
+        <p id={`${htmlFor}-hint`} className="text-muted text-base">
           {hint}
         </p>
       ) : null}
@@ -58,7 +69,7 @@ export function Field({
         <p
           id={`${htmlFor}-error`}
           role="alert"
-          className="text-sm text-red-700"
+          className="text-base text-red-700"
         >
           {error}
         </p>
@@ -97,8 +108,21 @@ export function FormStatus({
   title: string;
   children?: ReactNode;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Move focus to the outcome. Submitting replaces the form with this message,
+  // which otherwise leaves focus on a button that no longer exists — a keyboard
+  // or screen-reader user is dropped back at the top of the document with no
+  // idea whether anything happened. aria-live announces it; focus makes it
+  // reachable and keeps the next Tab somewhere sensible.
+  useEffect(() => {
+    ref.current?.focus();
+  }, []);
+
   return (
     <div
+      ref={ref}
+      tabIndex={-1}
       role="status"
       aria-live="polite"
       className={cn(
@@ -109,7 +133,7 @@ export function FormStatus({
       )}
     >
       <p className="font-semibold">{title}</p>
-      {children ? <p className="mt-1 text-sm">{children}</p> : null}
+      {children ? <p className="mt-1 text-base">{children}</p> : null}
     </div>
   );
 }

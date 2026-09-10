@@ -69,7 +69,6 @@ export function RenderBlocks({
                 scheme={scheme}
                 heading={block.heading as string}
                 subheading={block.subheading as string | null}
-                video={block.video as never}
                 poster={block.poster}
                 ctaLabel={block.ctaLabel as string | null}
                 ctaHref={block.ctaHref as string | null}

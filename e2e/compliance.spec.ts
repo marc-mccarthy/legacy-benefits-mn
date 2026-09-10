@@ -26,6 +26,27 @@ test.describe("CMS-required disclosures", () => {
         page.getByText("not associated, endorsed, or authorized").first(),
       ).toBeVisible();
     });
+
+    test(`no disclosure is set below 16px on ${path}`, async ({ page }) => {
+      await page.goto(path);
+
+      // CMS requires disclosures at 12 point ≈ 16px. This is a size floor, not
+      // a style preference: `text-sm` (14px ≈ 10.5pt) shipped on four pages
+      // because the requirement lived in a comment rather than in a test.
+      const undersized = await page.evaluate(() =>
+        [...document.querySelectorAll("[data-compliance]")]
+          .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 16)
+          .map((el) => ({
+            size: getComputedStyle(el).fontSize,
+            text: (el.textContent ?? "").trim().slice(0, 60),
+          })),
+      );
+
+      expect(
+        undersized,
+        `disclosures below the 12pt floor: ${JSON.stringify(undersized)}`,
+      ).toEqual([]);
+    });
   }
 
   test("footer links to disclosures, privacy, and opt-out", async ({
@@ -77,6 +98,59 @@ test.describe("Scope of Appointment", () => {
     await expect(
       page.getByText("does not automatically enroll me in any plan"),
     ).toBeVisible();
+  });
+});
+
+test.describe("cookie consent", () => {
+  test("both buttons record a choice and dismiss the banner", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const banner = page.getByRole("dialog", { name: "Cookie choices" });
+    await expect(banner).toBeVisible();
+    await banner.getByRole("button", { name: "Reject" }).click();
+
+    await expect(banner).toBeHidden();
+    await expect
+      .poll(() =>
+        page.evaluate(() => localStorage.getItem("consent-choice-v1")),
+      )
+      .toBe("denied");
+  });
+
+  test("is never server-rendered, so its buttons are always live", async ({
+    page,
+  }) => {
+    // The banner's visibility depends on localStorage and Global Privacy
+    // Control, neither of which the server can see. Emitting it server-side
+    // meant every visitor who had already chosen — and everyone sending GPC —
+    // got markup React then dropped from the client tree but left behind in the
+    // DOM: a banner at full opacity with no event handlers, where neither
+    // button did anything. Nothing about it looked broken.
+    //
+    // Asserting on the raw HTML rather than on the rendered page, because the
+    // symptom only exists before hydration.
+    const html = await (await page.request.get("/")).text();
+    expect(html).not.toContain("Cookie choices");
+  });
+
+  test("a stored choice keeps the banner away on the next visit", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page
+      .getByRole("dialog", { name: "Cookie choices" })
+      .getByRole("button", { name: "Accept" })
+      .click();
+
+    await page.reload();
+
+    // Hidden is not enough: the orphaned-node bug left a *visible* banner that
+    // simply had no handlers, so assert it is absent from the DOM entirely.
+    await expect(
+      page.getByRole("dialog", { name: "Cookie choices" }),
+    ).toHaveCount(0);
   });
 });
 

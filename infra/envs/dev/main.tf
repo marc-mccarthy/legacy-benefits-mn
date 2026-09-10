@@ -36,15 +36,47 @@ provider "aws" {
 locals {
   name = "${var.name}-dev"
 
-  # A custom domain is optional. Without one the stack still comes up and is
-  # served on the CloudFront distribution's own *.cloudfront.net URL, which is
-  # what `terraform output site_url` reports.
-  #
   # The zone is either created here (create_dns_zone, for migrating DNS into
   # Route 53) or referenced by id if one already exists.
-  zone_id    = var.create_dns_zone ? module.dns[0].zone_id : var.hosted_zone_id
-  has_domain = var.domain_name != "" && local.zone_id != ""
-  site_url   = local.has_domain ? "https://${var.domain_name}" : ""
+  #
+  # Managing the zone is deliberately independent of use_domain. That split is
+  # not cosmetic: ACM validates by reading a record over public DNS, so the
+  # certificate cannot be issued while the registrar still points at the old
+  # nameservers. Creating the zone and the certificate in one apply would hang
+  # for the validation resource's timeout and then fail. Migrating a live
+  # domain runs in two phases instead — see the README.
+  zone_id = var.create_dns_zone ? module.dns[0].zone_id : var.hosted_zone_id
+
+  # A custom domain is optional, and dev is expected to run without one: the
+  # stack still comes up and is served on the CloudFront distribution's own
+  # *.cloudfront.net URL, which is what `terraform output site_url` reports.
+  #
+  # Routing the hostname through here rather than reading var.domain_name
+  # downstream is what makes use_domain = false total: a real hostname left in
+  # terraform.tfvars must not reach media_host or site_url.
+  # Deliberately does NOT test local.zone_id. That value is
+  # module.dns[0].zone_id whenever the zone is created in this same run, which
+  # is unknown until apply — and has_domain gates `count` on the email module
+  # and the ACM certificate. Terraform cannot plan a count it cannot resolve, so
+  # a greenfield apply with use_domain = true failed outright with "Invalid
+  # count argument". The two-phase cutover masked it: phase 1 creates the zone
+  # with use_domain = false, so by phase 2 the id is in state and known.
+  #
+  # Dropping the test loses nothing. The validations on domain_name and
+  # hosted_zone_id already guarantee that use_domain = true implies a zone —
+  # either created here or supplied — so zone_id being non-empty was never
+  # adding a real condition, only an unknown.
+  has_domain  = var.use_domain && var.domain_name != ""
+  domain_name = local.has_domain ? var.domain_name : ""
+  site_url    = local.has_domain ? "https://${var.domain_name}" : ""
+
+  # Derived rather than required, because the only address guaranteed to pass
+  # SES is one on the domain SES just verified. Empty without a domain, which is
+  # what makes the app skip sending instead of erroring — the email module does
+  # not exist in that case either, so there would be nothing to send through.
+  ses_from_address = local.has_domain ? (
+    var.ses_from_address != "" ? var.ses_from_address : "no-reply@${var.domain_name}"
+  ) : ""
 }
 
 # Creates the hosted zone and carries over the existing records. Run this,
@@ -58,7 +90,20 @@ module "dns" {
   google_workspace_mx        = var.google_workspace_mx
   google_workspace_mx_legacy = var.google_workspace_mx_legacy
   spf_record                 = var.spf_record
+  dkim_records               = var.dkim_records
   dmarc_record               = var.dmarc_record
+  deletion_protection        = false
+}
+
+# Advisory rather than fatal — a domain may legitimately have no DKIM. But
+# creating the zone without carrying it over silently unpublishes DKIM, and
+# mail keeps flowing while quietly failing authentication, which is the failure
+# mode hardest to notice. A `check` warns; it does not block the apply.
+check "mail_records_carried_over" {
+  assert {
+    condition     = !var.create_dns_zone || !var.google_workspace_mx || length(var.dkim_records) > 0
+    error_message = "Creating a zone with Google Workspace MX but no dkim_records unpublishes DKIM. Read it off live DNS first: dig +short TXT google._domainkey.${var.domain_name}"
+  }
 }
 
 module "network" {
@@ -99,15 +144,29 @@ module "app" {
   alb_security_group_id   = module.network.alb_security_group_id
   app_security_group_id   = module.network.app_security_group_id
   certificate_arn         = module.edge.certificate_arn
+  has_certificate         = local.has_domain
   database_url_secret_arn = module.data.database_url_secret_arn
 
   image = var.image
   # Empty when there is no custom domain; the app then derives its own URL
   # from the request, so canonical links and the sitemap stay correct.
   site_url       = local.site_url
-  media_host     = var.domain_name
   business_name  = var.business_name
   business_phone = var.business_phone
+
+  # Was never passed, so it fell back to the module default of "" and the app
+  # silently skipped every send — including with use_domain = true, where SES
+  # would be fully verified and publishing DKIM while delivering nothing.
+  ses_from_address = local.ses_from_address
+
+  # Read at runtime by server components, so they belong in the task definition
+  # rather than baked in at build time like NEXT_PUBLIC_SITE_URL. Empty is a
+  # supported state for all three: the widget, the tag manager and the booking
+  # embed each render nothing rather than erroring.
+  turnstile_site_key      = var.turnstile_site_key
+  gtm_id                  = var.gtm_id
+  calendly_url            = var.calendly_url
+  lead_notification_email = var.lead_notification_email
 
   # Leads are stored and queued but not delivered until the real MedicarePRO
   # credential is in place. See infra README.
@@ -129,7 +188,7 @@ module "edge" {
   }
 
   name                              = local.name
-  domain_name                       = var.domain_name
+  domain_name                       = local.domain_name
   hosted_zone_id                    = local.zone_id
   alb_has_certificate               = local.has_domain
   alb_dns_name                      = module.app.alb_dns_name
@@ -144,7 +203,7 @@ module "email" {
   source = "../../modules/email"
 
   name           = local.name
-  domain_name    = var.domain_name
+  domain_name    = local.domain_name
   hosted_zone_id = local.zone_id
   region         = var.region
 }
@@ -173,6 +232,8 @@ module "ci" {
 
   name               = local.name
   ecr_repository_arn = module.app.ecr_repository_arn
+  cluster_arn        = module.app.cluster_arn
+  service_arn        = module.app.service_arn
   task_role_arns     = module.app.task_role_arns
   github_repository  = var.github_repository
   allowed_refs       = ["ref:refs/heads/main", "ref:refs/heads/develop"]

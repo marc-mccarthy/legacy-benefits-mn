@@ -36,7 +36,7 @@ export default async function ServiceDetailPage({ params }: Props) {
             <RichTextBody data={doc.body} />
             {/* Required wherever plan options are described. */}
             <TpmoDisclaimer
-              className="text-muted border-border-subtle border-t pt-6 text-sm leading-relaxed"
+              className="text-muted border-border-subtle border-t pt-6 leading-relaxed"
               orgCount={settings?.compliance?.orgCount ?? undefined}
               planCount={settings?.compliance?.planCount ?? undefined}
             />

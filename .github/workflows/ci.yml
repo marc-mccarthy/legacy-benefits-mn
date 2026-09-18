@@ -56,6 +56,25 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
+
+      # The backstop for the diagram atlas. The pre-commit hook runs the same two
+      # checks, but a hook is bypassable by design — `git commit --no-verify` is
+      # documented in docs/diagrams/README.md as the escape hatch — so this is the
+      # gate that actually holds.
+      #
+      # Safe here because neither check renders: they only read the committed bytes
+      # and compare them against docs/diagrams/diagrams.manifest.json. No browser, no
+      # network, nothing to install. Rendering needs mermaid-cli and a headless
+      # Chrome, which is deliberately absent from package.json and must never be
+      # pulled into a CI run to verify files that are already committed.
+      #
+      # A failure here means one of two things, and the message names which:
+      # a .mmd was edited without re-rendering its image, or a module under src/lib
+      # or src/app/api moved and D5 no longer describes the imports. Fix with
+      # `pnpm diagrams:render` on a machine with the toolchain.
+      - name: Diagrams match their sources
+        run: pnpm diagrams:check
+
       - run: pnpm test:coverage
       - run: pnpm test:integration
 
@@ -130,13 +149,32 @@ jobs:
       - name: Format check
         run: terraform fmt -check -recursive infra
 
-      - name: Validate each environment
+      # `infra/` is the only Terraform root this repository has. Verified in this
+      # run: it holds the only `.tf` files outside `infra/modules/`, and there is
+      # no environment directory beside it. `dev` was dropped and must not come
+      # back — if a second root is ever genuinely needed, it gets its own named
+      # step with its own `init` and `validate`, not a loop reinstated here. A
+      # loop over one item reads as a promise that more are coming.
+      #
+      # `-backend=false` because this configuration declares no `backend` block —
+      # confirmed by grep over `infra/**/*.tf` in this run — and none is meant to.
+      # Without the flag, `init` configures the default local backend, which is
+      # state handling CI has no business doing when all it wants is to type-check
+      # the configuration.
+      #
+      # `-input=false` because a runner has nobody to answer a prompt. An `init`
+      # that stops to ask blocks until the job's timeout kills it, which converts
+      # a fast, readable failure into a slow and silent one.
+      #
+      # `init` must precede `validate`: validation resolves module and provider
+      # installations, so it fails on a missing install rather than on the
+      # configuration when they are absent. Nothing here restores a Terraform
+      # cache and `.terraform/` contents are gitignored and untracked, so every
+      # run starts from a clean checkout and installs fresh.
+      - name: Init and validate
         run: |
-          for env in dev prod; do
-            echo "== $env =="
-            terraform -chdir="infra/envs/$env" init -backend=false -input=false
-            terraform -chdir="infra/envs/$env" validate
-          done
+          terraform -chdir=infra init -backend=false -input=false
+          terraform -chdir=infra validate
 
       - uses: bridgecrewio/checkov-action@master
         with:

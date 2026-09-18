@@ -1,0 +1,84 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Helvetica Neue, Helvetica, Arial, sans-serif","fontSize":"16px","textColor":"#0F172A","background":"#FFFFFF","lineColor":"#475569","mainBkg":"#EFF6FF","nodeBorder":"#1D4ED8","primaryColor":"#EFF6FF","primaryBorderColor":"#1D4ED8","primaryTextColor":"#0F172A","secondaryColor":"#F1F5F9","secondaryBorderColor":"#475569","secondaryTextColor":"#0F172A","tertiaryColor":"#F8FAFC","tertiaryBorderColor":"#CBD5E1","tertiaryTextColor":"#0F172A","clusterBkg":"#F8FAFC","clusterBorder":"#CBD5E1","edgeLabelBackground":"#FFFFFF","actorBkg":"#EEF2FF","actorBorder":"#4338CA","actorTextColor":"#0F172A","signalColor":"#475569","signalTextColor":"#0F172A","noteBkgColor":"#FEF3C7","noteBorderColor":"#B45309","noteTextColor":"#0F172A","activationBkgColor":"#ECFDF5","activationBorderColor":"#047857","labelBoxBkgColor":"#FEF3C7","labelBoxBorderColor":"#B45309","sequenceNumberColor":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"basis","nodeSpacing":45,"rankSpacing":60,"padding":12},"sequence":{"useMaxWidth":false,"htmlLabels":false,"mirrorActors":false,"wrap":true,"width":190}}}%%
+flowchart TB
+accTitle: How a stop request is taken, stored, and enforced on every later submission
+accDescr {
+  Two paths that meet at one table. On the left, someone asks not to be contacted.
+  The opt-out route deliberately has no Turnstile and no identity check: under
+  TCPA a revocation must be honoured through any reasonable means, and friction on
+  a stop request is itself the risk. The request is validated, the email is
+  lowercased and the phone is reduced to its last ten digits, and the row is
+  written with a hashed address. That reduction is the one canonical form, shared
+  with the validation schemas, because storage and lookup once had separate
+  versions of it and a number written differently stayed contactable. On the
+  right, a later contact form submission is captured. Before anything is queued,
+  the suppression check matches the submitted email or the submitted digits
+  against that table. A match does not discard the submission: the person did fill
+  in the form, so the lead is still stored as a record. What a match stops is the
+  outbox row, so nothing is delivered to the CRM or the dialer, and it stops the
+  acknowledgement email. The visitor still receives a success response, because
+  telling them they are suppressed would leak that someone else's record exists.
+  Releasing a suppressed lead is a human decision. A suppression row carries no
+  retention date, because it has to outlive the lead it suppresses.
+}
+
+person([Someone revoking consent])
+optOutForm["Do-not-contact form"]
+optOutRoute["/api/do-not-contact"]
+noTurnstile{{"No Turnstile, no identity check, by design"}}
+validateDnc{{"Validate the request"}}
+canonical["Lowercase the email, keep the last ten digits"]
+dncTable[("dnc_requests")]
+handled["A human actions it in the CRM and the dialer"]
+
+visitor([A later visitor])
+leadForm["Contact form"]
+leadRoute["/api/leads"]
+capture["captureLead"]
+suppressionCheck{{"isSuppressed: match email or digits"}}
+leadsTable[("leads")]
+outboxTable[("crm_outbox")]
+confirmEmail["Acknowledgement email"]
+response["201, success either way"]
+drain["Outbox drain"]
+crm[MedicarePRO CRM and dialer]
+release["Release by hand, a human decision"]
+
+person --> optOutForm
+optOutForm --> optOutRoute
+optOutRoute --> noTurnstile
+noTurnstile --> validateDnc
+validateDnc --x|fails the schema| optOutForm
+validateDnc --> canonical
+canonical -->|insert with a hashed address| dncTable
+dncTable -.->|later| handled
+
+visitor --> leadForm
+leadForm --> leadRoute
+leadRoute --> capture
+capture --> suppressionCheck
+suppressionCheck -->|reads| dncTable
+capture -->|always stored| leadsTable
+suppressionCheck -->|not suppressed| outboxTable
+suppressionCheck --x|suppressed, no outbox row| outboxTable
+suppressionCheck --x|suppressed, no acknowledgement| confirmEmail
+capture --> response
+outboxTable --> drain
+drain --> crm
+leadsTable -.->|suppressed rows wait here| release
+release -.-> crm
+
+classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
+classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
+classDef ours     fill:#ECFDF5,stroke:#047857,stroke-width:2px,color:#0F172A
+classDef guard    fill:#FEF3C7,stroke:#B45309,stroke-width:2px,color:#0F172A
+classDef vendor   fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
+classDef phi      fill:#FEE2E2,stroke:#B91C1C,stroke-width:2px,color:#0F172A
+classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
+
+class person,visitor,handled,release human
+class optOutForm,leadForm,response,confirmEmail client
+class optOutRoute,leadRoute,capture,canonical,drain ours
+class noTurnstile,validateDnc,suppressionCheck guard
+class dncTable,leadsTable,outboxTable phi
+class crm vendor
+linkStyle 4,15,16 stroke:#B91C1C,stroke-width:3px

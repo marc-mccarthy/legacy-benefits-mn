@@ -27,6 +27,10 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "seed": "tsx src/scripts/seed.ts",
+    "diagrams:derive": "node scripts/generate-derived-diagrams.mjs",
+    "diagrams:render": "node scripts/generate-derived-diagrams.mjs && node scripts/generate-diagrams.mjs",
+    "diagrams:check": "node scripts/generate-derived-diagrams.mjs --check && node scripts/generate-diagrams.mjs --check",
+    "diagrams:verify": "node scripts/generate-derived-diagrams.mjs --check && node scripts/generate-diagrams.mjs --check --render",
     "prepare": "husky"
   },
   "dependencies": {

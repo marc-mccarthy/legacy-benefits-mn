@@ -1,1 +1,7 @@
 pnpm exec lint-staged
+
+# Only reads files: no network, no browser, no renderer. Exits immediately unless
+# the commit touches docs/diagrams/*.mmd or src/lib | src/app/api, so an ordinary
+# commit pays nothing for it. See the header of the script for what each trigger
+# catches and why. Bypass with: git commit --no-verify
+node scripts/check-diagrams-staged.mjs

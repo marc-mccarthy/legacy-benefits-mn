@@ -1,7 +1,7 @@
 /**
  * Durations are milliseconds; `motion/react` takes `duration` in seconds, so
  * consumers divide by 1000. The same nine values exist as CSS custom properties
- * in `src/app/globals.css`; nothing compares the two files.
+ * in `src/app/globals.css`; `motion.test.ts` compares the two files.
  */
 
 export const DURATION_STATE = 140;

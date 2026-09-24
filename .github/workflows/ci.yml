@@ -104,8 +104,12 @@ jobs:
 
       - run: pnpm exec playwright install --with-deps chromium
 
-      # The compliance and accessibility specs are release gates: a failure
-      # here means the site is not fit to publish.
+      # scripts/serve-e2e.mjs serves out/ and mounts api-bundle/index.mjs as the
+      # API, because `next start` cannot serve an `output: "export"` build.
+      # Neither directory exists until these two run.
+      - run: pnpm build
+      - run: node scripts/build-api-bundle.mjs
+
       - run: pnpm test:e2e
 
       - uses: actions/upload-artifact@v4
@@ -143,7 +147,7 @@ jobs:
 
       # `exit-code: "0"` reports findings without failing the job.
       - name: Scan infra for misconfiguration
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           scan-type: config
           scan-ref: infra

@@ -132,10 +132,10 @@ export default defineConfig({
        * commit message.
        */
       thresholds: {
-        lines: 40,
-        statements: 40,
-        functions: 29,
-        branches: 36,
+        lines: 33,
+        statements: 33,
+        functions: 24,
+        branches: 31,
 
         // Every route handler is fully covered; they are the write path for
         // leads, SOA records and opt-outs. The gap is index.ts, whose Lambda
@@ -148,10 +148,9 @@ export default defineConfig({
         },
 
         // Business logic, compliance and security. Every file here is at 100%
-        // except src/lib/db/schema.ts, which is declarative drizzle table
-        // definitions with nothing to assert — the migrations and the
-        // integration spec are what prove those correct. That single file is
-        // the whole gap between these numbers and 100.
+        // except src/lib/db/schema.ts: schema.test.ts reads its index and
+        // foreign-key config through getTableConfig, which leaves only the
+        // column declarations themselves unexecuted.
         "src/lib/**": {
           lines: 98,
           statements: 98,

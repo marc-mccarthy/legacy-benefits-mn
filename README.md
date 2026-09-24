@@ -1,4 +1,4 @@
-# Legacy Benefits Group LLC Website
+# Legacy Benefits Group Website
 
 Marketing site and lead-capture system for a Medicare insurance practice in
 Minnesota. Next.js 16 / React 19, exported to static HTML, served from S3 through

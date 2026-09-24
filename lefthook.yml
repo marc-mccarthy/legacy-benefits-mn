@@ -15,12 +15,12 @@ pre-commit:
         piped: true
         jobs:
           - name: prettier
-            glob: "*.{ts,tsx,json,css,md,yml,yaml}"
+            glob: "*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}"
             run: pnpm exec prettier --write {staged_files}
             stage_fixed: true
 
           - name: eslint
-            glob: "*.{ts,tsx}"
+            glob: "*.{ts,tsx,js,jsx,mjs,cjs}"
             run: pnpm exec eslint --fix {staged_files}
             stage_fixed: true
 
@@ -54,7 +54,7 @@ pre-commit:
             run: pnpm test:unit
 
           - name: prettier-check
-            glob: "*.{ts,tsx,json,css,md,yml,yaml}"
+            glob: "*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}"
             run: pnpm exec prettier --check {staged_files}
 
           - name: diagrams-check

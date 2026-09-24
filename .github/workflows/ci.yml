@@ -147,7 +147,9 @@ jobs:
 
       # `exit-code: "0"` reports findings without failing the job.
       - name: Scan infra for misconfiguration
-        uses: aquasecurity/trivy-action@v0.28.0
+        # Releases before v0.33.1 pin aquasecurity/setup-trivy by tag, and the
+        # tags they name have since been deleted, so they fail to resolve.
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: infra

@@ -1,10 +1,9 @@
 # Diagram sources
 
-The Mermaid source of every diagram in this atlas, one fence each, in `LEGEND` then `D1`
-through `D8` order. Each fence is byte-identical to the `.mmd` file beside it, so a platform
-that renders Mermaid in Markdown draws the same diagram this repository committed as an image.
+Every diagram in this atlas, one fence each, in `LEGEND` then `D1` through `D8` order.
+Each fence is byte-identical to the `.mmd` file beside it.
 
-This file is generated. Run `pnpm diagrams:render` to rewrite it; never edit it by hand.
+This file is generated. Run `pnpm diagrams:build` to rewrite it; never edit it by hand.
 
 <details>
 <summary>The key — shapes, colours and line styles</summary>
@@ -98,8 +97,8 @@ accDescr {
   else, so the public address cannot be dialled directly. CloudFront forwards to
   Caddy on the single instance, which terminates origin TLS using a certificate it
   renews over DNS-01, and proxies inward to the Next.js application container.
-  The application reads content from Payload's tables and writes lead, Scope of
-  Appointment and do-not-contact records to the same Postgres container, whose
+  The application renders content authored in src/content and writes lead, Scope
+  of Appointment and do-not-contact records to the Postgres container, whose
   data directory is a bind mount on a separate EBS volume that outlives the
   instance. Images are served from an S3 bucket. Three outbound dependencies sit
   to the side: Cloudflare Turnstile verifies that a form submitter is human, SES
@@ -115,7 +114,7 @@ browser[Browser]
 edge{{CloudFront}}
 originSg{{"Security group: CloudFront prefix list only"}}
 caddy[["Caddy, origin TLS"]]
-app["Next.js 16 + Payload CMS"]
+app["Next.js 16, static export"]
 postgres[("Postgres container")]
 ebs[("EBS data volume")]
 mediaBucket[("S3 media bucket")]
@@ -167,61 +166,55 @@ linkStyle 4,10,17 stroke:#B91C1C,stroke-width:3px
 </details>
 
 <details>
-<summary>D2 — CMS blocks to a rendered page</summary>
+<summary>D2 — a content module to a rendered page</summary>
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"fontFamily":"Helvetica Neue, Helvetica, Arial, sans-serif","fontSize":"16px","textColor":"#0F172A","background":"#FFFFFF","lineColor":"#475569","mainBkg":"#EFF6FF","nodeBorder":"#1D4ED8","primaryColor":"#EFF6FF","primaryBorderColor":"#1D4ED8","primaryTextColor":"#0F172A","secondaryColor":"#F1F5F9","secondaryBorderColor":"#475569","secondaryTextColor":"#0F172A","tertiaryColor":"#F8FAFC","tertiaryBorderColor":"#CBD5E1","tertiaryTextColor":"#0F172A","clusterBkg":"#F8FAFC","clusterBorder":"#CBD5E1","edgeLabelBackground":"#FFFFFF","actorBkg":"#EEF2FF","actorBorder":"#4338CA","actorTextColor":"#0F172A","signalColor":"#475569","signalTextColor":"#0F172A","noteBkgColor":"#FEF3C7","noteBorderColor":"#B45309","noteTextColor":"#0F172A","activationBkgColor":"#ECFDF5","activationBorderColor":"#047857","labelBoxBkgColor":"#FEF3C7","labelBoxBorderColor":"#B45309","sequenceNumberColor":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"basis","nodeSpacing":45,"rankSpacing":60,"padding":12},"sequence":{"useMaxWidth":false,"htmlLabels":false,"mirrorActors":false,"wrap":true,"width":190}}}%%
 flowchart TB
-accTitle: How an editor's page in the CMS becomes a rendered page
+accTitle: How an authored content module becomes a rendered page
 accDescr {
-  A top-to-bottom map of one page render. An editor arranges blocks in the Payload
-  admin, which stores them as a layout array on a Pages document. When a visitor
-  asks for a route, the server component fetches everything it needs in parallel
-  through the Local API, which runs in process rather than over HTTP. Site
-  settings are cached for five minutes under a tag; the collection queries are
-  not. The fetched documents are handed to the block renderer as a single data
-  bundle, so an editor adding blocks cannot change how many queries the page runs.
-  The renderer switches on each block's type and returns the matching section
-  component. Ten block types are defined and all ten are handled. If no page
-  document exists for the route, the page falls back to a default composition
-  built from the collections, and only when those are empty too does it show the
-  empty-page notice.
+  A top-to-bottom map of one page render. Content is authored as TypeScript
+  modules under src/content. At build time the route's server component imports
+  the modules it needs, resolves the business identity from the environment, and
+  gathers the collections into a single data bundle. The home page's block list
+  comes from home.ts. The renderer switches on each block's type and returns the
+  matching section component; ten block types are defined and all ten are
+  handled. Because next.config sets output export, every route is rendered once
+  during the build into out/ and deployed as static files — no request reaches a
+  database, and there is no runtime content fetch to cache.
 }
 
-editor([Editor])
-admin["Payload admin"]
-pagesDoc[("Pages document, layout array")]
-contentTables[("Payload content tables")]
-visitor([Visitor])
+author([Author])
+contentModules[("src/content/*.ts")]
+homeBlocks[("home.ts, the block list")]
+env[/"BUSINESS_NAME and friends"/]
+build["next build, output: export"]
 route["Server component for the route"]
-localApi[["Local API, in process"]]
-siteSettings[("Site settings, cached 5 minutes")]
-collections[("Services, Events, Articles, Testimonials, Carriers")]
+identity["getBusinessIdentity"]
 blockData[/"One data bundle"/]
 renderBlocks{{"RenderBlocks, switch on blockType"}}
 sections["Ten section components"]
-fallback["Default composition from collections"]
-emptyNotice["EmptyPageNotice"]
+out[("out/, static HTML")]
+visitor([Visitor])
+cdn["CloudFront and S3"]
 html[Rendered page]
 
-editor -->|arranges blocks| admin
-admin -->|writes| pagesDoc
-pagesDoc -->|stored in| contentTables
-visitor -->|requests a route| route
-route -->|one parallel fetch| localApi
-localApi -->|findGlobal| siteSettings
-localApi -->|find| collections
-siteSettings -->|read from| contentTables
-collections -->|read from| contentTables
-localApi -->|page document| pagesDoc
-collections -->|gathered into| blockData
-route -->|layout plus data| renderBlocks
+author -->|edits| contentModules
+contentModules -->|includes| homeBlocks
+build -->|renders every route| route
+route -->|imports| contentModules
+route -->|calls| identity
+env -->|read by| identity
+identity -->|name, phone, address| blockData
+contentModules -->|gathered into| blockData
+homeBlocks -->|layout| renderBlocks
 blockData -->|passed whole| renderBlocks
 renderBlocks -->|one per block| sections
-sections ==>|composed into| html
-route -.->|no page document authored| fallback
-fallback -.->|collections have rows| html
-fallback --x|collections are empty too| emptyNotice
+sections ==>|written to| out
+out -->|synced by deploy| cdn
+visitor -->|requests a route| cdn
+cdn ==>|serves| html
+identity --x|BUSINESS_NAME unset| build
 
 classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
 classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
@@ -231,11 +224,11 @@ classDef vendor   fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
 classDef phi      fill:#FEE2E2,stroke:#B91C1C,stroke-width:2px,color:#0F172A
 classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
-class editor,visitor human
-class admin,html client
-class route,localApi,sections,fallback,emptyNotice ours
+class author,visitor human
+class cdn,html client
+class build,route,identity,sections ours
 class renderBlocks guard
-class pagesDoc,contentTables,siteSettings,collections,blockData artifact
+class contentModules,homeBlocks,env,blockData,out artifact
 ```
 
 </details>
@@ -254,7 +247,8 @@ accDescr {
   filled honeypot field is accepted with a success status and nothing is stored,
   so a bot learns nothing from the response. Turnstile is asked whether the
   submitter is human and a failure is rejected. The business identity is read from
-  site settings, because the consent text has to name the specific business. The
+  the environment, because the consent text has to name the specific business, and
+  a missing BUSINESS_NAME throws rather than resolving to a default. The
   capture step checks the suppression list first, then opens one transaction: the
   lead row is inserted with the consent text regenerated on the server, the
   disclosure version, a hashed address and a retention date ten years out. Only if
@@ -291,7 +285,7 @@ alt not verified
   R-->>V: 403 could not verify
 end
 T-->>R: yes
-R->>DB: read business identity from site settings
+R->>R: read business identity from the environment
 R->>S: has this email or phone opted out
 S-->>R: suppressed, yes or no
 Note over R,DB: one transaction
@@ -331,10 +325,8 @@ end
 flowchart TB
 accTitle: The four regulated tables, what each one proves, and what links them
 accDescr {
-  The four tables the lead pipeline owns, drawn apart from the content tables
-  because they are governed differently. Drizzle owns all four; Payload owns the
-  content tables beside them in the same database, and neither migrator may touch
-  the other's. Leads carry the TCPA consent evidence: the exact disclosure text
+  The four tables the lead pipeline owns, which are the only tables in the
+  database; drizzle-kit owns all four. Leads carry the TCPA consent evidence: the exact disclosure text
   shown, its version, and the moment of agreement, because a boolean is not
   evidence. Scope of Appointment records carry a signature, a signing time, the
   product types agreed to and the attestation text with its version. Do-not-contact
@@ -353,10 +345,6 @@ subgraph regulated ["Owned by drizzle-kit, ten-year retention"]
   soa[("soa_submissions")]
   dnc[("dnc_requests")]
   outbox[("crm_outbox")]
-end
-
-subgraph content ["Owned by payload migrate"]
-  payloadTables[("Pages, Services, Articles, Media, Users …")]
 end
 
 leadsCols["consent_text, consent_version, consented_at
@@ -396,7 +384,6 @@ secret -.->|salts| leads
 secret -.->|salts| soa
 secret -.->|salts| dnc
 
-regulated -.->|same database, separate migrator| content
 
 classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
 classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
@@ -408,7 +395,6 @@ classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
 class leads,soa,dnc,outbox phi
 class leadsCols,soaCols,dncCols,outboxCols,secret artifact
-class payloadTables client
 class capture,drain ours
 class suppression guard
 class crm vendor
@@ -432,15 +418,16 @@ accDescr {
   and the one that decides whether a person may be contacted are drawn as gates, because their
   job is to reject. The database schema is drawn as regulated data, because that is what it
   declares. Test files are excluded: a test importing a module says nothing about how the
-  application is wired. 32 modules and 48 imports are drawn.
+  application is wired. 34 modules and 53 imports are drawn.
 }
 
 subgraph Routehandlers ["Route handlers"]
-  leadsRoute["/leads"]
-  soaRoute["/soa"]
-  dncRoute["/do-not-contact"]
-  jobsRoute["/jobs/outbox"]
-  healthRoute["/health"]
+  apiRouter["index.ts"]
+  leadsRoute["leads.ts"]
+  soaRoute["soa.ts"]
+  dncRoute["do-not-contact.ts"]
+  jobsRoute["jobs-outbox.ts"]
+  healthRoute["health.ts"]
 end
 
 subgraph Requestsafety ["Request safety"]
@@ -475,8 +462,8 @@ end
 subgraph Storageandcontent ["Storage and content"]
   db["db/index.ts"]
   dbSchema["db/schema.ts"]
-  payloadLib["payload.ts"]
   media["media.ts"]
+  imageLoader["image-loader.ts"]
 end
 
 subgraph Outboundandconfiguration ["Outbound and configuration"]
@@ -485,11 +472,16 @@ subgraph Outboundandconfiguration ["Outbound and configuration"]
   siteUrl["site-url.ts"]
   business["business.ts"]
   announcement["announcement.ts"]
+  motion["motion.ts"]
   utils["utils.ts"]
 end
 
+apiRouter --> dncRoute
+apiRouter --> healthRoute
+apiRouter --> jobsRoute
+apiRouter --> leadsRoute
+apiRouter --> soaRoute
 business --> env
-business --> payloadLib
 crm --> crmTypes
 crm --> env
 crm --> mock
@@ -521,6 +513,7 @@ leadsRoute --> turnstile
 mock --> crmTypes
 outbox --> crm
 outbox --> db
+siteUrl --> env
 soa --> db
 soa --> disclosures
 soa --> leadSchema
@@ -545,118 +538,11 @@ classDef vendor   fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
 classDef phi      fill:#FEE2E2,stroke:#B91C1C,stroke-width:2px,color:#0F172A
 classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
-class leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,leadService,leadSchema,outbox,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,utils ours
+class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,leadService,leadSchema,outbox,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,utils ours
 class turnstile,request,suppression guard
 class webhook,zapier,mock,email vendor
 class dbSchema phi
-class db,payloadLib,media,env,siteUrl,business,announcement artifact
-```
-
-</details>
-
-<details>
-<summary>D6 — the six Terraform modules</summary>
-
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Helvetica Neue, Helvetica, Arial, sans-serif","fontSize":"16px","textColor":"#0F172A","background":"#FFFFFF","lineColor":"#475569","mainBkg":"#EFF6FF","nodeBorder":"#1D4ED8","primaryColor":"#EFF6FF","primaryBorderColor":"#1D4ED8","primaryTextColor":"#0F172A","secondaryColor":"#F1F5F9","secondaryBorderColor":"#475569","secondaryTextColor":"#0F172A","tertiaryColor":"#F8FAFC","tertiaryBorderColor":"#CBD5E1","tertiaryTextColor":"#0F172A","clusterBkg":"#F8FAFC","clusterBorder":"#CBD5E1","edgeLabelBackground":"#FFFFFF","actorBkg":"#EEF2FF","actorBorder":"#4338CA","actorTextColor":"#0F172A","signalColor":"#475569","signalTextColor":"#0F172A","noteBkgColor":"#FEF3C7","noteBorderColor":"#B45309","noteTextColor":"#0F172A","activationBkgColor":"#ECFDF5","activationBorderColor":"#047857","labelBoxBkgColor":"#FEF3C7","labelBoxBorderColor":"#B45309","sequenceNumberColor":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"basis","nodeSpacing":45,"rankSpacing":60,"padding":12},"sequence":{"useMaxWidth":false,"htmlLabels":false,"mirrorActors":false,"wrap":true,"width":190}}}%%
-flowchart TB
-accTitle: The six Terraform modules and the resources each one owns
-accDescr {
-  One Terraform root calls six modules. The dns module owns the hosted zone and
-  the mail records that travel with it, which is why its variables file is
-  irreplaceable. The network module owns the VPC, one public subnet, an S3
-  gateway endpoint and the origin security group, whose only inbound rule admits
-  CloudFront's managed prefix list; there is no SSH rule and no Postgres rule, and
-  its single route to the whole internet is on egress. The compute module owns the
-  one instance, its Elastic IP, the separate EBS data volume that carries the
-  database directory, and the Systems Manager document a deploy is sent through.
-  That document takes two image references, not a script, which is what stops the
-  deploy role from being a root shell on the box. The app module owns the ECR
-  repository, the media bucket, the generated secrets, every parameter the box
-  reads at boot, the instance role and the log group. The edge module owns the
-  certificate, validated in us-east-1, the CloudFront distribution, and the
-  records pointing the site at it over both address families. The ci module owns
-  the GitHub OIDC provider and the role a workflow assumes, so no AWS keys are
-  stored in GitHub.
-}
-
-root["Terraform root"]
-
-subgraph dns ["modules/dns"]
-  zone[("Route 53 hosted zone")]
-  mail["MX, SPF, DKIM, DMARC, carried-over records"]
-end
-
-subgraph network ["modules/network"]
-  vpc["VPC, public subnet, internet gateway"]
-  s3Endpoint["S3 gateway endpoint"]
-  sg{{"Origin security group, CloudFront prefix list only"}}
-end
-
-subgraph compute ["modules/compute"]
-  instance["One EC2 instance"]
-  eip["Elastic IP"]
-  dataVolume[("EBS data volume")]
-  ssmDoc[["SSM deploy document, two image parameters"]]
-end
-
-subgraph app ["modules/app"]
-  ecr[("ECR repository")]
-  media[("S3 media bucket")]
-  params[("SSM parameters and generated secrets")]
-  instanceRole["Instance role and profile"]
-  logGroup[("CloudWatch log group")]
-end
-
-subgraph edge ["modules/edge"]
-  cert["ACM certificate, us-east-1"]
-  cloudfront{{CloudFront distribution}}
-  siteRecords["Site records, A and AAAA"]
-end
-
-subgraph ci ["modules/ci"]
-  oidc["GitHub OIDC provider"]
-  deployRole["Deploy role and policy"]
-end
-
-root --> dns
-root --> network
-root --> app
-root --> compute
-root --> edge
-root --> ci
-
-zone --- mail
-cloudfront -->|admitted by| sg
-sg -->|protects| instance
-eip -->|public address of| instance
-dataVolume -->|carries the database directory| instance
-instance -->|assumes| instanceRole
-instanceRole -->|reads at boot| params
-instanceRole -->|pulls images from| ecr
-instanceRole -->|reads and writes| media
-instanceRole -->|writes| logGroup
-instance -->|reaches the bucket without leaving the VPC| s3Endpoint
-cert -->|served by| cloudfront
-zone -->|validates| cert
-siteRecords -->|alias to| cloudfront
-zone --- siteRecords
-deployRole -->|sends a command to| ssmDoc
-ssmDoc -->|runs the deploy on| instance
-oidc -->|lets a workflow assume| deployRole
-
-classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
-classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
-classDef ours     fill:#ECFDF5,stroke:#047857,stroke-width:2px,color:#0F172A
-classDef guard    fill:#FEF3C7,stroke:#B45309,stroke-width:2px,color:#0F172A
-classDef vendor   fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
-classDef phi      fill:#FEE2E2,stroke:#B91C1C,stroke-width:2px,color:#0F172A
-classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
-
-class root,vpc,s3Endpoint,instance,eip,instanceRole,siteRecords,mail,oidc,deployRole ours
-class sg,cloudfront,ssmDoc guard
-class dataVolume phi
-class zone,ecr,media,params,logGroup,cert artifact
+class db,media,imageLoader,env,siteUrl,business,announcement,motion artifact
 ```
 
 </details>
@@ -670,9 +556,9 @@ flowchart TB
 accTitle: What runs between a push and the new release serving
 accDescr {
   A push to main starts two workflows. The checks workflow runs three jobs against
-  a throwaway Postgres: quality applies both migrators and then lints, checks
+  a throwaway Postgres: quality applies the migrations and then lints, checks
   formatting, type checks and runs unit and integration tests; the end-to-end job
-  applies both migrators, seeds content and runs the Playwright suite, whose
+  applies the migrations and runs the Playwright suite, whose
   accessibility and compliance specs are release gates; the Terraform job checks
   formatting and validates the stack. The deploy workflow runs on a native arm64
   runner because the instance is Graviton. It assumes a role over OIDC rather than
@@ -707,7 +593,7 @@ end
 subgraph box ["On the instance, deploy script"]
   pull["Pull both images first"]
   pgUp["Bring Postgres up and wait for healthy"]
-  migrateRun{{"Run the migrate container: payload migrate, then drizzle-kit migrate"}}
+  migrateRun{{"Run the migrate container: drizzle-kit migrate"}}
   appUp["Bring the application up and wait for healthy"]
   healthProbe{{"Probe the health route"}}
   pageProbe{{"Fetch a real page"}}

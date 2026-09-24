@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
 
 const PAGES = ["/", "/services", "/learn", "/events", "/contact"];
 
-test.describe("CMS-required disclosures", () => {
+test.describe("Medicare-required disclosures", () => {
   for (const path of PAGES) {
     test(`TPMO and government disclaimers appear on ${path}`, async ({
       page,
@@ -30,9 +30,9 @@ test.describe("CMS-required disclosures", () => {
     test(`no disclosure is set below 16px on ${path}`, async ({ page }) => {
       await page.goto(path);
 
-      // CMS requires disclosures at 12 point ≈ 16px. This is a size floor, not
-      // a style preference: `text-sm` (14px ≈ 10.5pt) shipped on four pages
-      // because the requirement lived in a comment rather than in a test.
+      // Medicare sets the floor at 12 point, which is the 16px asserted below.
+      // A floor, not a style preference: `text-sm` (14px ≈ 10.5pt) shipped on
+      // four pages because the rule lived in a comment rather than in a test.
       const undersized = await page.evaluate(() =>
         [...document.querySelectorAll("[data-compliance]")]
           .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 16)
@@ -78,8 +78,8 @@ test.describe("Scope of Appointment", () => {
   }) => {
     await page.goto("/scope-of-appointment");
 
-    // CMS requires the beneficiary to choose specific product types, so a
-    // single blanket "Medicare" option would not be compliant.
+    // Medicare requires the beneficiary to pick specific product types, so a
+    // single blanket "Medicare" checkbox would not be compliant.
     await expect(
       page.getByRole("checkbox", { name: /Medicare Advantage \(Part C\)/ }),
     ).toBeVisible();

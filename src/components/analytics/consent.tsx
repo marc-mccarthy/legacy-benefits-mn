@@ -8,22 +8,10 @@ const STORAGE_KEY = "consent-choice-v1";
 
 type Choice = "granted" | "denied";
 
-/** `undefined` is "not known yet" — the server render, before hydration. */
 type Snapshot = Choice | null | undefined;
 
-/**
- * Fallback for when storage is unavailable: Safari private mode throws on
- * `setItem`, and hardened profiles block it outright. Without this the choice
- * would be recorded nowhere, the next snapshot would read `null` again, and the
- * banner would reappear the instant it was dismissed.
- */
 let memoryChoice: Choice | null = null;
 
-/**
- * Reads the visitor's stored choice as an external store rather than syncing
- * it into state from an effect, which would cause a cascading render on every
- * page load.
- */
 function subscribe(onChange: () => void) {
   window.addEventListener("storage", onChange);
   window.addEventListener("consent-change", onChange);
@@ -42,8 +30,6 @@ function hasGpc(): boolean {
 }
 
 function getSnapshot(): Snapshot {
-  // A Global Privacy Control signal is a legally binding opt-out under CPRA,
-  // so it outranks (and pre-empts) any banner interaction.
   if (hasGpc()) return "denied";
   try {
     return (
@@ -55,21 +41,6 @@ function getSnapshot(): Snapshot {
   }
 }
 
-/**
- * The server knows neither input: `localStorage` does not exist there, and the
- * Sec-GPC header is not plumbed through to this component. So it renders
- * nothing, and the banner appears after hydration.
- *
- * This is load-bearing, not a nicety. Returning `null` here — "no choice made"
- * — put the banner in the server HTML for every visitor, including everyone who
- * had already answered and everyone sending GPC. React then dropped it from the
- * client tree and left the server's markup orphaned in the DOM: a banner that
- * looks entirely normal, sits at full opacity above everything else, and has no
- * event handlers attached, so neither button does anything. It was not a
- * z-index or pointer-events problem, which is what a dead button usually is.
- *
- * Rendering nothing on the server means there is no orphan to leave behind.
- */
 function getServerSnapshot(): Snapshot {
   return undefined;
 }
@@ -85,10 +56,7 @@ export function Analytics({ gtmId }: { gtmId?: string }) {
     memoryChoice = value;
     try {
       window.localStorage.setItem(STORAGE_KEY, value);
-    } catch {
-      // The choice cannot be remembered across page loads, but it still has to
-      // take effect for this one. memoryChoice above covers that.
-    }
+    } catch {}
     window.dispatchEvent(new Event("consent-change"));
 
     const w = window as Window & { gtag?: (...args: unknown[]) => void };
@@ -100,13 +68,6 @@ export function Analytics({ gtmId }: { gtmId?: string }) {
     });
   }, []);
 
-  // `undefined` is the pre-hydration state and deliberately shows nothing: only
-  // a hydrated client that has actually read storage and GPC can decide. GPC is
-  // already folded into the snapshot as "denied", so it needs no second test.
-  //
-  // With JavaScript off the banner therefore never appears — which is correct
-  // rather than a gap, because the tag manager never loads either, so no
-  // analytics cookie is ever set and there is nothing to consent to.
   const showBanner = choice === null;
 
   return (

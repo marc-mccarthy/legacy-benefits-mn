@@ -17,7 +17,7 @@ describe("nothing to render", () => {
   });
 
   it("returns null for an unpopulated relationship id", () => {
-    // Payload returns a bare id when the query depth did not reach this
+    // A bare id arrives when the query depth did not reach this
     // relationship. Rendering is skipped rather than guessed at — if an image
     // silently fails to appear, the depth on the query is the thing to check.
     expect(mediaProps(42)).toBeNull();
@@ -52,7 +52,7 @@ describe("a fully populated document", () => {
 
   it("renames url to src", () => {
     // The whole point: components take next/image props and never branch on
-    // Payload's shape.
+    // The relationship shape.
     expect(mediaProps(doc)).not.toHaveProperty("url");
     expect(mediaProps(doc)?.src).toBe(doc.url);
   });

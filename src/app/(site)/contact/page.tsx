@@ -4,7 +4,9 @@ import { CalendlyInline } from "@/components/integrations/calendly";
 import { Container, Prose, Section } from "@/components/ui/section";
 import { TpmoDisclaimer } from "@/components/compliance/disclosures";
 import { tcpaConsentText } from "@/lib/compliance/disclosures";
-import { getSiteSettings } from "@/lib/payload";
+import { site } from "@/content/site";
+import { getBusinessIdentity } from "@/lib/business";
+import { env } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Contact a licensed agent",
@@ -13,20 +15,19 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const settings = await getSiteSettings().catch(() => null);
-  const brand =
-    settings?.businessName ?? process.env["BUSINESS_NAME"] ?? "this agency";
-  const phone = settings?.contact?.phone ?? process.env["BUSINESS_PHONE"];
-  const calendlyUrl = process.env["NEXT_PUBLIC_CALENDLY_URL"];
+  const identity = await getBusinessIdentity();
+  const brand = identity.name;
+  const phone = identity.phone;
+  const calendlyUrl = env("NEXT_PUBLIC_CALENDLY_URL");
 
   return (
     <Section>
       <Container className="grid gap-12 lg:grid-cols-[1.1fr_1fr]">
         <Prose className="space-y-5">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="font-display text-(length:--text-display-page)">
             Talk to a licensed agent
           </h1>
-          <p className="text-muted text-lg">
+          <p className="lead text-muted text-lg">
             Tell us what you are trying to sort out and we will call you back.
             There is no cost, and no obligation to enrol in anything.
           </p>
@@ -34,18 +35,18 @@ export default async function ContactPage() {
             <p className="text-lg">
               Prefer to call?{" "}
               <a
-                className="font-semibold underline underline-offset-4"
+                className="tabular font-semibold underline underline-offset-4"
                 href={`tel:${phone.replace(/\D/g, "")}`}
               >
                 {phone}
               </a>{" "}
-              <span className="text-muted">(TTY 711)</span>
+              <span className="text-muted">(TTY&nbsp;711)</span>
             </p>
           ) : null}
           <TpmoDisclaimer
             className="text-muted border-border-subtle border-t pt-5 leading-relaxed"
-            orgCount={settings?.compliance?.orgCount ?? undefined}
-            planCount={settings?.compliance?.planCount ?? undefined}
+            orgCount={site.compliance.orgCount ?? undefined}
+            planCount={site.compliance.planCount ?? undefined}
           />
         </Prose>
 
@@ -58,7 +59,7 @@ export default async function ContactPage() {
 
       {calendlyUrl ? (
         <Container className="mt-(--spacing-large)">
-          <h2 className="mb-6 text-2xl font-semibold tracking-tight">
+          <h2 className="font-display mb-6 text-(length:--text-display-lg)">
             Or pick a time that suits you
           </h2>
           <CalendlyInline url={calendlyUrl} />

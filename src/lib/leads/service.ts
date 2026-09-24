@@ -25,16 +25,15 @@ function retentionDate(): Date {
  * MedicarePRO happens later, out of band — the visitor's request never waits
  * on the CRM, and a CRM outage cannot cost a lead.
  *
- * The TCPA consent text is regenerated here on the server rather than accepted
- * from the request body. A consent record the submitter could edit would be
- * worthless as evidence.
+ * The consent text is regenerated server-side rather than read from the
+ * request body, so the stored copy is not submitter-controlled.
  */
 export async function captureLead(
   input: LeadInput,
   meta: {
     ip?: string;
     userAgent?: string;
-    /** Business identity, resolved by the caller from site settings. */
+    /** Business identity, resolved by the caller via `getBusinessIdentity`. */
     business?: { name?: string; phone?: string };
   } = {},
 ): Promise<{ leadId: number; suppressed: boolean }> {

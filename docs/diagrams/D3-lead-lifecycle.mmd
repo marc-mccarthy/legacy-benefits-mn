@@ -8,7 +8,8 @@ accDescr {
   filled honeypot field is accepted with a success status and nothing is stored,
   so a bot learns nothing from the response. Turnstile is asked whether the
   submitter is human and a failure is rejected. The business identity is read from
-  site settings, because the consent text has to name the specific business. The
+  the environment, because the consent text has to name the specific business, and
+  a missing BUSINESS_NAME throws rather than resolving to a default. The
   capture step checks the suppression list first, then opens one transaction: the
   lead row is inserted with the consent text regenerated on the server, the
   disclosure version, a hashed address and a retention date ten years out. Only if
@@ -45,7 +46,7 @@ alt not verified
   R-->>V: 403 could not verify
 end
 T-->>R: yes
-R->>DB: read business identity from site settings
+R->>R: read business identity from the environment
 R->>S: has this email or phone opted out
 S-->>R: suppressed, yes or no
 Note over R,DB: one transaction

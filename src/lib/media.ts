@@ -1,5 +1,6 @@
 type MediaLike =
   | {
+      src?: string | null;
       url?: string | null;
       alt?: string | null;
       width?: number | null;
@@ -9,13 +10,14 @@ type MediaLike =
   | null
   | undefined;
 
-/** Payload relationships come back as an id or a populated doc depending on
- *  depth; normalise both so components never branch on it. */
+/** Accepts either a `MediaAsset` from `src/content/` or a bare `{ url }`, so a
+ *  band never branches on which shape it was handed. */
 export function mediaProps(media: MediaLike) {
   if (!media || typeof media === "number") return null;
-  if (!media.url) return null;
+  const src = media.src ?? media.url;
+  if (!src) return null;
   return {
-    src: media.url,
+    src,
     alt: media.alt ?? "",
     width: media.width ?? 1600,
     height: media.height ?? 900,

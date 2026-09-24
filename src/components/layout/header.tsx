@@ -1,11 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import {
+  useEffect,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import * as NavigationMenu from "@radix-ui/react-navigation-menu";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/section";
 import { cn } from "@/lib/utils";
+
+function suppressPointerOpen(event: ReactPointerEvent<HTMLElement>) {
+  event.preventDefault();
+}
 
 export type NavItem = {
   label: string;
@@ -21,23 +32,15 @@ type HeaderProps = {
   brand: string;
 };
 
-/**
- * Two-tier header: a utility bar for phone and portal, and the main nav —
- * the structure measured on greatwatersfinancial.com. Dropdowns open on click
- * rather than hover so they are usable by keyboard and touch.
- */
 export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
 
-  // Condense the header once the page has moved, so the nav takes less room
-  // while reading without ever hiding it.
-  //
-  // Hysteresis matters more than the threshold: with a single 24px trigger and
-  // no debounce, an unsteady scroll toggles the header repeatedly and the nav
-  // links move under a pointer that is already reaching for them. Condensing at
-  // 120px and only expanding again below 60px means it cannot oscillate.
+  const pathname = usePathname();
+  const isCurrentPage = (href: string) => pathname === href;
+  const isWithinSection = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
   useEffect(() => {
     let frame = 0;
     const onScroll = () => {
@@ -58,36 +61,26 @@ export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
   return (
     <header
       data-scheme="light"
+      data-site-header
+      style={{ viewTransitionName: "site-header" }}
       className={cn(
-        "bg-surface sticky top-0 z-50 transition-shadow duration-300",
+        "bg-surface sticky top-0 z-50 transition-shadow duration-200",
         scrolled && "shadow-sm",
       )}
     >
-      {/* This bar does NOT collapse on scroll. It used to: past ~24px the phone
-       * number and TTY line animated to max-h-0 and stayed gone until the user
-       * scrolled back to the very top of the page. "Find a phone number" is the
-       * top task on a site like this, and WCAG 3.2.6 (Consistent Help) wants a
-       * contact mechanism in the same relative place on every page — a number
-       * that exists only in the first screenful is neither. The main row below
-       * still condenses, which is where the scroll affordance belongs. */}
       <div data-scheme="dark" className="bg-surface text-on-surface">
-        {/* 16px, not 14px. The phone number is the one piece of text on this
-         * page most likely to be read aloud to someone, or copied by hand.
-         *
-         * The links fill the bar's full 44px rather than sitting inline inside
-         * it. As inline text they measured 116x24 and 92x24 — the smallest
-         * targets in the header, on the highest-intent link on a Medicare site.
-         * `h-full` costs no layout: the bar is already 44px tall. */}
-        <Container className="flex h-11 items-center justify-end gap-6 text-base">
-          {phone ? (
-            <a
-              className="flex h-full items-center hover:underline"
-              href={`tel:${phone.replace(/\D/g, "")}`}
-            >
-              {phone}
-            </a>
-          ) : null}
-          <span className="flex h-full items-center opacity-70">TTY 711</span>
+        <Container className="flex h-11 items-center justify-between gap-6 text-base">
+          <div className="flex h-full items-center gap-6">
+            {phone ? (
+              <a
+                className="flex h-full items-center hover:underline"
+                href={`tel:${phone.replace(/\D/g, "")}`}
+              >
+                {phone}
+              </a>
+            ) : null}
+            <span className="flex h-full items-center opacity-70">TTY 711</span>
+          </div>
           {clientPortal?.href ? (
             <a
               className="flex h-full items-center hover:underline"
@@ -101,77 +94,100 @@ export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
 
       <Container
         className={cn(
-          "flex items-center justify-between gap-6 transition-all duration-300",
+          "flex items-center justify-between gap-6",
           scrolled ? "h-16" : "h-18",
         )}
       >
-        {/* min-h-11 throughout the nav, matching the floor argued for in
-         * button.tsx. That floor lived only in the Button component, so every
-         * link here — which is most of the header — quietly opted out of it and
-         * shipped at 28-36px. */}
         <Link
           href="/"
+          aria-current={isCurrentPage("/") ? "page" : undefined}
           className="inline-flex min-h-11 items-center text-lg font-bold tracking-tight"
         >
           {brand}
         </Link>
 
-        <nav aria-label="Main" className="hidden lg:block">
-          <ul className="flex items-center gap-7 text-base font-semibold">
+        <NavigationMenu.Root aria-label="Main" className="hidden lg:block">
+          <NavigationMenu.List className="flex items-center gap-7 text-base font-semibold">
             {nav.map((item) => (
-              <li key={item.href} className="relative">
+              <NavigationMenu.Item
+                key={item.href}
+                value={item.href}
+                className="relative"
+              >
                 {item.children?.length ? (
                   <>
-                    <button
+                    <NavigationMenu.Trigger
                       type="button"
-                      aria-expanded={openMenu === item.href}
-                      onClick={() =>
-                        setOpenMenu(openMenu === item.href ? null : item.href)
+                      aria-current={
+                        isCurrentPage(item.href) ? "page" : undefined
                       }
-                      className="flex min-h-11 items-center gap-1"
+                      onPointerMove={suppressPointerOpen}
+                      onPointerLeave={suppressPointerOpen}
+                      className={cn(
+                        "group flex min-h-11 items-center gap-1 border-b-2",
+                        isWithinSection(item.href)
+                          ? "nav-active-rule"
+                          : "border-transparent",
+                      )}
                     >
                       {item.label}
                       <ChevronDown
                         aria-hidden
-                        className={cn(
-                          "size-4 transition-transform",
-                          openMenu === item.href && "rotate-180",
-                        )}
+                        className="size-4 transition-transform group-data-[state=open]:rotate-180"
                       />
-                    </button>
-                    {openMenu === item.href ? (
-                      <ul className="border-border-subtle bg-surface absolute top-full left-0 w-72 rounded-(--radius-card) border p-2 shadow-lg">
+                    </NavigationMenu.Trigger>
+                    <NavigationMenu.Content
+                      data-nav-panel
+                      onPointerEnter={suppressPointerOpen}
+                      onPointerLeave={suppressPointerOpen}
+                      className="border-border-subtle bg-surface absolute top-full left-0 w-72 rounded-(--radius-card) border p-2 shadow-lg"
+                    >
+                      <ul>
                         {item.children.map((child) => (
                           <li key={child.href}>
-                            <Link
-                              href={child.href}
-                              onClick={() => setOpenMenu(null)}
-                              className="hover:bg-on-surface/5 block rounded-md p-3"
+                            <NavigationMenu.Link
+                              asChild
+                              active={isCurrentPage(child.href)}
                             >
-                              <span className="block">{child.label}</span>
-                              {child.description ? (
-                                <span className="text-muted block text-base font-normal">
-                                  {child.description}
-                                </span>
-                              ) : null}
-                            </Link>
+                              <Link
+                                href={child.href}
+                                className="hover:bg-on-surface/5 flex min-h-11 flex-col justify-center rounded-md p-3"
+                              >
+                                <span className="block">{child.label}</span>
+                                {child.description ? (
+                                  <span className="text-muted block text-base font-normal">
+                                    {child.description}
+                                  </span>
+                                ) : null}
+                              </Link>
+                            </NavigationMenu.Link>
                           </li>
                         ))}
                       </ul>
-                    ) : null}
+                    </NavigationMenu.Content>
                   </>
                 ) : (
-                  <Link
-                    href={item.href}
-                    className="inline-flex min-h-11 items-center"
+                  <NavigationMenu.Link
+                    asChild
+                    active={isCurrentPage(item.href)}
                   >
-                    {item.label}
-                  </Link>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "inline-flex min-h-11 items-center border-b-2",
+                        isWithinSection(item.href)
+                          ? "nav-active-rule"
+                          : "border-transparent",
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  </NavigationMenu.Link>
                 )}
-              </li>
+              </NavigationMenu.Item>
             ))}
-          </ul>
-        </nav>
+          </NavigationMenu.List>
+        </NavigationMenu.Root>
 
         <div className="hidden items-center gap-3 lg:flex">
           {cta?.href ? (
@@ -181,58 +197,94 @@ export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
           ) : null}
         </div>
 
-        {/* The negative margin keeps the icon optically aligned with the
-         * container edge while the 44px hit area extends past it. */}
-        <button
-          type="button"
-          className="-mr-3 inline-flex size-11 items-center justify-center lg:hidden"
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-nav"
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
-          {mobileOpen ? <X aria-hidden /> : <Menu aria-hidden />}
-        </button>
-      </Container>
+        <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
+          <Dialog.Trigger
+            className="-mr-3 inline-flex size-11 items-center justify-center lg:hidden"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileOpen ? <X aria-hidden /> : <Menu aria-hidden />}
+          </Dialog.Trigger>
 
-      {mobileOpen ? (
-        <div
-          id="mobile-nav"
-          className="border-border-subtle border-t lg:hidden"
-        >
-          <Container className="py-4">
-            <ul className="flex flex-col gap-1">
-              {nav.flatMap((item) => [
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
+          <Dialog.Portal>
+            <Dialog.Overlay
+              data-nav-sheet-overlay
+              className="bg-on-surface/50 fixed inset-0 z-50"
+            />
+            <Dialog.Content
+              data-nav-sheet
+              data-scheme="light"
+              className="bg-surface text-on-surface fixed inset-y-0 right-0 z-50 flex w-80 max-w-[calc(100vw-3rem)] flex-col overscroll-contain"
+            >
+              <Dialog.Title className="sr-only">Menu</Dialog.Title>
+
+              <div className="flex h-18 shrink-0 items-center justify-end px-5">
+                <Dialog.Close
+                  aria-label="Close menu"
+                  className="-mr-3 inline-flex size-11 items-center justify-center"
+                >
+                  <X aria-hidden />
+                </Dialog.Close>
+              </div>
+
+              <nav
+                aria-label="Site"
+                className="flex-1 overflow-y-auto overscroll-contain px-5 pb-4"
+              >
+                <ul className="flex flex-col gap-1">
+                  {nav.flatMap((item) => [
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        aria-current={
+                          isCurrentPage(item.href) ? "page" : undefined
+                        }
+                        className="flex min-h-11 items-center font-semibold"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>,
+                    ...(item.children ?? []).map((child) => (
+                      <li key={child.href}>
+                        <Link
+                          href={child.href}
+                          aria-current={
+                            isCurrentPage(child.href) ? "page" : undefined
+                          }
+                          className="text-muted flex min-h-11 items-center pl-4 text-base"
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      </li>
+                    )),
+                  ])}
+                </ul>
+              </nav>
+
+              <div className="border-border-subtle shrink-0 border-t px-5 py-4">
+                {phone ? (
+                  <a
                     className="flex min-h-11 items-center font-semibold"
+                    href={`tel:${phone.replace(/\D/g, "")}`}
+                  >
+                    {phone}
+                  </a>
+                ) : null}
+                {cta?.href ? (
+                  <Button
+                    asChild
+                    className="mt-3 w-full"
                     onClick={() => setMobileOpen(false)}
                   >
-                    {item.label}
-                  </Link>
-                </li>,
-                ...(item.children ?? []).map((child) => (
-                  <li key={child.href}>
-                    <Link
-                      href={child.href}
-                      className="text-muted flex min-h-11 items-center pl-4 text-base"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      {child.label}
-                    </Link>
-                  </li>
-                )),
-              ])}
-            </ul>
-            {cta?.href ? (
-              <Button asChild className="mt-4 w-full">
-                <Link href={cta.href}>{cta.label ?? "Get started"}</Link>
-              </Button>
-            ) : null}
-          </Container>
-        </div>
-      ) : null}
+                    <Link href={cta.href}>{cta.label ?? "Get started"}</Link>
+                  </Button>
+                ) : null}
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </Container>
     </header>
   );
 }

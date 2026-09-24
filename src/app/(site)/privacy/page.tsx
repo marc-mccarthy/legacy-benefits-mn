@@ -9,21 +9,18 @@ export const metadata: Metadata = {
     "What personal information we collect, why we collect it, how long we keep it, and the choices you have.",
 };
 
-/**
- * Baseline policy describing what this codebase actually does. It is not a
- * substitute for review by the agency's own counsel before launch — see the
- * open items in the project README.
- */
 export default function PrivacyPage() {
   return (
     <Section>
       <Container>
         <Prose className="space-y-6">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="font-display text-(length:--text-display-page)">
             Privacy Policy
           </h1>
 
-          <h2 className="text-xl font-semibold">What we collect</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            What we collect
+          </h2>
           <p className="leading-relaxed">
             When you submit a form we collect the details you give us — your
             name, contact details, ZIP code, the type of coverage you are asking
@@ -33,7 +30,9 @@ export default function PrivacyPage() {
             address. We do not store your raw IP address.
           </p>
 
-          <h2 className="text-xl font-semibold">Consent records</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            Consent records
+          </h2>
           <p className="leading-relaxed">
             If you tick the consent box, we store the exact wording you were
             shown along with the timestamp. This is how we demonstrate that
@@ -41,7 +40,9 @@ export default function PrivacyPage() {
             us show you precisely what you agreed to.
           </p>
 
-          <h2 className="text-xl font-semibold">How long we keep it</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            How long we keep it
+          </h2>
           <p className="leading-relaxed">
             Medicare marketing records, including Scope of Appointment forms,
             are retained for {RECORD_RETENTION_YEARS} years as required by the
@@ -50,7 +51,9 @@ export default function PrivacyPage() {
             need them to keep honouring your request.
           </p>
 
-          <h2 className="text-xl font-semibold">Who we share it with</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            Who we share it with
+          </h2>
           <p className="leading-relaxed">
             Your enquiry is stored in our customer relationship management
             system so a licensed agent can follow up. We do not sell your
@@ -58,7 +61,9 @@ export default function PrivacyPage() {
             exclude the contents of forms.
           </p>
 
-          <h2 className="text-xl font-semibold">Your choices</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            Your choices
+          </h2>
           <p className="leading-relaxed">
             You can withdraw consent, opt out of sharing, or ask us to delete
             your information at any time using the{" "}
@@ -73,7 +78,9 @@ export default function PrivacyPage() {
             sale or sharing of personal information automatically.
           </p>
 
-          <h2 className="text-xl font-semibold">Security</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            Security
+          </h2>
           <p className="leading-relaxed">
             Data is encrypted in transit and at rest. Access to the underlying
             database is restricted to the application and named administrators.

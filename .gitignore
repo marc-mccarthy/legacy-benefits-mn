@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# scripts/build-api-bundle.mjs
+/api-bundle/
+
 # production
 /build
 
@@ -48,9 +51,11 @@ next-env.d.ts
 .env*.local
 !.env.example
 
-# seeded demo media (downloaded, not source)
-.seed-media/
-media/
+# scratch from the sourcing-media skill's brief scan. It records the framework,
+# the asset dir and the candidate slots it detected — an input to
+# docs/ui-reference/MEDIA-PLAN.md, not a record worth keeping, and regenerated
+# by re-running the brief.
+.media-work/
 
 # playwright run artifacts
 test-results/
@@ -67,7 +72,30 @@ override.tf
 override_*.tf
 !terraform.tfvars.example
 
-# State is local and NEVER committed. It holds the generated RDS password and
-# PAYLOAD_SECRET in plaintext. Losing it means orphaned AWS resources that
-# terraform destroy can no longer see — back up infra/envs/*/terraform.tfstate
+# Saved plan files. A plan holds the full planned state, which means every
+# generated password and every SSM parameter value the apply would write, in
+# cleartext — the same exposure as the state file, from a file whose name looks
+# like a scratch artefact. `terraform plan -out=tfplan` produces one in the
+# working directory by default, so this pattern is what stops an ordinary
+# `git add infra/` from committing it.
+tfplan
+tfplan-*
+*.tfplan
+
+# State is local and NEVER committed. It holds the generated Postgres password
+# and PAYLOAD_SECRET in plaintext. Losing it means orphaned AWS resources that
+# terraform destroy can no longer see — back up infra/terraform.tfstate
 # somewhere private if the stack is real.
+#
+# The path above was infra/envs/*/terraform.tfstate, and that directory does not
+# exist: the envs/dev and envs/prod roots were collapsed into a single flat
+# infra/ root, a rename that is staged in this working tree. An instruction to
+# back up a path that cannot exist reads as satisfied by anyone who globs it and
+# finds nothing. CLAUDE.md's "Never touch" list carries the same stale path for
+# both the state and the tfvars.
+
+# technomancy
+technomancy_artifacts/
+
+# project-local postgres cluster (db:server:*)
+.pgdata/

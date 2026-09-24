@@ -8,8 +8,8 @@ accDescr {
   else, so the public address cannot be dialled directly. CloudFront forwards to
   Caddy on the single instance, which terminates origin TLS using a certificate it
   renews over DNS-01, and proxies inward to the Next.js application container.
-  The application reads content from Payload's tables and writes lead, Scope of
-  Appointment and do-not-contact records to the same Postgres container, whose
+  The application renders content authored in src/content and writes lead, Scope
+  of Appointment and do-not-contact records to the Postgres container, whose
   data directory is a bind mount on a separate EBS volume that outlives the
   instance. Images are served from an S3 bucket. Three outbound dependencies sit
   to the side: Cloudflare Turnstile verifies that a form submitter is human, SES
@@ -25,7 +25,7 @@ browser[Browser]
 edge{{CloudFront}}
 originSg{{"Security group: CloudFront prefix list only"}}
 caddy[["Caddy, origin TLS"]]
-app["Next.js 16 + Payload CMS"]
+app["Next.js 16, static export"]
 postgres[("Postgres container")]
 ebs[("EBS data volume")]
 mediaBucket[("S3 media bucket")]

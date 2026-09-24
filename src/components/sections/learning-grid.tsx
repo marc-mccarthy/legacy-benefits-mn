@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge, Card, CardBody } from "@/components/ui/card";
 import { Container, Section, type Scheme } from "@/components/ui/section";
+import { Morph } from "@/components/motion/morph";
 import { Reveal } from "@/components/motion/reveal";
 import { mediaProps } from "@/lib/media";
 import { formatDate } from "@/lib/utils";
@@ -22,16 +23,12 @@ const TYPE_LABEL: Record<ArticleItem["type"], string> = {
   video: "Video",
 };
 
-/** Fallback panel styling per resource type, mirroring the colour-blocked
- *  cards measured on greatwatersfinancial.com. */
 const TYPE_PANEL: Record<ArticleItem["type"], string> = {
   article: "bg-navy-800 text-white",
   tool: "bg-gold-500 text-navy-900",
   video: "bg-navy-600 text-white",
 };
 
-/** Filter chips. Rendered as links so filtering works without JavaScript and
- *  each filtered view is a real, shareable URL. */
 export function LearningFilters({
   active,
   basePath = "/learn",
@@ -58,8 +55,8 @@ export function LearningFilters({
                 aria-current={isActive ? "page" : undefined}
                 className={
                   isActive
-                    ? "bg-on-surface text-surface rounded-full px-4 py-2 text-sm font-semibold"
-                    : "border-border-subtle rounded-full border px-4 py-2 text-sm font-semibold"
+                    ? "bg-on-surface text-surface inline-flex min-h-11 items-center rounded-full px-5 text-base font-semibold"
+                    : "border-border-subtle inline-flex min-h-11 items-center rounded-full border px-5 text-base font-semibold"
                 }
               >
                 {o.label}
@@ -93,11 +90,11 @@ export function LearningGrid({
         <Reveal className="max-w-2xl space-y-4">
           <h2
             id="learn-heading"
-            className="font-display text-3xl font-semibold tracking-tight md:text-5xl"
+            className="font-display text-(length:--text-display-lg)"
           >
             {heading ?? "Learning center"}
           </h2>
-          {intro ? <p className="text-muted text-lg">{intro}</p> : null}
+          {intro ? <p className="lead text-muted text-lg">{intro}</p> : null}
         </Reveal>
 
         {showFilters ? <LearningFilters active={activeType} /> : null}
@@ -105,30 +102,31 @@ export function LearningGrid({
         {articles.length === 0 ? (
           <p className="text-muted">No resources here yet. Check back soon.</p>
         ) : (
-          <ul className="grid gap-6 md:grid-cols-3">
-            {articles.map((article, i) => {
-              const cover = mediaProps(article.coverImage as never);
-              return (
-                <li key={article.id} className="flex">
-                  <Reveal
-                    delay={Math.min(i * 0.05, 0.15)}
-                    className="flex w-full"
+          <Reveal>
+            <ul className="grid gap-6 md:grid-cols-3">
+              {articles.map((article) => {
+                const cover = mediaProps(article.coverImage as never);
+                return (
+                  <li
+                    key={article.id}
+                    data-article-type={article.type}
+                    className="flex"
                   >
                     <Card className="w-full">
                       {cover ? (
                         <div className="aspect-[16/10] w-full overflow-hidden">
-                          <Image
-                            src={cover.src}
-                            alt={cover.alt}
-                            width={cover.width}
-                            height={cover.height}
-                            className="size-full object-cover"
-                            sizes="(min-width: 768px) 33vw, 100vw"
-                          />
+                          <Morph kind="learn" slug={article.slug}>
+                            <Image
+                              src={cover.src}
+                              alt={cover.alt}
+                              width={cover.width}
+                              height={cover.height}
+                              className="size-full object-cover"
+                              sizes="(min-width: 768px) 33vw, 100vw"
+                            />
+                          </Morph>
                         </div>
                       ) : (
-                        // No cover uploaded: a brand-colour panel with the
-                        // resource type, rather than a ragged empty card.
                         <div
                           aria-hidden
                           className={`grid aspect-[16/10] w-full place-items-center ${TYPE_PANEL[article.type]}`}
@@ -151,17 +149,17 @@ export function LearningGrid({
                         <p className="text-muted flex-1">{article.excerpt}</p>
                         <time
                           dateTime={article.publishedAt}
-                          className="text-muted text-sm"
+                          className="text-muted text-base"
                         >
                           {formatDate(article.publishedAt)}
                         </time>
                       </CardBody>
                     </Card>
-                  </Reveal>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+          </Reveal>
         )}
       </Container>
     </Section>

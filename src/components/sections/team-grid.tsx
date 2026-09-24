@@ -11,7 +11,7 @@ export type TeamMember = {
   name: string;
   slug: string;
   role: string;
-  headshot?: unknown;
+  photo?: unknown;
 };
 
 export function TeamGrid({
@@ -30,13 +30,13 @@ export function TeamGrid({
       <Container className="space-y-10">
         <h2
           id="team-heading"
-          className="font-display text-3xl font-semibold tracking-tight md:text-5xl"
+          className="font-display text-(length:--text-display-lg)"
         >
           {heading ?? "Meet the team"}
         </h2>
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((member, i) => {
-            const photo = mediaProps(member.headshot as never);
+            const photo = mediaProps(member.photo as never);
             return (
               <li key={member.id} className="flex">
                 <Reveal
@@ -54,8 +54,6 @@ export function TeamGrid({
                         className="aspect-[5/6] w-full object-cover"
                       />
                     ) : (
-                      // Without this the card collapsed to text while its
-                      // neighbours kept a portrait, breaking the row's rhythm.
                       <Monogram
                         name={member.name}
                         className="aspect-[5/6] w-full"

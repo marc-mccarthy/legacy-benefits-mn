@@ -12,13 +12,8 @@ import type { SoaInput } from "./soa-schema";
 
 export { soaInputSchema, type SoaInput } from "./soa-schema";
 
-/**
- * Records a Scope of Appointment.
- *
- * Stored with the attestation text and version actually shown, because the
- * record must be reproducible on request for 10 years. Never queued to the
- * CRM: an SOA is a regulatory artefact, not a marketing lead.
- */
+// Stores the attestation text and version as shown, and does not touch the
+// CRM outbox — the lead path is captureLead, not this.
 export async function recordSoa(
   input: SoaInput,
   meta: { ip?: string; userAgent?: string } = {},
@@ -36,9 +31,7 @@ export async function recordSoa(
   const appointmentAt = input.appointmentAt
     ? new Date(input.appointmentAt)
     : null;
-  // CMS expects the SOA at least 48 hours before the meeting where possible.
-  // Recorded rather than enforced: same-day appointments are permitted in
-  // defined circumstances, and blocking them here would be wrong.
+  // Recorded as a flag, not enforced — a same-day appointment still submits.
   const meetsFortyEightHourGuidance = appointmentAt
     ? appointmentAt.getTime() - signedAt.getTime() >= 48 * 3600_000
     : false;

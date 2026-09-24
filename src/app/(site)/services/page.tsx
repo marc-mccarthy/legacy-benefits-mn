@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { ServiceGrid } from "@/components/sections/service-grid";
 import { CtaBand } from "@/components/sections/cta-band";
-import { getServices } from "@/lib/payload";
+import { services } from "@/content/services";
+import { getBusinessIdentity } from "@/lib/business";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ServicesPage() {
-  const services = await getServices().catch(() => []);
+  const identity = await getBusinessIdentity();
 
   return (
     <>
@@ -23,6 +24,7 @@ export default async function ServicesPage() {
         heading="Have a question about a specific plan?"
         ctaLabel="Talk to a licensed agent"
         ctaHref="/contact"
+        phone={identity.phone ?? null}
       />
     </>
   );

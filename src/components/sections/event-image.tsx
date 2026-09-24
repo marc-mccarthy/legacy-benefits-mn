@@ -1,35 +1,40 @@
 import Image from "next/image";
 import { CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/card";
+import { Morph } from "@/components/motion/morph";
 import { mediaProps } from "@/lib/media";
 
-/**
- * Photo header for an event card, with the free/paid badge overlaid — the
- * treatment used on greatwatersfinancial.com, where the photo does most of
- * the visual work.
- *
- * Falls back to a brand-coloured panel so a card without a photo still has
- * structure rather than collapsing to plain text.
- */
 export function EventImage({
   image,
   cost,
+  morphSlug,
 }: {
   image?: unknown;
   cost: "free" | "paid";
+  morphSlug?: string;
 }) {
   const photo = mediaProps(image as never);
 
+  const picture = photo ? (
+    <Image
+      src={photo.src}
+      alt={photo.alt}
+      fill
+      sizes="(min-width: 768px) 33vw, 100vw"
+      className="object-cover"
+    />
+  ) : null;
+
   return (
     <div className="relative aspect-[16/9] w-full overflow-hidden">
-      {photo ? (
-        <Image
-          src={photo.src}
-          alt={photo.alt}
-          fill
-          sizes="(min-width: 768px) 33vw, 100vw"
-          className="object-cover"
-        />
+      {picture ? (
+        morphSlug ? (
+          <Morph kind="event" slug={morphSlug}>
+            {picture}
+          </Morph>
+        ) : (
+          picture
+        )
       ) : (
         <div
           aria-hidden

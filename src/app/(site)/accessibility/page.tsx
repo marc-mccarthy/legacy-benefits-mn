@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Container, Prose, Section } from "@/components/ui/section";
-import { getSiteSettings } from "@/lib/payload";
+import { getBusinessIdentity } from "@/lib/business";
 
 export const metadata: Metadata = {
   title: "Accessibility",
@@ -9,25 +9,27 @@ export const metadata: Metadata = {
 };
 
 export default async function AccessibilityPage() {
-  const settings = await getSiteSettings().catch(() => null);
-  const phone = settings?.contact?.phone;
-  const email = settings?.contact?.email;
+  const identity = await getBusinessIdentity();
+  const phone = identity.phone;
+  const email = identity.email;
 
   return (
     <Section>
       <Container>
         <Prose className="space-y-6">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="font-display text-(length:--text-display-page)">
             Accessibility
           </h1>
-          <p className="text-lg leading-relaxed">
+          <p className="lead text-lg leading-relaxed">
             We build this site to the Web Content Accessibility Guidelines
             (WCAG) 2.2 Level AA. Much of our audience uses screen readers,
             screen magnification, or keyboard navigation, so this is treated as
             a functional requirement rather than an afterthought.
           </p>
 
-          <h2 className="text-xl font-semibold">What that means here</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            What that means here
+          </h2>
           <ul className="space-y-2 leading-relaxed">
             <li>
               Every page works with a keyboard alone, with a visible focus ring.
@@ -41,14 +43,18 @@ export default async function AccessibilityPage() {
             <li>Automated accessibility checks run against every release.</li>
           </ul>
 
-          <h2 className="text-xl font-semibold">Alternative formats</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            Alternative formats
+          </h2>
           <p className="leading-relaxed">
             We can provide any information on this site in large print, by
             phone, or in another language, free of charge. Auxiliary aids and
             language assistance services are available on request.
           </p>
 
-          <h2 className="text-xl font-semibold">Tell us about a problem</h2>
+          <h2 className="font-display text-(length:--text-display-lg)">
+            Tell us about a problem
+          </h2>
           <p className="leading-relaxed">
             If something here is difficult or impossible to use, please tell us
             and we will fix it and help you directly in the meantime.
@@ -58,12 +64,12 @@ export default async function AccessibilityPage() {
               <li>
                 Phone:{" "}
                 <a
-                  className="underline underline-offset-4"
+                  className="tabular underline underline-offset-4"
                   href={`tel:${phone.replace(/\D/g, "")}`}
                 >
                   {phone}
                 </a>{" "}
-                (TTY 711)
+                (TTY&nbsp;711)
               </li>
             ) : null}
             {email ? (

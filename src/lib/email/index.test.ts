@@ -206,20 +206,19 @@ describe("sendEmail client construction", () => {
 });
 
 describe("sendLeadNotification recipients", () => {
-  it("prefers the addresses configured in site settings", async () => {
+  it("prefers the addresses the caller passed in", async () => {
     vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "env@agency.example");
 
     await sendLeadNotification(lead, {
-      notificationEmails: ["cms@agency.example"],
+      notificationEmails: ["caller@agency.example"],
     });
 
-    // Site settings win so the client can change recipients without a deploy.
     expect(sentCommand().Destination).toEqual({
-      ToAddresses: ["cms@agency.example"],
+      ToAddresses: ["caller@agency.example"],
     });
   });
 
-  it("falls back to the env var when site settings list none", async () => {
+  it("falls back to the env var when the caller lists none", async () => {
     vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "env@agency.example");
 
     await sendLeadNotification(lead, { notificationEmails: [] });
@@ -358,10 +357,10 @@ describe("sendLeadConfirmation", () => {
   it("prefers the business identity passed in", async () => {
     vi.stubEnv("BUSINESS_NAME", "Env Agency");
 
-    await sendLeadConfirmation(lead, { name: "CMS Agency" });
+    await sendLeadConfirmation(lead, { name: "Caller Agency" });
 
-    expect(sentSubject().Data).toBe("We got your request — CMS Agency");
-    expect(sentBody()).toContain("A licensed agent at CMS Agency");
+    expect(sentSubject().Data).toBe("We got your request — Caller Agency");
+    expect(sentBody()).toContain("A licensed agent at Caller Agency");
   });
 
   it("falls back to BUSINESS_NAME", async () => {

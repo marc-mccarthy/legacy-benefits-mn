@@ -16,7 +16,7 @@
 set -euo pipefail
 
 DOMAIN="${1:-}"
-TF_DIR="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../envs/prod" && pwd)}"
+TF_DIR="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
 if [[ -z "$DOMAIN" ]]; then
   echo "usage: $0 <domain> [terraform-dir]" >&2

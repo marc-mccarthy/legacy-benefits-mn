@@ -1,14 +1,8 @@
-/**
- * Structured data. Uses InsuranceAgency rather than FinancialService — the
- * schema.org type has to match the actual business, and a Medicare agency is
- * not a securities firm.
- */
-
 export function JsonLd({ data }: { data: object }) {
   return (
     <script
       type="application/ld+json"
-      // Payload is built server-side from our own content, never user input.
+      // Built server-side from our own content, never user input.
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
     />
   );

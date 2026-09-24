@@ -1,0 +1,26 @@
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3010
+- Network:       http://127.119.40.108:3010
+- Environments: .env
+✓ Ready in 427ms
+✓ Running next.config.ts took 73ms
+
+⚠ ./
+Warning: Failed to find font override values for font `Atkinson Hyperlegible Next`
+Skipping generating a fallback font.
+
+
+ GET / 200 in 2.9s (next.js: 2.6s, application-code: 381ms)
+⚠ ./
+Warning: Failed to find font override values for font `Atkinson Hyperlegible Next`
+Skipping generating a fallback font.
+
+
+ GET / 200 in 87ms (next.js: 3ms, application-code: 84ms)
+⚠ ./
+Warning: Failed to find font override values for font `Atkinson Hyperlegible Next`
+Skipping generating a fallback font.
+
+
+ GET / 200 in 92ms (next.js: 2ms, application-code: 90ms)
+[?25h

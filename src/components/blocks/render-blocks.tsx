@@ -1,4 +1,5 @@
-import { Container, Section } from "@/components/ui/section";
+import type { ReactNode } from "react";
+import { Section } from "@/components/ui/section";
 import { CtaBand } from "@/components/sections/cta-band";
 import {
   EventCarousel,
@@ -10,8 +11,11 @@ import {
   LearningGrid,
   type ArticleItem,
 } from "@/components/sections/learning-grid";
-import { RichTextBody, RichTextSection } from "@/components/sections/rich-text";
-import { ServiceGrid } from "@/components/sections/service-grid";
+import { RichTextSection } from "@/components/sections/rich-text";
+import {
+  ServiceGrid,
+  type ServiceItem,
+} from "@/components/sections/service-grid";
 import { StatsBand, type Stat } from "@/components/sections/stats-band";
 import {
   Testimonials,
@@ -26,25 +30,18 @@ import type { Scheme } from "@/components/ui/section";
 type Block = Record<string, unknown> & { blockType: string; scheme?: Scheme };
 
 type BlockData = {
-  services: {
-    id: number | string;
-    title: string;
-    slug: string;
-    summary: string;
-  }[];
+  services: ServiceItem[];
   events: EventItem[];
   articles: ArticleItem[];
   stats: Stat[];
   testimonials: Testimonial[];
   carriers: Carrier[];
+  phone?: string | null;
 };
 
 /**
- * Maps Payload page blocks onto section components.
- *
- * Collection-backed blocks (services, events, resources) receive their data
- * from the page, already fetched — an editor arranging blocks should not be
- * able to change how many queries a page runs.
+ * Maps page blocks onto section components. Collection-backed blocks are handed
+ * their data by the route rather than fetching their own.
  */
 export function RenderBlocks({
   blocks,
@@ -70,6 +67,8 @@ export function RenderBlocks({
                 heading={block.heading as string}
                 subheading={block.subheading as string | null}
                 poster={block.poster}
+                slides={block.slides}
+                videoSrc="/video/hero-bg.mp4"
                 ctaLabel={block.ctaLabel as string | null}
                 ctaHref={block.ctaHref as string | null}
               />
@@ -80,7 +79,7 @@ export function RenderBlocks({
               <RichTextSection
                 key={key}
                 scheme={scheme}
-                content={block.content}
+                content={block.content as ReactNode}
               />
             );
 
@@ -127,7 +126,9 @@ export function RenderBlocks({
             return (
               <Testimonials
                 key={key}
-                scheme={scheme}
+                // Passed raw, not coerced: the band's own dark default has to
+                // survive an unset value, which `?? "light"` would overwrite.
+                scheme={block.scheme as Scheme | undefined}
                 heading={block.heading as string | null}
                 items={data.testimonials}
               />
@@ -149,12 +150,10 @@ export function RenderBlocks({
                 key={key}
                 scheme={scheme}
                 heading={block.heading as string | null}
-                items={(
-                  (block.items as { question: string; answer: unknown }[]) ?? []
-                ).map((item) => ({
-                  question: item.question,
-                  answer: <RichTextBody data={item.answer} />,
-                }))}
+                items={
+                  (block.items as { question: string; answer: ReactNode }[]) ??
+                  []
+                }
               />
             );
 
@@ -167,12 +166,11 @@ export function RenderBlocks({
                 body={block.body as string | null}
                 ctaLabel={block.ctaLabel as string | null}
                 ctaHref={block.ctaHref as string | null}
+                phone={data.phone}
               />
             );
 
           default:
-            // An unknown block means the config and the renderer have drifted.
-            // Render nothing rather than crashing a live marketing page.
             if (process.env.NODE_ENV !== "production") {
               console.warn(
                 `RenderBlocks: no component for "${block.blockType}"`,
@@ -182,18 +180,5 @@ export function RenderBlocks({
         }
       })}
     </>
-  );
-}
-
-/** Fallback used when a page has no layout blocks yet. */
-export function EmptyPageNotice() {
-  return (
-    <Section>
-      <Container>
-        <p className="text-muted">
-          This page has no content blocks yet. Add them in the admin panel.
-        </p>
-      </Container>
-    </Section>
   );
 }

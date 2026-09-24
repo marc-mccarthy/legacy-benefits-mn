@@ -1,16 +1,19 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/site-url";
 
-export default async function robots(): Promise<MetadataRoute.Robots> {
-  const base = await getSiteUrl();
+// A metadata route is a route handler, and `output: "export"` requires one
+// to declare itself static.
+export const dynamic = "force-static";
+
+export default function robots(): MetadataRoute.Robots {
+  const base = getSiteUrl();
 
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        // The admin panel and API surface must never be indexed.
-        disallow: ["/admin", "/api/"],
+        disallow: ["/api/"],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

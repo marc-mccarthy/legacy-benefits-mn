@@ -1,0 +1,225 @@
+{
+  "video": [
+    {
+      "index": 0,
+      "currentSrc": "https://player.vimeo.com/progressive_redirect/playback/876484888/rendition/720p/file.mp4?loc=external&log_user=0&signature=4bf848cb9a0340467be5269e1434c2c2dcb66f52bd9884b74776bc1175c85610",
+      "dataSrc": "https://player.vimeo.com/progressive_redirect/playback/876484888/rendition/720p/file.mp4?loc=external&log_user=0&signature=4bf848cb9a0340467be5269e1434c2c2dcb66f52bd9884b74776bc1175c85610",
+      "poster": "https://ethnocare.ca/cdn/shop/files/Transtibial_prosthetic_device.jpg?crop=center&height=800&v=1726601141&width=800",
+      "rendered": {
+        "width": 0,
+        "height": 0
+      },
+      "objectFit": "contain",
+      "playsInline": true,
+      "muted": true,
+      "loop": true,
+      "autoplay": false,
+      "parentMixBlendMode": "normal",
+      "parentFilter": "none",
+      "parentBackgroundImage": "none",
+      "downloaded": false,
+      "frames": [],
+      "renderedAtCaptureTime": null
+    },
+    {
+      "index": 1,
+      "currentSrc": "https://player.vimeo.com/progressive_redirect/playback/876488066/rendition/720p/file.mp4?loc=external&log_user=0&signature=1b29cab621570308cefebd63eea5d2ccee773bea7bacbc4036f64acca646b378",
+      "dataSrc": "https://player.vimeo.com/progressive_redirect/playback/876488066/rendition/720p/file.mp4?loc=external&log_user=0&signature=1b29cab621570308cefebd63eea5d2ccee773bea7bacbc4036f64acca646b378",
+      "poster": null,
+      "rendered": {
+        "width": 0,
+        "height": 0
+      },
+      "objectFit": "contain",
+      "playsInline": true,
+      "muted": true,
+      "loop": true,
+      "autoplay": false,
+      "parentMixBlendMode": "normal",
+      "parentFilter": "none",
+      "parentBackgroundImage": "none",
+      "downloaded": false,
+      "frames": [],
+      "renderedAtCaptureTime": null
+    },
+    {
+      "index": 2,
+      "currentSrc": "https://player.vimeo.com/progressive_redirect/playback/876488535/rendition/720p/file.mp4?loc=external&log_user=0&signature=898588c5db79be5a6ac858fcff5de83def6ec317241f4b310101365c2a39dd19",
+      "dataSrc": "https://player.vimeo.com/progressive_redirect/playback/876488535/rendition/720p/file.mp4?loc=external&log_user=0&signature=898588c5db79be5a6ac858fcff5de83def6ec317241f4b310101365c2a39dd19",
+      "poster": null,
+      "rendered": {
+        "width": 0,
+        "height": 0
+      },
+      "objectFit": "contain",
+      "playsInline": true,
+      "muted": true,
+      "loop": true,
+      "autoplay": false,
+      "parentMixBlendMode": "normal",
+      "parentFilter": "none",
+      "parentBackgroundImage": "none",
+      "downloaded": false,
+      "frames": [],
+      "renderedAtCaptureTime": null
+    },
+    {
+      "index": 3,
+      "currentSrc": null,
+      "dataSrc": null,
+      "poster": "https://ethnocare.ca/",
+      "rendered": {
+        "width": 1420,
+        "height": 880
+      },
+      "objectFit": "contain",
+      "playsInline": true,
+      "muted": false,
+      "loop": false,
+      "autoplay": false,
+      "parentMixBlendMode": "normal",
+      "parentFilter": "none",
+      "parentBackgroundImage": "none",
+      "downloaded": false
+    }
+  ],
+  "webglGradient": {
+    "present": true,
+    "globalName": "window.gradient",
+    "keys": [
+      "$container",
+      "animateBind",
+      "onResizeBind",
+      "onColorThemeChangeBind",
+      "onPageChangeBind",
+      "time",
+      "gradient",
+      "progress",
+      "containerMetrics",
+      "scene",
+      "camera",
+      "renderer",
+      "material",
+      "plane",
+      "camUnit",
+      "composer",
+      "counter",
+      "customPass"
+    ],
+    "scalars": {
+      "time": 289.09999999999724,
+      "containerMetrics": [
+        1440,
+        900
+      ],
+      "counter": 28.91000000000172
+    },
+    "rendererType": "ja",
+    "hasComposer": true,
+    "hasCustomPass": true,
+    "uniforms": {
+      "uTime": 289.09999999999724,
+      "uResolution": {
+        "x": 1,
+        "y": 0.625
+      },
+      "uPosition": {
+        "x": 0.1,
+        "y": -0.15
+      },
+      "uAccentColor": {
+        "x": 0.176,
+        "y": 0.203,
+        "z": 0.227
+      },
+      "uBackgroundColor": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "uZoom": 0.35,
+      "uTimeAmplitude": 0.015
+    }
+  },
+  "imageSequence": [
+    {
+      "index": 0,
+      "heightPx": 17385,
+      "canvasBackingStore": {
+        "width": 2880,
+        "height": 1800
+      },
+      "canvasRendered": {
+        "width": 1440,
+        "height": 900
+      },
+      "stepCount": 3,
+      "steps": [
+        {
+          "heading": "Enhance socket fit & stability",
+          "classes": "c-images-sequence-step is-inview is-visible"
+        },
+        {
+          "heading": "Retrofit sizing",
+          "classes": "c-images-sequence-step is-inview is-visible"
+        },
+        {
+          "heading": "Air expansion system",
+          "classes": "c-images-sequence-step is-inview is-visible is-active"
+        }
+      ],
+      "sampleSources": [
+        "https://player.vimeo.com/progressive_redirect/playback/876484888/rendition/720p/file.mp4?loc=external&log_user=0&signature=4bf848cb9a0340467be5269e1434c2c2dcb66f52bd9884b74776bc1175c85610"
+      ],
+      "downloaded": false,
+      "dataAttributes": {
+        "imagesSequence": "",
+        "theme": "dark"
+      }
+    },
+    {
+      "index": 1,
+      "heightPx": 11280,
+      "canvasBackingStore": {
+        "width": 2880,
+        "height": 1800
+      },
+      "canvasRendered": {
+        "width": 1440,
+        "height": 900
+      },
+      "stepCount": 0,
+      "steps": [],
+      "sampleSources": [
+        "https://player.vimeo.com/progressive_redirect/playback/876488066/rendition/720p/file.mp4?loc=external&log_user=0&signature=1b29cab621570308cefebd63eea5d2ccee773bea7bacbc4036f64acca646b378"
+      ],
+      "downloaded": false,
+      "dataAttributes": {
+        "imagesSequence": "",
+        "theme": "dark"
+      }
+    },
+    {
+      "index": 2,
+      "heightPx": 4080,
+      "canvasBackingStore": {
+        "width": 2880,
+        "height": 1800
+      },
+      "canvasRendered": {
+        "width": 1440,
+        "height": 900
+      },
+      "stepCount": 0,
+      "steps": [],
+      "sampleSources": [
+        "https://player.vimeo.com/progressive_redirect/playback/876488535/rendition/720p/file.mp4?loc=external&log_user=0&signature=898588c5db79be5a6ac858fcff5de83def6ec317241f4b310101365c2a39dd19"
+      ],
+      "downloaded": false,
+      "dataAttributes": {
+        "imagesSequence": "",
+        "theme": "dark"
+      }
+    }
+  ]
+}

@@ -71,7 +71,7 @@ describe("formatDate", () => {
   });
 
   it("handles a date-only string as UTC midnight", () => {
-    // Payload's dayOnly picker stores midnight UTC, which is the previous
+    // A dayOnly picker stores midnight UTC, which is the previous
     // evening in Chicago — worth knowing when a listed date looks a day early.
     expect(formatDate("2026-09-08")).toBe("Sep 7, 2026");
   });

@@ -27,7 +27,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm build && pnpm start --port ${PORT}`,
+    // `next start` cannot serve an `output: "export"` build, so the suite runs
+    // against the exported files and the API bundle the Lambda ships.
+    command: "node scripts/serve-e2e.mjs",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,

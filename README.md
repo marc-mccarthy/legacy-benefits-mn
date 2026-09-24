@@ -1,424 +1,102 @@
-# Legacy Benefits MN Website
+# Legacy Benefits Group LLC Website
 
 Marketing site and lead-capture system for a Medicare insurance practice in
-Minnesota. Next.js 16 / React 19 on the front, Payload CMS on PostgreSQL for
-content and compliance records, deployed to AWS with Terraform.
-
-> Demo build. Content is realistic sample data; the client's real details live in
-> the CMS and in a gitignored `.env`, never in this repository. Lead capture works
-> end to end, and delivery to MedicarePRO runs on a mock transport until a
-> credential is added — one environment variable.
->
-> **The testimonials are invented placeholders and must be replaced or removed
-> before this goes live.** See [Switching from demo to live](#switching-from-demo-to-live).
-
----
-
-## Why it is built this way
-
-This is a regulated site, not a brochure. Three constraints shaped most of the
-decisions:
-
-1. **CMS marketing rules.** Medicare marketing materials must carry specific
-   disclaimers, must not overstate the plans on offer, and marketing records must
-   be retained for 10 years.
-2. **TCPA.** Contacting someone without provable, specific consent is the
-   expensive mistake. Consent is stored as the exact text shown to the visitor,
-   with its version and a timestamp — never as a boolean.
-3. **Accessibility.** The audience skews older and toward assistive technology.
-   Content that is invisible without JavaScript, or that hides behind a scroll
-   animation, is a functional outage.
+Minnesota. Next.js 16 / React 19, exported to static HTML, served from S3 through
+CloudFront, with the lead pipeline on Lambda behind `/api/*`.
 
 ## Stack
 
-| Layer         | Choice                                                |
-| ------------- | ----------------------------------------------------- |
-| Framework     | Next.js 16 (App Router) · React 19 · TypeScript       |
-| Styling       | Tailwind CSS v4, CSS-first `@theme` tokens            |
-| Content + API | Payload CMS 3 (embedded, same app)                    |
-| Database      | PostgreSQL 17 — Payload tables + Drizzle app tables   |
-| Motion        | Motion, reduced-motion aware                          |
-| Carousel      | Embla                                                 |
-| Forms         | React Hook Form + Zod, Cloudflare Turnstile           |
-| Email         | AWS SES                                               |
-| Infra         | ECS Fargate · RDS · CloudFront · WAF · SES · Route 53 |
-| IaC           | Terraform 1.16, AWS provider 6.x                      |
+| Layer     | Choice                                                  |
+| --------- | ------------------------------------------------------- |
+| Framework | Next.js 16 (App Router) · React 19 · TypeScript         |
+| Styling   | Tailwind CSS v4, CSS-first `@theme` tokens              |
+| Content   | Typed TypeScript modules under `src/content/`           |
+| Database  | PostgreSQL — four lead tables, owned by Drizzle         |
+| Motion    | Motion, reduced-motion aware                            |
+| Carousel  | Embla                                                   |
+| Forms     | React Hook Form + Zod, Cloudflare Turnstile             |
+| Email     | AWS SES — see the note on network reachability below    |
+| IaC       | Terraform 1.16, AWS provider 6.x — one root at `infra/` |
+
+## Content
+
+Every page is authored in `src/content/` and rendered to static HTML at build
+time. There is no admin interface: changing content means editing a module and
+redeploying.
+
+- `site.ts` — business identity, navigation, announcement, stats, compliance
+- `home.ts` — the home page block list, rendered by `RenderBlocks`
+- `services.ts`, `team.ts`, `articles.ts`, `events.ts`, `testimonials.ts`,
+  `carriers.ts`, `faq.tsx`
+- `media.ts` — the eight image slots, built from `media-manifest.json`
+- `articles/<slug>.tsx`, `services/<slug>.tsx` — one body component each
 
 ## Getting started
 
 ```bash
-cp .env.example .env          # then fill in the values it documents
+cp .env.example .env
 pnpm install
-
-# Postgres — either one:
-pnpm db:up                    # docker compose, port 5433
-# or Homebrew: brew services start postgresql@17 && createdb legacybenefitsmn
-
-pnpm migrate                  # Payload schema (content)
-pnpm drizzle:migrate          # app schema (leads, outbox, SOA, suppression)
-pnpm seed                     # sample content and imagery
-
-pnpm dev                      # http://localhost:3000
+pnpm dev
 ```
 
-Create the first admin at `/admin`. Nothing else requires AWS credentials — with
-`S3_BUCKET` unset uploads fall back to local disk, and with `SES_FROM_ADDRESS`
-unset email is logged instead of sent.
+No database is needed to run or build the site. One is needed only to submit a
+form locally:
 
-### Scripts
-
-| Command                               | Purpose                                     |
-| ------------------------------------- | ------------------------------------------- |
-| `pnpm dev`                            | Development server                          |
-| `pnpm test`                           | All Vitest specs                            |
-| `pnpm test:unit` / `test:integration` | Unit only / database-backed only            |
-| `pnpm test:e2e`                       | Playwright — E2E, accessibility, compliance |
-| `pnpm typecheck` / `lint` / `format`  | `tsc --noEmit` / ESLint / Prettier          |
-| `pnpm migrate:create <name>`          | New Payload migration (interactive)         |
-| `pnpm drizzle:generate`               | New app-table migration                     |
-| `pnpm seed`                           | Idempotent sample content                   |
-| `pnpm db:up` / `db:down`              | Local Postgres via docker compose           |
-
-`pre-commit` runs lint-staged; `pre-push` runs the unit suite.
-
-## How the code is organised
-
-```
-src/
-├─ app/(site)/          public pages
-├─ app/(payload)/       admin panel (generated by Payload)
-├─ app/api/             leads · soa · do-not-contact · jobs/outbox · health
-├─ collections/         Pages Services Team Events Articles Categories
-│                       Testimonials Carriers Media Users
-├─ components/
-│  ├─ compliance/       required disclosure blocks
-│  ├─ sections/         page sections, 1:1 with page-builder blocks
-│  ├─ forms/            contact, Scope of Appointment, do-not-contact
-│  └─ motion/           scroll reveal
-├─ lib/
-│  ├─ business.ts       resolves identity from the CMS, env as fallback
-│  ├─ env.ts            treats a blank env var as absent (see note below)
-│  ├─ compliance/       disclosure text, SOA, suppression
-│  ├─ crm/              MedicarePRO port + transports
-│  └─ leads/            capture, validation, outbox
-infra/                  Terraform: network data app edge dns email
-                        observability scheduler ci
-e2e/                    Playwright specs
+```bash
+pnpm db:create
+pnpm drizzle:migrate
 ```
 
-### Page builder blocks
+## Commands
 
-`hero` · `richText` · `serviceGrid` · `eventCarousel` · `learningGrid` ·
-`stats` · `testimonials` · `carrierStrip` · `faq` · `ctaBand`
+| Command                   | What it does                                 |
+| ------------------------- | -------------------------------------------- |
+| `pnpm dev`                | Development server                           |
+| `pnpm build`              | Static export to `out/`                      |
+| `pnpm lint` / `typecheck` | ESLint / `tsc --noEmit`                      |
+| `pnpm test`               | Vitest, all projects                         |
+| `pnpm test:unit`          | Vitest, no database required                 |
+| `pnpm test:integration`   | Vitest, requires `DATABASE_URL`              |
+| `pnpm test:e2e`           | Playwright against `out/` and the API bundle |
+| `pnpm drizzle:migrate`    | Apply the lead-table migrations              |
 
-Each block has a `scheme` (light / muted / dark) that re-points the semantic
-colour tokens for that band, so sections alternate without duplicating classes.
-
-## Configuration: what goes where
-
-The rule: **secrets and infrastructure wiring → environment. Anything the client
-would ask you to change → CMS.**
-
-| CMS (`/admin` → Site Settings)             | Environment                         |
-| ------------------------------------------ | ----------------------------------- |
-| Business name, phone, email, address       | `DATABASE_URL`, `PAYLOAD_SECRET`    |
-| Lead notification recipients               | MedicarePRO webhook, Turnstile keys |
-| NPN, state licences, carrier/plan counts   | `S3_BUCKET`, `AWS_REGION`, GTM ID   |
-| Nav, announcement bar, stats, social links | `SES_FROM_ADDRESS`                  |
-
-Contact details are content, not configuration — they change, they are not
-secret, and the client should not need a redeploy to fix a phone number. The
-environment variables of the same name exist only as a first-boot fallback.
-
-Owner and business identity are read from the environment **when seeding**, so
-real names and addresses stay out of this repository. Without them the seed
-produces obviously-fictional placeholders.
-
-> **A blank environment variable counts as unset.** `process.env.X ?? fallback`
-> returns `""` for a variable that is present but empty, which is how
-> `.env.example` ships every key. Use `env()` from `src/lib/env.ts` instead.
+`docs/DEVELOPMENT.md` covers the build-time environment variables, the API
+bundle, and the Turnstile failure mode.
 
 ## Lead capture
 
-Leads are never sent to the CRM synchronously. The request path writes two rows
-in one transaction — the lead and an outbox entry — and returns.
+A submission to `/api/leads` writes one row to `leads` and one to `crm_outbox`
+in a single transaction, stores the consent text exactly as it was shown with its
+version and a timestamp, and returns `201`. `/api/jobs/outbox` drains the outbox
+with `FOR UPDATE SKIP LOCKED`, backoff and leases. Suppressed contacts are
+stored, never queued, and receive the same response.
 
-```
-form ─▶ /api/leads ─▶ [ leads + crm_outbox ]  (one transaction)
-                              │
-       EventBridge (1 min) ─▶ /api/jobs/outbox ─▶ MedicarePRO
-```
+`PAYLOAD_SECRET` is the salt for `ip_hash`. It is named after the CMS that used
+to be here and is still read by `src/lib/leads/service.ts`; rotating it severs
+every existing hash, and nothing reports that.
 
-A CRM outage delays delivery but cannot lose a lead. Delivery is idempotent,
-retries back off exponentially, and rows that exhaust their retries are marked
-`failed` and raise a CloudWatch alarm rather than disappearing quietly.
+## The deployed Lambda has no route to the public internet
 
-On submit the agency is emailed (reply-to is the lead, so hitting reply works)
-and the visitor gets a confirmation. Both are best-effort: the lead is already
-committed, so a mail failure never becomes a failed submission.
+Observed in `infra/`: the Lambda runs in private subnets whose route table
+carries no `0.0.0.0/0` route, and there is no NAT gateway, internet gateway or
+VPC endpoint. Three things in the application therefore cannot succeed in the
+deployed environment:
 
-### MedicarePRO
+- **SES** — lead notification and confirmation email
+- **Cloudflare Turnstile** — token verification at
+  `challenges.cloudflare.com`
+- **CRM webhook delivery** — any transport that posts outward
 
-MedicarePRO has no public REST API. Two inbound paths are supported, chosen by
-`CRM_TRANSPORT`:
-
-- **`webhook`** (preferred) — a URL generated at CRM → Settings → Integrations.
-  It is **displayed once and cannot be retrieved again**; put it straight into
-  Secrets Manager.
-- **`zapier`** — a catch-hook whose Zap runs the MPCRM "Add Lead" action
-  (version 1), authenticated with a key from `support@medicareprocrm.com`.
-- **`mock`** (default) — stores and queues, delivers nowhere. Dev and CI use this.
-
-Field names in `src/lib/crm/transports/webhook.ts` are this project's best
-mapping; MedicarePRO publishes no schema. **Confirm against a real test post
-before go-live.**
-
-## Compliance features
-
-| Requirement                    | Where                                                     |
-| ------------------------------ | --------------------------------------------------------- |
-| CMS TPMO disclaimer            | Footer of every page, plus service/article/event pages    |
-| Government non-affiliation     | Footer of every page                                      |
-| Scope of Appointment           | `/scope-of-appointment`, retained 10 years                |
-| TCPA consent evidence          | `leads.consent_text` + `consent_version` + `consented_at` |
-| Opt-out / do-not-sell / delete | `/do-not-contact`, suppression checked on every capture   |
-| Global Privacy Control         | Honoured automatically; no banner shown when signalled    |
-| Nondiscrimination, TTY 711     | Footer and `/disclosures`                                 |
-| Accessibility statement        | `/accessibility`                                          |
-
-Disclosure text lives in `src/lib/compliance/disclosures.ts` and is
-**versioned**. When wording changes, add a new version rather than editing in
-place — consent records reference the version actually shown, and editing text
-would silently rewrite the evidence for every past submission.
-
-MedicarePRO also has its own eSOA feature. Decide whether `/scope-of-appointment`
-should remain or link to the CRM's instead; two SOA records in two systems gets
-messy at audit time.
+A deployed form submission stores the lead and then fails to notify anyone. Lead
+data is not lost; the notification is. Adding a network path is an infrastructure
+change nobody has made.
 
 ## Deployment
 
-```
-CloudFront + WAF ─▶ ALB ─▶ ECS Fargate (ARM64) ─▶ RDS PostgreSQL
-                              │                        ▲
-                              └─▶ S3 (media) ──────────┘ Secrets Manager
-```
+`.github/workflows/deploy.yml` builds the site, uploads `out/` to S3, packs
+`api-bundle/` as the API function, and invalidates CloudFront. `infra/` holds the
+Terraform. Nothing in this repository applies it.
 
-```bash
-set -a; source .env; set +a                    # exports TF_VAR_name
-
-cd infra/envs/dev
-cp terraform.tfvars.example terraform.tfvars   # fill in the three required values
-terraform init
-terraform apply                                 # ~86 resources
-terraform output site_url                       # the URL to open
-
-terraform destroy                               # and all of it goes away
-```
-
-The `source .env` line is not optional. `TF_VAR_name` is the prefix on every AWS
-resource name, and `name` is declared with no default precisely so a missing
-value stops the apply instead of silently inheriting one — which is how the
-stack previously ended up named after this repository's folder rather than the
-client. Terraform reads `TF_VAR_*` from the environment natively; there is no
-wrapper involved.
-
-Everything is in Terraform. There is no bootstrap step, no state bucket to
-create first, and nothing to set up in the AWS console — `apply` on a clean
-account builds the whole stack and `destroy` removes it. State is local, in
-`infra/envs/<env>/terraform.tfstate`, and gitignored: it holds the generated
-database password and `PAYLOAD_SECRET` in plaintext. **Back it up somewhere
-private.** Lose it and `destroy` can no longer see what it created, which means
-cleaning up by hand — the one thing this layout exists to avoid.
-
-The layout assumes **one environment per AWS account**, which is what lets each
-root own the account-level GitHub OIDC provider outright. To put dev and prod in
-the same account, set `create_oidc_provider = false` on whichever you apply
-second; its ARN is derived from the account id, so there is still nothing to
-copy between them.
-
-**A custom domain is optional.** Set `use_domain = false` and the stack still
-comes up in full, served over HTTPS on the CloudFront distribution's own
-`*.cloudfront.net` URL — useful for showing a client the site before a domain
-exists. That is how `envs/dev` is configured, deliberately: giving dev a
-subdomain would mean either delegating from the production zone or running a
-second zone for the same domain, and the latter breaks resolution.
-
-`use_domain = true` adds an ACM certificate, Route 53 records for the apex and
-`www` (A and AAAA), and switches the CloudFront-to-ALB hop to HTTPS. With it
-false that hop is plain HTTP inside AWS — visitors still get HTTPS at the edge —
-and SES is skipped, since it needs a verified domain. See
-[Migrating DNS into Route 53](#migrating-dns-into-route-53) for why it is a
-separate switch from `create_dns_zone`.
-
-The app is never told its own URL: `NEXT_PUBLIC_SITE_URL` is used when set, and
-otherwise the origin is derived per request, so canonical links, the sitemap, and
-JSON-LD are correct on the CloudFront URL too.
-
-CI deploys via GitHub OIDC — no AWS keys stored in GitHub. Each deploy builds an
-immutable image tagged with the commit SHA, runs migrations as a one-off ECS task
-inside the VPC, then rolls the service. Rollback is redeploying an earlier SHA.
-
-**Which environment a deploy targets** is decided in `.github/workflows/deploy.yml`:
-a push to `main` goes to **dev**, and **prod** is manual only — Actions → Deploy →
-Run workflow → choose `prod`. That choice selects a GitHub **Environment**, and
-every AWS target is read from that environment's variables: `AWS_REGION`,
-`AWS_DEPLOY_ROLE_ARN`, `ECR_REPOSITORY`, `ECS_CLUSTER`, `ECS_SERVICE`,
-`SITE_URL`. Take them from `terraform output` in the matching `infra/envs`
-directory.
-
-Set them per **environment**, not as repository-wide variables — repository
-variables are visible to both, so dev and prod would deploy to the same place.
-A required reviewer on the `prod` environment adds a human gate to the manual
-dispatch.
-
-Which branches may deploy at all is enforced in AWS rather than in the workflow,
-by `allowed_refs` on the `ci` module: prod trusts `main` only, dev also trusts
-`develop`. Dispatching prod from a feature branch fails at
-`sts:AssumeRoleWithWebIdentity`.
-
-Running cost is roughly **$90–130/month** at low traffic. The NAT gateway and ALB
-dominate; both bill per hour regardless of traffic.
-
-## Migrating DNS into Route 53
-
-Terraform creates the hosted zone and every record, but **cannot repoint the
-registrar** — no provider exists for Squarespace or Google domains. That step is
-manual, and the ordering below is what keeps the client's email working.
-
-### legacybenefitsmn.com, as it stands
-
-Verified by live lookup on 2026-09-08:
-
-|                 |                                                                |
-| --------------- | -------------------------------------------------------------- |
-| Registrar       | **Squarespace Domains II LLC** (expires 2027-01-19)            |
-| DNS host        | **Google Cloud DNS** (`ns-cloud-a{1..4}`)                      |
-| MX              | Legacy Google five-record set (`aspmx.l` + `alt1`–`alt4`)      |
-| SPF             | `v=spf1 include:_spf.google.com ~all`                          |
-| DKIM            | selector `google`, present                                     |
-| DMARC           | **none** — `p=none` staged in `envs/prod`                      |
-| Verification    | `isqbop7e6zek` CNAME → `gv-g4wgakmz3yjmin.dv.googlehosted.com` |
-| DNSSEC          | **enabled** — DS `37879` published at `.com`, TTL 86400        |
-| Website records | **none** — no apex A, no AAAA, no www, no CAA                  |
-
-Registrar and DNS host are **two different logins**. DNS is edited in the Google
-Cloud console (Network Services → Cloud DNS), not `admin.google.com`, which has
-no zone editor. Nameservers are changed at Squarespace.
-
-Because no website records exist today, this is an **email-only** migration —
-there is no live site to break.
-
-Two rows above are the ones that bite. Workspace verified this domain by
-**CNAME** rather than the more familiar TXT record, so it looks like noise and
-is easy to leave behind; losing it un-verifies the domain. And **DNSSEC is on** —
-Squarespace enables it automatically, so nobody chose it. Both are carried in
-`envs/prod/terraform.tfvars`; the DNSSEC one cannot be, and is why the sequence
-below has a step 0.
-
-### The two knobs
-
-`create_dns_zone` answers _who is authoritative_. `use_domain` answers _is the
-site attached to the hostname_. They are deliberately separate, because ACM
-validates a certificate by reading a record over public DNS — so the certificate
-cannot be issued until the registrar already points at Route 53. Setting both at
-once would hang the apply until the validation resource times out, then fail.
-
-| phase | `create_dns_zone` | `use_domain` | result                                                         |
-| ----- | ----------------- | ------------ | -------------------------------------------------------------- |
-| 1     | `true`            | `false`      | zone and records exist, nothing live. Nameservers switch here. |
-| 2     | `true`            | `true`       | certificate validates, CloudFront serves the domain            |
-
-Set `create_dns_zone = false` with `hosted_zone_id` if the zone already exists;
-a domain already delegated to Route 53 can go straight to `use_domain = true`.
-
-With `use_domain = false` the whole stack still comes up and is served on the
-CloudFront URL that `terraform output site_url` prints — no certificate, no
-Route 53 records, no SES identity.
-
-### The sequence
-
-**0. Disable DNSSEC at Squarespace** (Domains → the domain → DNSSEC). Do this
-first: it is harmless, changes nothing about resolution, and starts a 24-hour
-clock you otherwise wait out later.
-
-> ⚠️ The Route 53 zone this creates is **unsigned**. Switching the nameservers
-> while the DS record is still published at the `.com` registry makes validating
-> resolvers ask for signatures that do not exist and return SERVFAIL for the
-> entire domain — mail included. That is an outage, not a degradation, and the
-> DS TTL is 86400, so undoing it is not fast.
-
-1. `create_dns_zone = true`, `use_domain = false`, then `terraform apply` —
-   creates the zone, MX, SPF, DKIM, DMARC and the verification CNAME. **Nothing
-   is live yet**; the registrar still points at the old nameservers, so email
-   keeps flowing.
-2. Verify before switching anything:
-   ```bash
-   bash infra/scripts/preflight-cutover.sh legacybenefitsmn.com
-   ```
-   It checks the DS is gone (asked at the `.com` servers, not a cache), then
-   compares every record the new zone serves against what the old nameservers
-   answer today. **Anything it fails on, stop.** A wrong or missing MX bounces
-   his mail.
-3. `terraform output route53_nameservers`, then paste those four into Squarespace
-   under Domains → DNS → Nameservers. `terraform output dns_cutover_runbook`
-   prints these steps next to them.
-4. Propagation takes up to 48 hours. Confirm mail still delivers and the
-   verification CNAME still resolves.
-5. `use_domain = true`, then `terraform apply` again. ACM validates against the
-   now-live zone, CloudFront serves the domain, SES finishes verifying.
-
-### DNSSEC afterwards
-
-The zone stays unsigned. Re-enabling DNSSEC is a deliberate separate change — a
-KMS asymmetric key in us-east-1, `aws_route53_key_signing_key`,
-`aws_route53_hosted_zone_dnssec`, and then publishing the **new** DS at the
-registrar in a second manual step.
-
-It is deferred on purpose. The appeal of this migration is that nothing is live
-to break; adding key management and a second registrar handoff during it trades
-that away, and DNSSEC does nothing for mail delivery here — the Google MX hosts
-are not DANE-validated. Worth doing once the zone has been stable for a while.
-
-### What to collect from the client first
-
-A full export of the current records. `dig` only finds names you already know, so
-a subdomain or third-party verification record will not show up:
-
-```bash
-gcloud dns managed-zones list
-gcloud dns record-sets export zone.txt --zone=ZONE_NAME --zone-file-format
-```
-
-A screenshot of the Cloud DNS record table works just as well — the zone is
-small, though scroll to the bottom of the list rather than the bottom of the
-visible area. A forgotten verification record silently breaks whatever depended
-on it, and nobody notices for weeks. It will not announce itself either: this
-domain's is a CNAME named `isqbop7e6zek`, which reads as noise.
-
-## Switching from demo to live
-
-Everything works as-is for review. To point it at the real business:
-
-1. **Business details** — edit in `/admin`, or set them in `.env` and re-seed:
-   name, phone, address, NPN, state licences, and the carrier and plan counts
-   used in the plan-availability disclaimer.
-2. **MedicarePRO** — put the webhook URL in `MEDICAREPRO_WEBHOOK_URL` and set
-   `CRM_TRANSPORT=webhook`. Confirm the field mapping with a test post.
-3. **Brand** — swap the primitives block at the top of `src/app/globals.css` for
-   the real palette and fonts. Nothing downstream references those values.
-4. **Photography** — replace the sample imagery, especially the team headshots.
-   The seeded avatars are DiceBear placeholders. Anyone without a photo falls
-   back to an initials monogram rather than an illustration, so a half-finished
-   roster never mixes cartoons with real portraits.
-5. **Testimonials — must be replaced or removed before launch.** ⚠️ The seeded
-   quotes, names and locations are **invented**. They exist so the section can
-   be seen in review. Publishing fabricated testimonials for an insurance
-   practice is a false-advertising problem and a CMS marketing-material problem,
-   not a cosmetic one. Either collect real, attributable quotes with the
-   client's permission, or delete the `testimonials` block from the page
-   layouts.
-6. **Keys** — Turnstile site/secret, a GTM container ID, and a verified SES
-   sending domain (new SES accounts start in a sandbox that only mails verified
-   addresses).
-7. **Copy review** — have whoever signs off marketing material read the
-   disclosure and privacy text.
+CloudFront serves the static site from S3 by default and routes `/api/*` to the
+Lambda. A CloudFront Function rewrites extensionless paths onto the `.html` files
+the export writes, and `403` and `404` from S3 both map to `/404.html`.

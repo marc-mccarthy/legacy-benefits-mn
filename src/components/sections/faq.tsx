@@ -7,11 +7,6 @@ import { Container, Section, type Scheme } from "@/components/ui/section";
 
 export type FaqItem = { question: string; answer: ReactNode };
 
-/**
- * Accordion FAQ. Radix handles the roving focus and aria-expanded wiring that
- * hand-rolled accordions almost always get wrong. Items are collapsible and
- * independent, so a visitor can open several at once.
- */
 export function Faq({
   heading,
   items,
@@ -28,7 +23,7 @@ export function Faq({
       <Container className="grid gap-10 md:grid-cols-[1fr_2fr]">
         <h2
           id="faq-heading"
-          className="font-display text-3xl font-semibold tracking-tight md:text-4xl"
+          className="font-display text-(length:--text-display-lg)"
         >
           {heading ?? "Common questions"}
         </h2>
@@ -48,8 +43,11 @@ export function Faq({
                   />
                 </Accordion.Trigger>
               </Accordion.Header>
-              <Accordion.Content className="text-muted pb-5 leading-relaxed">
-                {item.answer}
+              <Accordion.Content
+                data-faq-panel
+                className="text-muted leading-relaxed"
+              >
+                <div className="pb-5">{item.answer}</div>
               </Accordion.Content>
             </Accordion.Item>
           ))}

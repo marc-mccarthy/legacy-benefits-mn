@@ -3,9 +3,9 @@ flowchart TB
 accTitle: What runs between a push and the new release serving
 accDescr {
   A push to main starts two workflows. The checks workflow runs three jobs against
-  a throwaway Postgres: quality applies both migrators and then lints, checks
+  a throwaway Postgres: quality applies the migrations and then lints, checks
   formatting, type checks and runs unit and integration tests; the end-to-end job
-  applies both migrators, seeds content and runs the Playwright suite, whose
+  applies the migrations and runs the Playwright suite, whose
   accessibility and compliance specs are release gates; the Terraform job checks
   formatting and validates the stack. The deploy workflow runs on a native arm64
   runner because the instance is Graviton. It assumes a role over OIDC rather than
@@ -40,7 +40,7 @@ end
 subgraph box ["On the instance, deploy script"]
   pull["Pull both images first"]
   pgUp["Bring Postgres up and wait for healthy"]
-  migrateRun{{"Run the migrate container: payload migrate, then drizzle-kit migrate"}}
+  migrateRun{{"Run the migrate container: drizzle-kit migrate"}}
   appUp["Bring the application up and wait for healthy"]
   healthProbe{{"Probe the health route"}}
   pageProbe{{"Fetch a real page"}}

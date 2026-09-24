@@ -7,12 +7,10 @@ const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
  * verification is skipped rather than failing closed, so the form is testable
  * without Cloudflare credentials.
  *
- * A secret that is present but whitespace-only throws instead of falling into
- * either default. Silently skipping would turn bot protection off in
- * production without anyone asking for it, and silently verifying against a
- * blank secret makes Cloudflare reject every visitor — a site-wide 403 on the
- * contact form that reads like Cloudflare being flaky. Neither is a state
- * anyone chose, so it fails loudly and diagnosably instead.
+ * A secret that is present but whitespace-only throws rather than taking
+ * either branch: skipping would disable verification, and sending a blank
+ * secret makes Cloudflare 403 every submission, which reads like Cloudflare
+ * being flaky rather than a config error.
  */
 export async function verifyTurnstile(
   token: string | undefined,

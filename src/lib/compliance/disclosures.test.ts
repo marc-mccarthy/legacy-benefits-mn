@@ -13,7 +13,7 @@ import {
 } from "./disclosures";
 
 describe("tpmoDisclaimer", () => {
-  it("states the four things CMS requires of a TPMO", () => {
+  it("states the four things Medicare requires of a TPMO", () => {
     const text = tpmoDisclaimer();
 
     expect(text).toContain(
@@ -33,8 +33,9 @@ describe("tpmoDisclaimer", () => {
   });
 
   it("omits the count sentence when neither is configured", () => {
-    // An absent count is silence; a wrong count is itself a CMS violation, so
-    // the sentence only appears when the agent has supplied real numbers.
+    // An absent count is silence; a wrong count is itself a Medicare marketing
+    // violation, so the sentence only appears when the agent has supplied real
+    // numbers.
     expect(tpmoDisclaimer()).not.toContain("Currently we represent");
   });
 
@@ -142,7 +143,7 @@ describe("SOA_PRODUCT_TYPES", () => {
 });
 
 describe("retention", () => {
-  it("is the ten years CMS requires of marketing records", () => {
+  it("is the ten years Medicare requires of marketing records", () => {
     expect(RECORD_RETENTION_YEARS).toBe(10);
   });
 });
@@ -151,8 +152,8 @@ describe("the version travels with the text", () => {
   // These assertions exist to make editing a disclosure in place impossible
   // without noticing.
   //
-  // Leads and SOA records store the version that was shown, and CMS expects
-  // those records to be reproducible for ten years. Rewording a constant
+  // Leads and SOA records store the version that was shown, and Medicare
+  // expects those records reproducible for ten years. Rewording a constant
   // without adding a new version silently rewrites the evidence for every
   // submission already on file. Changing any text below fails these tests, at
   // which point the correct move is a NEW version — not an updated snapshot.

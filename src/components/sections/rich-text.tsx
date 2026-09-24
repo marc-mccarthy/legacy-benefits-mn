@@ -1,5 +1,4 @@
-import { RichText as LexicalRichText } from "@payloadcms/richtext-lexical/react";
-import type { SerializedEditorState } from "@payloadcms/richtext-lexical/lexical";
+import type { ReactNode } from "react";
 import {
   Container,
   Prose,
@@ -7,27 +6,23 @@ import {
   type Scheme,
 } from "@/components/ui/section";
 
-export function RichTextBody({ data }: { data: unknown }) {
-  if (!data) return null;
-  return (
-    <div className="rich-text">
-      <LexicalRichText data={data as SerializedEditorState} />
-    </div>
-  );
+export function RichTextBody({ children }: { children?: ReactNode }) {
+  if (!children) return null;
+  return <div className="rich-text">{children}</div>;
 }
 
 export function RichTextSection({
   content,
   scheme = "light",
 }: {
-  content: unknown;
+  content?: ReactNode;
   scheme?: Scheme;
 }) {
   return (
     <Section scheme={scheme}>
       <Container>
         <Prose>
-          <RichTextBody data={content} />
+          <RichTextBody>{content}</RichTextBody>
         </Prose>
       </Container>
     </Section>

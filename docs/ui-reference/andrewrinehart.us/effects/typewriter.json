@@ -1,0 +1,77 @@
+{
+  "selector": ".typed-me",
+  "datasetStrings": [
+    "Founder<br />Venture<br />Real Estate<br />Contact"
+  ],
+  "datasetOptions": {
+    "typeSpeed": 80,
+    "startDelay": 0,
+    "backspeed": 40,
+    "backDelay": 1000
+  },
+  "renderedHtml": "Founder<br>Venture<br>Real Estate<br>Contact",
+  "fontSizePx": "35px",
+  "fontFamily": "\"Open Sans\", Arial, sans-serif",
+  "color": "rgb(255, 255, 255)",
+  "cursor": {
+    "character": "|",
+    "animationShorthand": "0.7s infinite blink",
+    "animationName": "blink",
+    "animationDuration": "0.7s",
+    "animationIterationCount": "infinite",
+    "animationTimingFunction": "ease",
+    "fontSizePx": "35px",
+    "color": "rgb(255, 255, 255)",
+    "opacity": "0.516683"
+  },
+  "frames": [
+    {
+      "index": 0,
+      "tMs": 0,
+      "text": "",
+      "path": "docs/ui-reference/www.andrewrinehart.us/effects/typewriter-00-t0ms.png"
+    },
+    {
+      "index": 1,
+      "tMs": 500,
+      "text": "Founde",
+      "path": "docs/ui-reference/www.andrewrinehart.us/effects/typewriter-01-t500ms.png"
+    },
+    {
+      "index": 2,
+      "tMs": 1000,
+      "text": "Founder\nVen",
+      "path": "docs/ui-reference/www.andrewrinehart.us/effects/typewriter-02-t1000ms.png"
+    },
+    {
+      "index": 3,
+      "tMs": 1500,
+      "text": "Founder\nVenture",
+      "path": "docs/ui-reference/www.andrewrinehart.us/effects/typewriter-03-t1500ms.png"
+    },
+    {
+      "index": 4,
+      "tMs": 2000,
+      "text": "Founder\nVenture\nReal",
+      "path": "docs/ui-reference/www.andrewrinehart.us/effects/typewriter-04-t2000ms.png"
+    },
+    {
+      "index": 5,
+      "tMs": 2500,
+      "text": "Founder\nVenture\nReal Esta",
+      "path": "docs/ui-reference/www.andrewrinehart.us/effects/typewriter-05-t2500ms.png"
+    },
+    {
+      "index": 6,
+      "tMs": 3000,
+      "text": "Founder\nVenture\nReal Estate\nCo",
+      "path": "docs/ui-reference/www.andrewrinehart.us/effects/typewriter-06-t3000ms.png"
+    },
+    {
+      "index": 7,
+      "tMs": 3500,
+      "text": "Founder\nVenture\nReal Estate\nContact",
+      "path": "docs/ui-reference/www.andrewrinehart.us/effects/typewriter-07-t3500ms.png"
+    }
+  ]
+}

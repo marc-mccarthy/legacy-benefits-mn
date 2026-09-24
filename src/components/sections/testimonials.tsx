@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Quote } from "lucide-react";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { Reveal } from "@/components/motion/reveal";
 import { Monogram } from "@/components/ui/monogram";
@@ -16,7 +15,7 @@ export type Testimonial = {
 export function Testimonials({
   heading,
   items,
-  scheme = "light",
+  scheme = "dark",
 }: {
   heading?: string | null;
   items: Testimonial[];
@@ -26,29 +25,25 @@ export function Testimonials({
 
   return (
     <Section scheme={scheme} aria-labelledby="testimonials-heading">
-      <Container className="space-y-10">
+      <Container className="space-y-(--spacing-medium)">
         <Reveal>
           <h2
             id="testimonials-heading"
-            className="font-display text-3xl font-semibold tracking-tight md:text-5xl"
+            className="font-display text-(length:--text-display-lg)"
           >
             {heading ?? "What clients say"}
           </h2>
         </Reveal>
 
-        <ul className="grid gap-6 md:grid-cols-3">
-          {items.map((item, i) => {
-            const photo = mediaProps(item.photo as never);
-            return (
-              <li key={item.id} className="flex">
-                <Reveal
-                  delay={Math.min(i * 0.05, 0.15)}
-                  className="flex w-full"
-                >
-                  <figure className="border-border-subtle flex w-full flex-col gap-5 rounded-(--radius-card) border p-6">
-                    <Quote aria-hidden className="text-accent size-7" />
-                    <blockquote className="flex-1 text-lg leading-relaxed text-pretty">
-                      {item.quote}
+        <Reveal>
+          <ul className="divide-border-subtle divide-y">
+            {items.map((item) => {
+              const photo = mediaProps(item.photo as never);
+              return (
+                <li key={item.id}>
+                  <figure className="flex flex-col gap-6 py-(--spacing-medium)">
+                    <blockquote className="font-display max-w-4xl text-(length:--text-display-lg) leading-snug text-pretty">
+                      {`“${item.quote}”`}
                     </blockquote>
                     <figcaption className="flex items-center gap-3">
                       {photo ? (
@@ -77,11 +72,11 @@ export function Testimonials({
                       </span>
                     </figcaption>
                   </figure>
-                </Reveal>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </Reveal>
       </Container>
     </Section>
   );

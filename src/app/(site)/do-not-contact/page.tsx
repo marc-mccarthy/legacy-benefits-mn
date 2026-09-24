@@ -13,10 +13,10 @@ export default function DoNotContactPage() {
     <Section>
       <Container className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
         <Prose className="space-y-5">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="font-display text-(length:--text-display-page)">
             Stop contact or remove my information
           </h1>
-          <p className="text-muted text-lg">
+          <p className="lead text-muted text-lg">
             Use this form to withdraw consent to be contacted, to opt out of the
             sale or sharing of your personal information, or to ask us to delete
             what we hold about you.

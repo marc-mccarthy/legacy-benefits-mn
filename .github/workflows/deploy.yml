@@ -4,160 +4,245 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: Environment to deploy
-        required: true
-        default: dev
-        type: choice
-        options: [dev, prod]
 
 concurrency:
-  group: deploy-${{ inputs.environment || 'dev' }}
+  group: ${{ github.workflow }}-deploy
   cancel-in-progress: false
 
 permissions:
-  id-token: write # required for OIDC
   contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  MAX_PACKAGE_BYTES: 209715200
 
 jobs:
-  deploy:
-    name: Build, migrate, deploy
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'dev' }}
-
-    env:
-      AWS_REGION: ${{ vars.AWS_REGION }}
-      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
-      ECS_SERVICE: ${{ vars.ECS_SERVICE }}
-
+  build:
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      key: ${{ steps.pack.outputs.key }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      # Short-lived credentials via OIDC. No AWS keys are stored in GitHub.
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: pnpm/action-setup@v6
+
+      # Node 22 to match the Lambda nodejs22.x runtime. Native modules are
+      # ABI-bound to the major that built them, and sharp ships prebuilt arm64
+      # binaries — hence the arm64 runner.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # A NEXT_PUBLIC_ value is baked into the bundle at build time, so it is
+      # published by definition — vars, never secrets. The BUSINESS_* four are
+      # read through env() by src/lib/business.ts during prerender.
+      - name: Build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+          NEXT_PUBLIC_GTM_ID: ${{ vars.NEXT_PUBLIC_GTM_ID }}
+          NEXT_PUBLIC_CALENDLY_URL: ${{ vars.NEXT_PUBLIC_CALENDLY_URL }}
+          NEXT_PUBLIC_MEDIA_HOST: ${{ vars.NEXT_PUBLIC_MEDIA_HOST }}
+          BUSINESS_NAME: ${{ vars.BUSINESS_NAME }}
+          BUSINESS_PHONE: ${{ vars.BUSINESS_PHONE }}
+          BUSINESS_EMAIL: ${{ vars.BUSINESS_EMAIL }}
+          BUSINESS_ADDRESS: ${{ vars.BUSINESS_ADDRESS }}
+        run: pnpm build
+
+      # esbuild inlines every runtime dependency into one file, so the package
+      # is index.mjs plus a generated package.json and carries no node_modules.
+      # Zipping from inside the directory puts index.mjs at the archive root,
+      # which is what lets the runtime resolve the "index.handler" entry point.
+      - name: Pack API
+        id: pack
+        run: |
+          set -euo pipefail
+          key="${GITHUB_SHA::12}"
+
+          node scripts/build-api-bundle.mjs
+
+          test -f api-bundle/index.mjs
+          test -f api-bundle/package.json
+          test ! -e api-bundle/node_modules
+
+          bytes=$(du -sb api-bundle | cut -f1)
+          echo "api package: $(numfmt --to=iec "$bytes")"
+          if [ "$bytes" -gt "$MAX_PACKAGE_BYTES" ]; then
+            echo "::error::api package $(numfmt --to=iec "$bytes") exceeds the $(numfmt --to=iec "$MAX_PACKAGE_BYTES") guard; Lambda hard limit is 250MB unzipped"
+            exit 1
+          fi
+
+          (cd api-bundle && zip -qry "../$key.zip" .)
+
+          # An index.mjs one directory down would upload and update the function
+          # cleanly, then fail to resolve on first invoke.
+          unzip -Z1 "$key.zip" | grep -qx 'index.mjs'
+
+          echo "key=$key" >>"$GITHUB_OUTPUT"
+
+      # The handler calls drizzle-orm's migrator directly, so the package needs
+      # only those two runtime dependencies rather than the workspace tree. The
+      # versions come out of package.json so they cannot drift from the app's.
+      # --node-linker=hoisted writes real directories instead of links into
+      # pnpm's content-addressed store, which Lambda cannot follow.
+      - name: Pack migrate
+        run: |
+          set -euo pipefail
+          key="${{ steps.pack.outputs.key }}"
+          rm -rf mig && mkdir -p mig
+
+          node --input-type=commonjs -e '
+            const fs = require("fs");
+            const { dependencies } = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            const pick = ["drizzle-orm", "pg"];
+            for (const name of pick) {
+              if (!dependencies[name]) throw new Error(name + " is not a dependency");
+            }
+            fs.writeFileSync("mig/package.json", JSON.stringify({
+              name: "migrate",
+              private: true,
+              type: "module",
+              dependencies: Object.fromEntries(pick.map((n) => [n, dependencies[n]])),
+            }, null, 2) + "\n");
+          '
+
+          # --ignore-workspace: pnpm-workspace.yaml at the repo root would
+          # otherwise capture mig/. --no-frozen-lockfile: CI=true makes frozen
+          # the default, and this directory has no lockfile by design.
+          (cd mig && pnpm install --node-linker=hoisted --ignore-workspace --no-frozen-lockfile)
+
+          cp -R drizzle mig/drizzle
+          cp scripts/migrate-handler.mjs mig/migrate.mjs
+
+          test -f mig/migrate.mjs
+          test -f mig/drizzle/meta/_journal.json
+          test ! -L mig/node_modules/drizzle-orm
+          test ! -L mig/node_modules/pg
+
+          bytes=$(du -sb mig | cut -f1)
+          echo "migrate package: $(numfmt --to=iec "$bytes")"
+          if [ "$bytes" -gt "$MAX_PACKAGE_BYTES" ]; then
+            echo "::error::migrate package $(numfmt --to=iec "$bytes") exceeds the $(numfmt --to=iec "$MAX_PACKAGE_BYTES") guard"
+            exit 1
+          fi
+
+          (cd mig && zip -qry "../$key-migrate.zip" .)
+
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - uses: aws-actions/amazon-ecr-login@v2
-        id: ecr
+      # Both zips now measure well under the 50MB direct-upload limit, but the
+      # S3 path works for any size and needs no branch on it.
+      - name: Upload
+        env:
+          BUCKET: ${{ vars.ASSETS_BUCKET }}
+          KEY: ${{ steps.pack.outputs.key }}
+        run: |
+          set -euo pipefail
+          aws s3 cp "$KEY.zip" "s3://$BUCKET/releases/$KEY.zip"
+          aws s3 cp "$KEY-migrate.zip" "s3://$BUCKET/releases/$KEY-migrate.zip"
 
-      - uses: docker/setup-buildx-action@v3
+          # out/ carries _next/static and a copy of public/, so the excludes
+          # keep this sync off the two prefixes the dedicated syncs below own,
+          # and off the zips uploaded seconds ago.
+          aws s3 sync out/ "s3://$BUCKET/" --delete --exclude 'releases/*' --exclude 'media/*' --exclude 'video/*'
 
-      - name: Build and push image
-        uses: docker/build-push-action@v6
+          aws s3 sync public/media "s3://$BUCKET/media"
+          aws s3 sync public/video "s3://$BUCKET/video"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    env:
+      BUCKET: ${{ vars.ASSETS_BUCKET }}
+      KEY: ${{ needs.build.outputs.key }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
-          context: .
-          # Tasks run on Graviton.
-          platforms: linux/arm64
-          push: true
-          # Immutable tag: every deploy is traceable to a commit, and a rollback
-          # is redeploying a known SHA rather than re-running a build.
-          tags: |
-            ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-          build-args: |
-            NEXT_PUBLIC_SITE_URL=${{ vars.SITE_URL }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # Register the new revision BEFORE migrating, then migrate against that
-      # revision, then roll the service onto it.
-      #
-      # The order is the whole point. Previously this ran migrations against the
-      # service's CURRENT task definition with only `command` overridden, never
-      # `image`, which broke in two directions:
-      #
-      #   - On a first deploy the current definition is still the Terraform
-      #     bootstrap placeholder (nginx). nginx has no `node`, so the container
-      #     never started, exitCode came back `None`, and the job failed here —
-      #     before the deploy step. `terraform apply` plus a push to main could
-      #     never produce a working site, and nothing said why.
-      #   - On every later deploy it ran migrations from image N-1 and then
-      #     started image N against them, so any release carrying a migration
-      #     began on the pre-migration schema. That defeats the guarantee the
-      #     Dockerfile is built around: migrations ship with the image so a
-      #     release applies exactly the schema it was built against.
-      - name: Register new task definition
-        id: taskdef
+      - name: Migrate
+        env:
+          FN: ${{ vars.MIGRATE_FUNCTION_NAME }}
         run: |
           set -euo pipefail
+          aws lambda update-function-code --function-name "$FN" \
+            --s3-bucket "$BUCKET" --s3-key "releases/$KEY-migrate.zip" >/dev/null
+          aws lambda wait function-updated-v2 --function-name "$FN"
 
-          CURRENT=$(aws ecs describe-services \
-            --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
-            --query 'services[0].taskDefinition' --output text)
+          code=$(aws lambda invoke --function-name "$FN" \
+            --cli-binary-format raw-in-base64-out \
+            --query FunctionError --output text response.json)
 
-          IMAGE="${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${{ github.sha }}"
-
-          aws ecs describe-task-definition --task-definition "$CURRENT" \
-            --query 'taskDefinition' --output json > taskdef.json
-
-          jq --arg IMAGE "$IMAGE" '
-            .containerDefinitions[0].image = $IMAGE
-            | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
-                  .compatibilities, .registeredAt, .registeredBy)
-          ' taskdef.json > new-taskdef.json
-
-          NEW_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://new-taskdef.json \
-            --query 'taskDefinition.taskDefinitionArn' --output text)
-
-          echo "arn=$NEW_ARN" >> "$GITHUB_OUTPUT"
-          echo "Registered $NEW_ARN"
-
-      # Runs inside the VPC rather than from the runner, which would mean
-      # exposing the database publicly.
-      - name: Run database migrations
-        run: |
-          set -euo pipefail
-
-          NETWORK=$(aws ecs describe-services \
-            --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
-            --query 'services[0].networkConfiguration' --output json)
-
-          TASK_ARN=$(aws ecs run-task \
-            --cluster "$ECS_CLUSTER" \
-            --task-definition "${{ steps.taskdef.outputs.arn }}" \
-            --launch-type FARGATE \
-            --network-configuration "$NETWORK" \
-            --overrides '{"containerOverrides":[{"name":"web","command":["node","node_modules/.bin/payload","migrate"]}]}' \
-            --query 'tasks[0].taskArn' --output text)
-
-          echo "Migration task: $TASK_ARN"
-          aws ecs wait tasks-stopped --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN"
-
-          EXIT_CODE=$(aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN" \
-            --query 'tasks[0].containers[0].exitCode' --output text)
-
-          # `None` means the container never started at all — a pull failure, a
-          # bad command, an unreachable secret. Distinguished from a non-zero
-          # exit because the causes and the fixes are completely different.
-          if [ "$EXIT_CODE" = "None" ]; then
-            echo "::error::Migration container never started. Stopped reason:"
-            aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN" \
-              --query 'tasks[0].[stoppedReason,containers[0].reason]' --output text
+          cat response.json
+          # A failed migration can return a payload rather than throwing, so
+          # FunctionError alone is not sufficient.
+          if [ "$code" != "None" ] || grep -qiE '"(errorType|errorMessage)"' response.json; then
+            echo "::error::migrations failed"
             exit 1
           fi
 
-          if [ "$EXIT_CODE" != "0" ]; then
-            echo "::error::Migration task exited with $EXIT_CODE — not deploying."
+      - name: Update function
+        env:
+          FN: ${{ vars.LAMBDA_FUNCTION_NAME }}
+        run: |
+          set -euo pipefail
+          aws lambda update-function-code --function-name "$FN" \
+            --s3-bucket "$BUCKET" --s3-key "releases/$KEY.zip" >/dev/null
+          aws lambda wait function-updated-v2 --function-name "$FN"
+
+      - name: Invalidate
+        env:
+          DIST: ${{ vars.CLOUDFRONT_ID }}
+        run: |
+          # Never a wildcard broad enough to cover the fingerprinted asset
+          # prefix: that would evict the objects this same deploy just
+          # uploaded. Each wildcard counts as one path.
+          aws cloudfront create-invalidation --distribution-id "$DIST" \
+            --paths '/*' >/dev/null
+
+      # Nothing above proves the site serves. Aurora resumes from 0 ACU in
+      # ~15s and the first request also pays a Lambda cold start.
+      - name: Verify serving
+        env:
+          SITE: ${{ vars.SITE_URL }}
+          BUSINESS_NAME: ${{ vars.BUSINESS_NAME }}
+        run: |
+          set -euo pipefail
+
+          # /api/health checks Postgres and returns 503 when it is unreachable,
+          # so a 200 proves the function is up and the database is live.
+          healthy=""
+          for i in $(seq 1 30); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$SITE/api/health" || echo 000)
+            if [ "$code" = "200" ]; then healthy=1; break; fi
+            echo "health attempt $i: $code"
+            sleep 10
+          done
+          if [ -z "$healthy" ]; then
+            echo "::error::$SITE/api/health never returned 200"
             exit 1
           fi
 
-      - name: Deploy new image
-        run: |
-          set -euo pipefail
+          # A healthy function says nothing about the pages, which are served
+          # from S3 by a different origin. Assert a rendered string rather than
+          # a status, so an empty or placeholder page fails here.
+          code=$(curl -sS -o home.html -w '%{http_code}' --max-time 20 "$SITE/" || echo 000)
+          if [ "$code" != "200" ]; then
+            echo "::error::$SITE/ returned $code"
+            exit 1
+          fi
+          if ! grep -qF "$BUSINESS_NAME" home.html; then
+            echo "::error::$SITE/ returned 200 but the body does not contain $BUSINESS_NAME"
+            exit 1
+          fi
 
-          aws ecs update-service --cluster "$ECS_CLUSTER" --service "$ECS_SERVICE" \
-            --task-definition "${{ steps.taskdef.outputs.arn }}" >/dev/null
-
-          echo "Waiting for the service to stabilise…"
-          aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE"
-
-      - name: Smoke test
-        run: |
-          set -euo pipefail
-          STATUS=$(curl -s -o /dev/null -w '%{http_code}' "${{ vars.SITE_URL }}/api/health")
-          echo "Health check: $STATUS"
-          [ "$STATUS" = "200" ]
+          echo "serving: $SITE"

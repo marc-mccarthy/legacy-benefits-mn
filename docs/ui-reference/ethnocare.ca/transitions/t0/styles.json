@@ -1,0 +1,1770 @@
+{
+  "index": 0,
+  "from": "/",
+  "to": "/pages/about-us",
+  "link": "header a[href=\"/pages/about-us\"]",
+  "navigationEventFired": true,
+  "screencastFrames": 122,
+  "samples": [
+    {
+      "t": 1,
+      "containerOpacity": 1,
+      "containerTransform": "none",
+      "containerFilter": "none",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready is-hero-animation-completed",
+      "phase": null
+    },
+    {
+      "t": 151,
+      "containerOpacity": 1,
+      "containerTransform": "none",
+      "containerFilter": "none",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready is-hero-animation-completed",
+      "phase": null
+    },
+    {
+      "t": 296,
+      "containerOpacity": 1,
+      "containerTransform": "none",
+      "containerFilter": "none",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready is-hero-animation-completed",
+      "phase": null
+    },
+    {
+      "t": 436,
+      "containerOpacity": 1,
+      "containerTransform": "none",
+      "containerFilter": "none",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready is-hero-animation-completed",
+      "phase": null
+    },
+    {
+      "t": 582,
+      "containerOpacity": 1,
+      "containerTransform": "none",
+      "containerFilter": "none",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready is-hero-animation-completed",
+      "phase": null
+    },
+    {
+      "t": 725,
+      "containerOpacity": 1,
+      "containerTransform": "none",
+      "containerFilter": "none",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready is-hero-animation-completed",
+      "phase": null
+    },
+    {
+      "t": 923,
+      "containerOpacity": 1,
+      "containerTransform": "none",
+      "containerFilter": "blur(0px)",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-infobar-enabled is-loading",
+      "phase": null
+    },
+    {
+      "t": 1064,
+      "containerOpacity": 1,
+      "containerTransform": "none",
+      "containerFilter": "blur(0px)",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-infobar-enabled is-loading",
+      "phase": null
+    },
+    {
+      "t": 1266,
+      "containerOpacity": 0.218263,
+      "containerTransform": "none",
+      "containerFilter": "blur(7.81737px)",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-infobar-enabled is-loading",
+      "phase": null
+    },
+    {
+      "t": 1516,
+      "containerOpacity": 0.908884,
+      "containerTransform": "none",
+      "containerFilter": "blur(7.81737px)",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded",
+      "phase": null
+    },
+    {
+      "t": 1583,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 1643,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 1711,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 1778,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 1847,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 1912,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 1979,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2032,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2080,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2124,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2184,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2221,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2254,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2287,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2321,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2355,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2389,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2421,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2455,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2489,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2533,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2566,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2600,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2633,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2666,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2700,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2732,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2765,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2796,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2830,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2863,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2896,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2927,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2959,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 2992,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3028,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3061,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3093,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3125,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3158,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3191,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3223,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3254,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3286,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3320,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3353,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3386,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3418,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3452,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3485,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3517,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3549,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3582,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3612,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3644,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3676,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3710,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3743,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3774,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3806,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3839,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3871,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3904,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3936,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 3975,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 4009,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 4044,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    },
+    {
+      "t": 4077,
+      "containerOpacity": 0,
+      "containerTransform": "",
+      "containerFilter": "",
+      "overlayOpacity": 0,
+      "overlayTransform": "none",
+      "scrollY": 0,
+      "htmlClasses": "js-focus-visible fonts-loaded is-first-loaded is-infobar-enabled is-loaded lenis lenis-smooth is-ready",
+      "phase": null
+    }
+  ],
+  "phases": [],
+  "barbaPresent": false,
+  "containerSelector": "u-anim-page",
+  "overlaySelector": "c-preloader",
+  "enterAnimation": {
+    "route": "/pages/about-us",
+    "sampleCount": 106,
+    "classFlipTimeline": [
+      {
+        "tMs": 16,
+        "classes": "is-loading",
+        "opacity": 0,
+        "transform": "none"
+      },
+      {
+        "tMs": 124,
+        "classes": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none"
+      },
+      {
+        "tMs": 940,
+        "classes": "is-loading js-focus-visible fonts-loaded",
+        "opacity": 0,
+        "transform": "none"
+      },
+      {
+        "tMs": 1303,
+        "classes": "is-loading js-focus-visible fonts-loaded lenis lenis-smooth",
+        "opacity": 0,
+        "transform": "none"
+      },
+      {
+        "tMs": 1652,
+        "classes": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded",
+        "opacity": 0,
+        "transform": "none"
+      },
+      {
+        "tMs": 1839,
+        "classes": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled",
+        "opacity": 0.490126,
+        "transform": "none"
+      },
+      {
+        "tMs": 1962,
+        "classes": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 0.822914,
+        "transform": "none"
+      }
+    ],
+    "samples": [
+      {
+        "t": 16,
+        "htmlClasses": "is-loading",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 124,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 174,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 192,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 195,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 196,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 231,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 233,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 236,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 243,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 291,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 293,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 301,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 302,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 312,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 319,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 328,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 339,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 345,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 352,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 361,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 373,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 378,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 386,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 394,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 403,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 415,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 420,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 426,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 437,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 449,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 453,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 461,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 470,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 484,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 486,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 495,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 501,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 511,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 522,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 528,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 535,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 545,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 555,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 562,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 569,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 578,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 589,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 595,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 603,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 611,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 623,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 628,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 635,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 645,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 656,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 662,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 669,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 678,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 690,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 695,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 703,
+        "htmlClasses": "is-loading js-focus-visible",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 940,
+        "htmlClasses": "is-loading js-focus-visible fonts-loaded",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1303,
+        "htmlClasses": "is-loading js-focus-visible fonts-loaded lenis lenis-smooth",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1373,
+        "htmlClasses": "is-loading js-focus-visible fonts-loaded lenis lenis-smooth",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1452,
+        "htmlClasses": "is-loading js-focus-visible fonts-loaded lenis lenis-smooth",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1517,
+        "htmlClasses": "is-loading js-focus-visible fonts-loaded lenis lenis-smooth",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1585,
+        "htmlClasses": "is-loading js-focus-visible fonts-loaded lenis lenis-smooth",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1652,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1721,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded",
+        "opacity": 0,
+        "transform": "none",
+        "preloaderOpacity": 1,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1839,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled",
+        "opacity": 0.490126,
+        "transform": "none",
+        "preloaderOpacity": 0.41043,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 1962,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 0.822914,
+        "transform": "none",
+        "preloaderOpacity": 0.0949307,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2054,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 0.907519,
+        "transform": "none",
+        "preloaderOpacity": 0.0338542,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2114,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 0.943001,
+        "transform": "none",
+        "preloaderOpacity": 0.0135921,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2209,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 0.988782,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2274,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 0.998166,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2340,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2408,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2472,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2534,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2600,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2659,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2723,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2786,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2848,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2912,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 2971,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3034,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3094,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3158,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3220,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3283,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3348,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3408,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3469,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3530,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3592,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3659,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3726,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3791,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3859,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3920,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 3982,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 4043,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 4104,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      },
+      {
+        "t": 4173,
+        "htmlClasses": "js-focus-visible fonts-loaded lenis lenis-smooth is-first-loaded is-loaded is-infobar-enabled is-ready",
+        "opacity": 1,
+        "transform": "none",
+        "preloaderOpacity": 0,
+        "preloaderTransform": "none"
+      }
+    ]
+  }
+}

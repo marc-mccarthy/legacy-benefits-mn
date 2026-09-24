@@ -1,0 +1,143 @@
+data "aws_iam_policy_document" "lambda_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lambda" {
+  name               = "${var.name}-lambda"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+}
+
+# ENI management in the VPC; without it the function cannot start at all.
+resource "aws_iam_role_policy_attachment" "lambda_vpc" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+data "aws_iam_policy_document" "lambda" {
+  statement {
+    actions = ["logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = [
+      "${aws_cloudwatch_log_group.lambda.arn}:*",
+      "${aws_cloudwatch_log_group.migrate.arn}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload",
+    ]
+    resources = ["${aws_s3_bucket.assets.arn}/*"]
+  }
+
+  statement {
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.assets.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda" {
+  name   = "${var.name}-lambda"
+  role   = aws_iam_role.lambda.id
+  policy = data.aws_iam_policy_document.lambda.json
+}
+
+# CloudFront signs Function URL requests with SigV4 under its own service principal.
+resource "aws_lambda_permission" "cloudfront" {
+  statement_id           = "AllowCloudFront"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.app.function_name
+  principal              = "cloudfront.amazonaws.com"
+  source_arn             = aws_cloudfront_distribution.this.arn
+  function_url_auth_type = "AWS_IAM"
+}
+
+# Since October 2025 a Function URL reached through CloudFront also needs
+# lambda:InvokeFunction; InvokeFunctionUrl alone returns 403. No
+# function_url_auth_type here — this grant is on the function, not the URL.
+resource "aws_lambda_permission" "cloudfront_invoke" {
+  statement_id  = "AllowCloudFrontInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.app.function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.this.arn
+}
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+}
+
+data "aws_iam_policy_document" "deploy_assume" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    # A job with `environment:` gets sub `...:environment:NAME`, never the ref: form.
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values = [
+        "${var.github_subject_prefix}:ref:refs/heads/main",
+        "${var.github_subject_prefix}:environment:production",
+      ]
+    }
+  }
+}
+
+resource "aws_iam_role" "deploy" {
+  name               = "${var.name}-github-deploy"
+  assume_role_policy = data.aws_iam_policy_document.deploy_assume.json
+}
+
+data "aws_iam_policy_document" "deploy" {
+  statement {
+    actions = [
+      "lambda:UpdateFunctionCode",
+      "lambda:UpdateFunctionConfiguration",
+      "lambda:GetFunction",
+      "lambda:GetFunctionConfiguration",
+      "lambda:InvokeFunction",
+    ]
+    resources = [aws_lambda_function.app.arn, aws_lambda_function.migrate.arn]
+  }
+
+  statement {
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:ListBucket",
+      "s3:GetObject",
+    ]
+    resources = [aws_s3_bucket.assets.arn, "${aws_s3_bucket.assets.arn}/*"]
+  }
+
+  statement {
+    actions   = ["cloudfront:CreateInvalidation"]
+    resources = [aws_cloudfront_distribution.this.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "deploy" {
+  name   = "${var.name}-github-deploy"
+  role   = aws_iam_role.deploy.id
+  policy = data.aws_iam_policy_document.deploy.json
+}

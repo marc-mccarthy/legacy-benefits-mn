@@ -3,12 +3,6 @@
 import Script from "next/script";
 import { useEffect, useRef } from "react";
 
-/**
- * Calendly inline embed, matching greatwatersfinancial.com.
- *
- * Loaded lazily and given an accessible name, because the widget renders into
- * an iframe that is otherwise unlabelled for screen readers.
- */
 export function CalendlyInline({
   url,
   title = "Schedule a call with a licensed agent",

@@ -20,13 +20,6 @@ export type EventItem = {
   image?: unknown;
 };
 
-/**
- * Events slider, matching the pattern on greatwatersfinancial.com (Swiper
- * there, Embla here). Arrows and dots are real buttons with labels, and the
- * track is a labelled group so keyboard and screen-reader users can move
- * through it — carousels are the most commonly inaccessible component on
- * sites of this type.
- */
 export function EventCarousel({
   heading,
   events,
@@ -40,13 +33,10 @@ export function EventCarousel({
   });
   const [selected, setSelected] = useState(0);
 
-  // Derived during render rather than synced into state from an effect, which
-  // would cause a cascading render on mount.
   const snaps = emblaApi ? emblaApi.scrollSnapList() : [];
 
   useEffect(() => {
     if (!emblaApi) return;
-    // setState here runs from Embla's event, not synchronously in the effect.
     const onSelect = () => setSelected(emblaApi.selectedScrollSnap());
     emblaApi.on("select", onSelect).on("reInit", onSelect);
     return () => {
@@ -64,13 +54,13 @@ export function EventCarousel({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h2
           id="events-heading"
-          className="font-display text-3xl font-semibold tracking-tight md:text-5xl"
+          className="font-display text-(length:--text-display-lg)"
         >
           {heading ?? "Upcoming events"}
         </h2>
         <Link
           href="/events"
-          className="font-semibold underline underline-offset-4"
+          className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
         >
           View all events
         </Link>
@@ -90,11 +80,15 @@ export function EventCarousel({
               className="min-w-0 flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%]"
             >
               <Card className="h-full">
-                <EventImage image={event.image} cost={event.cost} />
+                <EventImage
+                  image={event.image}
+                  cost={event.cost}
+                  morphSlug={event.slug}
+                />
                 <CardBody>
                   <p className="text-muted flex items-center gap-2">
                     <CalendarDays aria-hidden className="size-4" />
-                    <time dateTime={event.startsAt}>
+                    <time className="tabular" dateTime={event.startsAt}>
                       {formatDate(event.startsAt)} ·{" "}
                       {formatTime(event.startsAt)}
                     </time>
@@ -107,7 +101,7 @@ export function EventCarousel({
                   <p className="text-muted flex-1">{event.summary}</p>
                   <Link
                     href={`/events/${event.slug}`}
-                    className="font-semibold underline underline-offset-4"
+                    className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
                   >
                     View event
                     <span className="sr-only">: {event.title}</span>
@@ -130,10 +124,6 @@ export function EventCarousel({
                     onClick={() => emblaApi?.scrollTo(i)}
                     aria-label={`Go to slide ${i + 1} of ${snaps.length}`}
                     aria-current={selected === i}
-                    // 44px hit area with a small visual dot. 24px only just
-                    // clears WCAG 2.5.8, leaving no margin for a hand tremor,
-                    // and these sit close together where a mis-tap jumps the
-                    // carousel somewhere unintended.
                     className="grid size-11 place-items-center rounded-full"
                   >
                     <span
@@ -148,7 +138,6 @@ export function EventCarousel({
                 </li>
               ))}
             </ul>
-            {/* Counting small dots is harder than reading a number. */}
             <p aria-hidden className="text-muted">
               {selected + 1} of {snaps.length}
             </p>

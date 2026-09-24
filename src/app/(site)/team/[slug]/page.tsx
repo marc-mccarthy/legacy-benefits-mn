@@ -3,25 +3,32 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { RichTextBody } from "@/components/sections/rich-text";
 import { JsonLd, personSchema } from "@/components/seo/json-ld";
+import { Button } from "@/components/ui/button";
 import { Container, Section } from "@/components/ui/section";
-import { getDocBySlug } from "@/lib/payload";
-import { mediaProps } from "@/lib/media";
+import { Monogram } from "@/components/ui/monogram";
+import { team, teamMemberBySlug } from "@/content/team";
 
 type Props = { params: Promise<{ slug: string }> };
 
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return team.map((member) => ({ slug: member.slug }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const doc = await getDocBySlug("team", slug).catch(() => null);
+  const doc = teamMemberBySlug(slug);
   if (!doc) return {};
   return { title: doc.name, description: `${doc.name} — ${doc.role}` };
 }
 
 export default async function TeamMemberPage({ params }: Props) {
   const { slug } = await params;
-  const doc = await getDocBySlug("team", slug).catch(() => null);
+  const doc = teamMemberBySlug(slug);
   if (!doc) notFound();
 
-  const photo = mediaProps(doc.headshot as never);
+  const photo = doc.photo;
 
   return (
     <Section>
@@ -32,57 +39,61 @@ export default async function TeamMemberPage({ params }: Props) {
         {photo ? (
           <Image
             src={photo.src}
-            alt={doc.name}
+            alt={photo.alt || `Portrait of ${doc.name}, ${doc.role}`}
             width={640}
             height={768}
             sizes="320px"
             className="aspect-[5/6] w-full rounded-(--radius-card) object-cover"
             priority
           />
-        ) : null}
+        ) : (
+          <Monogram
+            name={doc.name}
+            className="aspect-[5/6] w-full rounded-(--radius-card)"
+            textClassName="text-6xl"
+          />
+        )}
 
         <div className="space-y-5">
           <div>
-            <h1 className="text-4xl font-semibold tracking-tight">
+            <h1 className="font-display text-(length:--text-display-page)">
               {doc.name}
             </h1>
-            <p className="text-muted text-lg">{doc.role}</p>
+            <p className="lead text-muted text-lg">{doc.role}</p>
           </div>
 
-          <RichTextBody data={doc.bio} />
+          <RichTextBody>
+            <p>{doc.bio}</p>
+          </RichTextBody>
 
-          {doc.licenses?.length ? (
+          {doc.licenses.length ? (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold tracking-wide uppercase">
+              <h2 className="text-base font-semibold">
                 Licences and designations
               </h2>
-              <ul className="text-muted space-y-1 text-sm">
-                {doc.licenses.map((l, i) => (
-                  <li key={i}>{l.label}</li>
+              <ul className="text-muted space-y-1 text-base">
+                {doc.licenses.map((l) => (
+                  <li key={l}>{l}</li>
                 ))}
               </ul>
             </div>
           ) : null}
 
-          <ul className="space-y-1 text-sm">
+          <ul className="space-y-2 text-base">
             {doc.phone ? (
               <li>
-                <a
-                  className="underline underline-offset-4"
-                  href={`tel:${doc.phone.replace(/\D/g, "")}`}
-                >
-                  {doc.phone}
-                </a>
+                <Button asChild variant="secondary" className="tabular">
+                  <a href={`tel:${doc.phone.replace(/\D/g, "")}`}>
+                    {doc.phone}
+                  </a>
+                </Button>
               </li>
             ) : null}
             {doc.email ? (
               <li>
-                <a
-                  className="underline underline-offset-4"
-                  href={`mailto:${doc.email}`}
-                >
-                  {doc.email}
-                </a>
+                <Button asChild variant="secondary">
+                  <a href={`mailto:${doc.email}`}>{doc.email}</a>
+                </Button>
               </li>
             ) : null}
           </ul>

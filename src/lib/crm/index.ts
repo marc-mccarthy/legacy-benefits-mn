@@ -19,7 +19,7 @@ const MODES = ["webhook", "zapier", "mock"] as const;
  * An unrecognised value throws rather than falling back. The mock reports
  * every send as successful, so a typo like CRM_TRANSPORT=webook would have
  * drainOutbox mark each row `sent`, leave countFailed at zero, and never trip
- * the alarm — losing every lead in production with a green dashboard. Read
+ * the alarm, discarding every lead while reporting success. Read
  * through env() so a blank or padded value is treated as unset rather than as
  * an unknown mode.
  */

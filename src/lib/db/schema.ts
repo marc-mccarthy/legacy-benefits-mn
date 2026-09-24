@@ -33,15 +33,15 @@ export const leads = pgTable(
     message: text("message"),
     sourcePath: text("source_path"),
     utm: jsonb("utm").$type<Record<string, string>>(),
-    // TCPA evidence. A boolean is not defensible: store the exact disclosure
-    // the visitor was shown, its version, and when they agreed to it.
+    // The text and version as shown, not a boolean — a flag cannot reproduce
+    // what the visitor actually read.
     consentedAt: timestamp("consented_at", { withTimezone: true }),
     consentText: text("consent_text"),
     consentVersion: text("consent_version"),
     userAgent: text("user_agent"),
     // Hashed, never raw — the raw address is not needed after rate limiting.
     ipHash: text("ip_hash"),
-    // CMS marketing records are retained 10 years; this drives purge jobs.
+    // Read by the purge job to decide what is eligible for deletion.
     retentionUntil: timestamp("retention_until", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -50,12 +50,8 @@ export const leads = pgTable(
   (t) => [index("leads_created_at_idx").on(t.createdAt)],
 );
 
-/**
- * Scope of Appointment. CMS requires a documented, product-type-specific SOA
- * before a Medicare Advantage or Part D sales meeting, retained for 10 years.
- * This is a compliance record, not a lead — it is never sent to the CRM
- * automatically and is not deleted on a marketing opt-out.
- */
+// Kept out of the CRM path and out of the marketing-opt-out purge; the two
+// write paths are separate for that reason.
 export const soaSubmissions = pgTable(
   "soa_submissions",
   {
@@ -70,7 +66,7 @@ export const soaSubmissions = pgTable(
     /** Typed signature plus the date the beneficiary signed. */
     signature: text("signature").notNull(),
     signedAt: timestamp("signed_at", { withTimezone: true }).notNull(),
-    /** When the sales meeting is expected to occur (CMS 48-hour guidance). */
+    /** When the sales meeting is expected to occur. */
     appointmentAt: timestamp("appointment_at", { withTimezone: true }),
     attestationText: text("attestation_text").notNull(),
     attestationVersion: text("attestation_version").notNull(),
@@ -86,11 +82,8 @@ export const soaSubmissions = pgTable(
   (t) => [index("soa_created_at_idx").on(t.createdAt)],
 );
 
-/**
- * Do-not-contact and privacy requests (TCPA revocation, CCPA/CPRA delete or
- * do-not-sell). Kept even after a lead is purged, because the suppression
- * itself must outlive the record it suppresses.
- */
+// Rows here survive a lead purge: a suppression that vanished with the lead
+// would stop suppressing anything.
 export const dncRequests = pgTable(
   "dnc_requests",
   {

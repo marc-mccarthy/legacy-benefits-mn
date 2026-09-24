@@ -3,15 +3,8 @@ import "server-only";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 
 /**
- * Transactional email via SES.
- *
- * Credentials come from the ECS task role — there are no access keys here. If
- * SES_FROM_ADDRESS is unset (local dev, CI) sending is skipped and logged
- * instead, so nothing needs AWS to run.
- *
- * Every send is best-effort: a lead is already committed to Postgres before
- * this runs, so a mail failure must never turn into a failed submission for
- * the visitor.
+ * Transactional email via SES. With SES_FROM_ADDRESS unset, sending is skipped
+ * and logged rather than throwing.
  */
 
 let client: SESv2Client | undefined;
@@ -90,8 +83,8 @@ export async function sendLeadNotification(
   lead: LeadSummary,
   business?: { name?: string; notificationEmails?: string[] },
 ) {
-  // Recipients come from site settings so they can be changed without a
-  // redeploy; the env var is only a fallback.
+  // The caller's list wins; the env var is read directly only when it passes
+  // none, so a caller that resolved an empty list does not silence the mail.
   const to = business?.notificationEmails?.length
     ? business.notificationEmails
     : (process.env["LEAD_NOTIFICATION_EMAILS"] ?? "")

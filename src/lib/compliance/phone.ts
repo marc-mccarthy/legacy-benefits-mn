@@ -19,9 +19,8 @@ export const PHONE_MIN_DIGITS = 10;
  * Digits-only means formatting cannot defeat suppression, and taking the last
  * ten means a country code cannot either.
  *
- * A foreign number whose last ten digits collide with a domestic one would
- * over-suppress, which is the right way to be wrong here: an unnecessary
- * suppression costs a lead, a missed one costs a TCPA claim.
+ * A foreign number whose last ten digits collide with a domestic one
+ * over-suppresses rather than under-suppresses.
  */
 export function normalizePhone(phone?: string): string | undefined {
   const digits = phone?.replace(/\D/g, "");

@@ -3,11 +3,11 @@ import type { CrmLead, CrmSendResult, CrmTransport } from "../types";
 /**
  * Posts to the inbound webhook URL generated in MedicarePRO under
  * Settings -> Integrations. That URL is displayed exactly once and cannot be
- * retrieved afterwards, so it lives in Secrets Manager, never in the repo.
+ * retrieved afterwards, so it is read from SSM Parameter Store as a
+ * SecureString rather than from the repo.
  *
- * The field names below are this project's best mapping; MedicarePRO does not
- * publish a schema for the endpoint. Confirm against a real test post before
- * go-live and adjust `toPayload` only (see plan, Part 9 item 1).
+ * MedicarePRO publishes no schema for the endpoint, so the field names in
+ * `toPayload` are a guess mapped from the lead shape.
  */
 export class WebhookTransport implements CrmTransport {
   readonly name = "webhook";

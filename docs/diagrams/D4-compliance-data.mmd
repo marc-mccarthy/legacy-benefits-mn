@@ -2,10 +2,8 @@
 flowchart TB
 accTitle: The four regulated tables, what each one proves, and what links them
 accDescr {
-  The four tables the lead pipeline owns, drawn apart from the content tables
-  because they are governed differently. Drizzle owns all four; Payload owns the
-  content tables beside them in the same database, and neither migrator may touch
-  the other's. Leads carry the TCPA consent evidence: the exact disclosure text
+  The four tables the lead pipeline owns, which are the only tables in the
+  database; drizzle-kit owns all four. Leads carry the TCPA consent evidence: the exact disclosure text
   shown, its version, and the moment of agreement, because a boolean is not
   evidence. Scope of Appointment records carry a signature, a signing time, the
   product types agreed to and the attestation text with its version. Do-not-contact
@@ -24,10 +22,6 @@ subgraph regulated ["Owned by drizzle-kit, ten-year retention"]
   soa[("soa_submissions")]
   dnc[("dnc_requests")]
   outbox[("crm_outbox")]
-end
-
-subgraph content ["Owned by payload migrate"]
-  payloadTables[("Pages, Services, Articles, Media, Users …")]
 end
 
 leadsCols["consent_text, consent_version, consented_at
@@ -67,7 +61,6 @@ secret -.->|salts| leads
 secret -.->|salts| soa
 secret -.->|salts| dnc
 
-regulated -.->|same database, separate migrator| content
 
 classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
 classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
@@ -79,7 +72,6 @@ classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
 class leads,soa,dnc,outbox phi
 class leadsCols,soaCols,dncCols,outboxCols,secret artifact
-class payloadTables client
 class capture,drain ours
 class suppression guard
 class crm vendor

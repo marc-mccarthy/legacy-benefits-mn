@@ -163,7 +163,7 @@ describe("the 48-hour guidance flag", () => {
   });
 
   it("is true at exactly 48 hours", async () => {
-    // CMS asks for the SOA at least 48 hours ahead; the boundary itself
+    // Medicare asks for the SOA at least 48 hours ahead; the boundary itself
     // qualifies.
     const result = await recordSoa({
       ...soa,

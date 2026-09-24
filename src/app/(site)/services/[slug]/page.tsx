@@ -4,41 +4,52 @@ import { CtaBand } from "@/components/sections/cta-band";
 import { RichTextBody } from "@/components/sections/rich-text";
 import { TpmoDisclaimer } from "@/components/compliance/disclosures";
 import { Container, Prose, Section } from "@/components/ui/section";
-import { getDocBySlug, getSiteSettings } from "@/lib/payload";
+import { serviceBySlug, services } from "@/content/services";
+import { site } from "@/content/site";
+import { getBusinessIdentity } from "@/lib/business";
 
 type Props = { params: Promise<{ slug: string }> };
 
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return services.map((service) => ({ slug: service.slug }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const doc = await getDocBySlug("services", slug).catch(() => null);
+  const doc = serviceBySlug(slug);
   if (!doc) return {};
   return { title: doc.title, description: doc.summary };
 }
 
 export default async function ServiceDetailPage({ params }: Props) {
   const { slug } = await params;
-  const [doc, settings] = await Promise.all([
-    getDocBySlug("services", slug).catch(() => null),
-    getSiteSettings().catch(() => null),
-  ]);
+  const doc = serviceBySlug(slug);
 
   if (!doc) notFound();
+
+  const identity = await getBusinessIdentity();
+  const Body = doc.Body;
 
   return (
     <>
       <Section>
         <Container>
           <Prose className="space-y-6">
-            <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+            <h1 className="font-display text-(length:--text-display-page)">
               {doc.title}
             </h1>
-            <p className="text-muted text-lg leading-relaxed">{doc.summary}</p>
-            <RichTextBody data={doc.body} />
-            {/* Required wherever plan options are described. */}
+            <p className="lead text-muted text-lg leading-relaxed">
+              {doc.summary}
+            </p>
+            <RichTextBody>
+              <Body />
+            </RichTextBody>
             <TpmoDisclaimer
               className="text-muted border-border-subtle border-t pt-6 leading-relaxed"
-              orgCount={settings?.compliance?.orgCount ?? undefined}
-              planCount={settings?.compliance?.planCount ?? undefined}
+              orgCount={site.compliance.orgCount ?? undefined}
+              planCount={site.compliance.planCount ?? undefined}
             />
           </Prose>
         </Container>
@@ -47,6 +58,7 @@ export default async function ServiceDetailPage({ params }: Props) {
         heading="Want help comparing your options?"
         ctaLabel="Request a call"
         ctaHref="/contact"
+        phone={identity.phone ?? null}
       />
     </>
   );

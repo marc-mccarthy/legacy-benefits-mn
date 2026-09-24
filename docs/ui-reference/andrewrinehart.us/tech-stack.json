@@ -1,0 +1,159 @@
+{
+  "site": "www.andrewrinehart.us",
+  "capturedAt": "2026-09-18",
+  "capturedFrom": ["https://www.andrewrinehart.us/"],
+  "method": "headless Chromium via Playwright 1.61.1 at 1440x900 for runtime globals and network; curl for headers and transient body reads. No third-party asset written to disk.",
+  "confidenceLegend": {
+    "observed": "read off a live object at runtime, or off a response header",
+    "parsed": "extracted from a URL path segment or a response body",
+    "inferred": "reasoned from an API surface or behavioural fingerprint; reasoning recorded in tech-stack.md"
+  },
+
+  "platform": {
+    "name": "WordPress",
+    "version": "7.0.4",
+    "versionConfidence": "observed",
+    "detectedVia": "<meta name=\"generator\" content=\"WordPress 7.0.4\">; link header rel=\"https://api.w.org/\" -> /wp-json/; ?ver=7.0.4 on every wp-includes asset",
+    "url": "https://www.andrewrinehart.us/",
+    "bytes": 97411,
+    "role": "CMS. SINGLE-PAGE SITE - the only internal route in the document is /. Page id 20, page-template-blank. Section navigation is Divi Overlays modals, not routes."
+  },
+
+  "hosting": [
+    {
+      "name": "GoDaddy Managed WordPress",
+      "version": null,
+      "versionConfidence": "observed",
+      "detectedVia": "FOUR independent signals: (1) mu-plugin /wp-content/mu-plugins/vendor/wpex/godaddy-launch/...?ver=2.0.2; (2) img1.wsimg.com telemetry - tti.min.js 7570 B and scc-c2.min.js 21697 B; (3) 3x POST https://csp.secureserver.net/eventbus/web?clientid=... returning 202; (4) x-gateway-cache-key / x-gateway-cache-status / x-gateway-request-id / x-gateway-skip-cache headers on every response",
+      "url": null,
+      "bytes": null,
+      "role": "origin host"
+    },
+    { "name": "nginx", "version": null, "versionConfidence": "observed", "detectedVia": "GET /wp-content/plugins/*/readme.txt returns an nginx 403 Forbidden page", "url": null, "bytes": null, "role": "origin web server; also why plugin readme versions are unreadable" },
+    { "name": "Cloudflare", "version": null, "versionConfidence": "observed", "detectedVia": "server: cloudflare; cf-ray: a3d2bddf3d2a5116-MSP; cf-cache-status: HIT with age: 86204 and cache-control: public, max-age=2678400. No nel/report-to block, so this is GoDaddy's own edge layer rather than an owner-configured Cloudflare zone.", "url": null, "bytes": null, "role": "edge cache in front of the GoDaddy gateway" }
+  ],
+
+  "theme": {
+    "name": "Divi",
+    "vendor": "Elegant Themes",
+    "version": "4.20.2",
+    "versionConfidence": "observed",
+    "detectedVia": "fetched /wp-content/themes/Divi/style.css directly: 'Theme Name: Divi' / 'Version: 4.20.2'. Matches ?ver=4.20.2 on enqueued theme scripts.",
+    "url": "https://www.andrewrinehart.us/wp-content/themes/Divi/",
+    "bytes": null,
+    "role": "page builder driving all layout (body classes et_pb_pagebuilder_layout, et_divi_theme, et_pb_gutters3)",
+    "child": {
+      "name": "Divi Child",
+      "version": "4.20.0.1677036222",
+      "versionConfidence": "observed",
+      "detectedVia": "/wp-content/themes/Divi-child/style.css header, and <meta name=\"generator\" content=\"Divi Child v.4.20.0.1677036222\">; header also carries 'Updated: 2023-02-22 03:23:42'",
+      "url": "https://www.andrewrinehart.us/wp-content/themes/Divi-child/style.css?ver=4.20.2"
+    },
+    "stalenessFlag": "Divi 4.20.2 shipped mid-2023; the child theme is stamped 2023-02-22. Over three years without an update - a stale, unpatched page builder."
+  },
+
+  "animatedBackground": {
+    "whatItActuallyIs": "A looping HTML5 video in a Divi Section Video Background module. NOT particles.",
+    "versionConfidence": "observed",
+    "detectedVia": "<video loop autoplay playsinline muted width=1280 height=720> inside et_pb_section_video_bg (25 occurrences); confirmed by runtime media requests with 206 range responses",
+    "sources": [
+      { "url": "https://www.andrewrinehart.us/wp-content/uploads/2023/02/Technology-888.m4v", "declaredType": "video/mp4", "servedContentType": "video/x-m4v", "bytes": 10668985, "human": "10.2 MiB" },
+      { "url": "https://www.andrewrinehart.us/wp-content/uploads/2023/02/Technology-888.webm", "declaredType": "video/webm", "servedContentType": "video/webm", "bytes": 6331250, "human": "6.0 MiB" }
+    ],
+    "notes": "Served straight from wp-content/uploads. No transcoding, no adaptive ladder, no poster frame. The <source type> declares video/mp4 while the server returns video/x-m4v - a mismatch that currently works."
+  },
+
+  "libraries": [
+    {
+      "name": "particles.js",
+      "version": "2.0.0",
+      "versionConfidence": "parsed",
+      "detectedVia": "verbatim banner at the top of particles.min.js: '/* Author : Vincent Garreau - vincentgarreau.com' ... '/* v2.0.0'. Globals pJS, pJSDom, particlesJS, hexToRgb, clamp, isInArray, requestAnimFrame, cancelRequestAnimFrame all present on window.",
+      "url": "https://www.andrewrinehart.us/wp-content/plugins/divi-particles/assets/particles.min.js?ver=7.0.4",
+      "bytes": null,
+      "role": "LOADED BUT NEVER INITIALISED - DEAD CODE SITEWIDE.",
+      "deadCodeEvidence": "window.pJSDom === [] (empty) and document.querySelectorAll('canvas').length === 0 at runtime after load and scrolling. divi-particles.js guards every call with if(jQuery('body').find('#divi-particles-N').length > 0); the only divi-particles-prefixed id in the DOM is id=\"divi-particles-js\", which is WordPress's auto-generated <script> tag id (handle + '-js'), not a container. On a one-page site that means it never runs anywhere.",
+      "wouldBeConfig": "The stock particles.js demo preset, unmodified: 100 white circles, line_linked enabled at distance 150 / opacity 0.4, move.speed 6, onhover repulse (distance 200), onclick push (4 particles), retina_detect true. Still carries the generator placeholder shape.image.src: 'img/github.svg'.",
+      "wrappedBy": "divi-particles plugin"
+    },
+    {
+      "name": "Typed.js",
+      "version": "1.1.x",
+      "versionConfidence": "inferred",
+      "detectedVia": "The plugin initialiser typed.fe.js calls $(this).typed(options) - the jQuery-plugin API, which Typed.js v2.0 removed in favour of new Typed(el, opts). The file has typeSpeed, backSpeed, shuffle and cursorChar but NO smartBackspace and NO fadeOut, both v2 features. Banner: 'Typed.js | Copyright (c) 2014 Matt Boldt' (MIT). No version string in the file.",
+      "url": "https://www.andrewrinehart.us/wp-content/plugins/divi-typewriter/assets/js/typed.js?ver=1",
+      "bytes": 15615,
+      "role": "The rotating 'Founder / Venture / Real Estate / Contact' text. Single <span class=\"typed-me\" data-string0=\"Founder<br />Venture<br />Real Estate<br />Contact\">.",
+      "wrappedBy": "divi-typewriter plugin"
+    },
+    { "name": "jQuery", "version": "3.7.1", "versionConfidence": "parsed", "detectedVia": "/wp-includes/js/jquery/jquery.min.js?ver=3.7.1 (WordPress core declares this version accurately); window.jQuery and window.$ both defined at runtime", "url": "https://www.andrewrinehart.us/wp-includes/js/jquery/jquery.min.js?ver=3.7.1", "bytes": null, "role": "WordPress core. Every library here depends on it." },
+    { "name": "jQuery Migrate", "version": "3.4.1", "versionConfidence": "observed", "detectedVia": "console log at runtime: 'JQMIGRATE: Migrate is installed, version 3.4.1'", "url": "https://www.andrewrinehart.us/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1", "bytes": null, "role": "legacy shim, still shipping" },
+    { "name": "animate.css", "version": "4.1.1", "versionConfidence": "parsed", "detectedVia": "URL path segment cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css", "url": "https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css?ver=4.1.1", "bytes": 4216, "role": "Overlay entrance - but NEARLY INERT: the document contains only 'animate__animated' (2x, on .divioverlay-bg) with no accompanying effect class such as animate__fadeIn. animate__animated alone sets duration and fill-mode and plays nothing." },
+    { "name": "MediaElement.js", "version": "4.2.17", "versionConfidence": "parsed", "detectedVia": "?ver=4.2.17 on mediaelement-and-player.min.js and mediaelementplayer-legacy.min.css; runtime globals mejs, MediaElement, MediaElementPlayer, HtmlMediaElement, wp.mediaelement", "url": "https://www.andrewrinehart.us/wp-includes/js/mediaelement/mediaelement-and-player.min.js?ver=4.2.17", "bytes": null, "role": "WordPress's media player. Enqueued but NOT driving the background video, which is a bare <video>." },
+    { "name": "Waypoints", "version": null, "versionConfidence": "inferred", "detectedVia": "minified inside Divi/js/scripts.min.js (strings 'Waypoint constructor', 'waypoints_options', 'waypoints.horizontal'); runtime globals Waypoint, waypointContextKey, et_reinit_waypoint_modules. No version string survives.", "url": "https://www.andrewrinehart.us/wp-content/themes/Divi/js/scripts.min.js?ver=4.20.2", "bytes": null, "role": "Divi's scroll-animation trigger. window.et_animation_data === [] at runtime, so NO Divi scroll animations are configured on this page." },
+    { "name": "jquery.exitintent", "version": null, "versionConfidence": "parsed", "detectedVia": "enqueued at divi-overlays/assets/js/jquery.exitintent.js?ver=2.9.7.2 (that ver is the parent plugin's)", "url": "https://www.andrewrinehart.us/wp-content/plugins/divi-overlays/assets/js/jquery.exitintent.js?ver=2.9.7.2", "bytes": null, "role": "Exit-intent trigger for Divi Overlays" }
+  ],
+
+  "plugins": [
+    { "name": "Divi Overlays", "version": "2.9.7.2", "versionConfidence": "parsed", "detectedVia": "?ver=2.9.7.2 on all four of its assets (css/style.css, css/custom_animations.css, js/custom.js, js/jquery.exitintent.js) and on its generated et-cache file. The plugin declares this version to wp_enqueue_script, so the query param IS meaningful here.", "url": "https://www.andrewrinehart.us/wp-content/plugins/divi-overlays/", "bytes": null, "role": "Full-screen modal 'pages'. DOM: id=\"divi-overlay-container-44\", .divioverlay, .divioverlay-bg. THIS IS THE SITE'S NAVIGATION." },
+    { "name": "Divi Particles", "version": null, "versionConfidence": "inferred", "detectedVia": "Version CANNOT be determined. The ?ver=7.0.4 on its assets is the WORDPRESS CORE version, substituted by wp_enqueue_script when a plugin passes false/omits the version argument - the same 7.0.4 appears on wp-includes/css/dist/components/style.min.css. readme.txt is 403 (nginx).", "url": "https://www.andrewrinehart.us/wp-content/plugins/divi-particles/", "bytes": null, "role": "Wraps particles.js 2.0.0. Renders nothing on this site. ALSO enqueued with a doubled slash (/divi-particles//assets/...), causing a 301 redirect on both of its scripts on every page load." },
+    { "name": "Divi Typewriter", "version": null, "versionConfidence": "inferred", "detectedVia": "Version CANNOT be determined. Its CSS carries ?ver=7.0.4 (WordPress core) and its JS ?ver=1 (a literal, not a version). readme.txt is 403 (nginx).", "url": "https://www.andrewrinehart.us/wp-content/plugins/divi-typewriter/", "bytes": null, "role": "Wraps Typed.js 1.1.x" },
+    { "name": "GoDaddy Launch (mu-plugin)", "version": "2.0.2", "versionConfidence": "parsed", "detectedVia": "?ver=2.0.2 on /wp-content/mu-plugins/vendor/wpex/godaddy-launch/includes/Dependencies/GoDaddy/Styles/build/latest.css", "url": "https://www.andrewrinehart.us/wp-content/mu-plugins/vendor/wpex/godaddy-launch/", "bytes": null, "role": "Host-installed must-use plugin; conclusive host fingerprint" }
+  ],
+
+  "versionParamWarning": "?ver=7.0.4 on divi-particles and divi-typewriter assets is WordPress's core version, NOT the plugin's. WordPress substitutes $wp_version when a plugin omits the version argument to wp_enqueue_script. Do not read those as plugin versions. ?ver=2.9.7.2 on divi-overlays IS the plugin's own declared version.",
+
+  "fonts": {
+    "delivery": "Google Fonts CSS API (fonts.googleapis.com) with woff2 from fonts.gstatic.com. All open-licence.",
+    "declaredFaces": 231,
+    "loadedFaces": 1,
+    "countMethod": "counted at runtime from [...document.fonts] after load",
+    "byFamily": [
+      { "family": "Roboto", "declared": 108, "loaded": 0, "fontDisplay": "swap", "licence": "Apache 2.0", "reuseAllowed": true },
+      { "family": "Open Sans", "declared": 100, "loaded": 1, "loadedFace": "400 normal, 42964 B from fonts.gstatic.com/s/opensans/v44/...woff2", "fontDisplay": "swap", "licence": "OFL", "reuseAllowed": true },
+      { "family": "Lato", "declared": 20, "loaded": 0, "fontDisplay": "swap", "licence": "OFL", "reuseAllowed": true },
+      { "family": "ETmodules", "declared": 3, "loaded": 0, "fontDisplay": "block", "files": ["Divi/core/admin/fonts/modules/all/modules.ttf", "modules.woff"], "licence": "ships with Divi (GPL theme)", "reuseAllowed": true }
+    ],
+    "computedStack": "\"Open Sans\", Arial, sans-serif",
+    "licensingFlag": "CLEAN. Open Sans, Lato and Roboto are all open-licence and may be self-hosted freely. No commercial foundry face anywhere - unlike ethnocare.ca.",
+    "wasteFlag": "231 declared faces, 1 loaded. Lato and Roboto are fetched from Google's CSS endpoint on every page view and used for nothing."
+  },
+
+  "images": {
+    "cdn": null,
+    "transformGrammar": null,
+    "srcsetUsed": false,
+    "srcsetCount": 0,
+    "lazyLoadingUsed": false,
+    "lazyLoadCount": 0,
+    "formats": { "png": 4 },
+    "versionConfidence": "observed",
+    "detectedVia": "grep of the served HTML for srcset= (0 hits) and loading=\"lazy\" (0 hits); all wp-content/uploads image references are .png",
+    "role": "No CDN, no transforms, no responsive delivery. Four raw PNGs, all favicon/logo crops."
+  },
+
+  "analytics": [
+    { "name": "GoDaddy TTI / traffic beacon", "id": null, "versionConfidence": "observed", "detectedVia": "img1.wsimg.com/traffic-assets/js/tccl-tti.min.js (301) -> img1.wsimg.com/signals/js/clients/tti/tti.min.js (7570 B); globals _trfd, _trfq, trafficScript, tti, _tcclInternal", "owner": "host, not site owner" },
+    { "name": "GoDaddy SCC-C2", "id": null, "versionConfidence": "observed", "detectedVia": "img1.wsimg.com/signals/js/clients/scc-c2/scc-c2.min.js (21697 B); global 'scc-c2'", "owner": "host, not site owner" },
+    { "name": "GoDaddy event bus", "id": null, "versionConfidence": "observed", "detectedVia": "3x POST https://csp.secureserver.net/eventbus/web?clientid=... returning 202", "owner": "host, not site owner" },
+    { "name": "GoDaddy data layers", "id": null, "versionConfidence": "observed", "detectedVia": "window._expDataLayer, window._signalsDataLayer", "owner": "host, not site owner" }
+  ],
+
+  "thirdPartyHosts": ["img1.wsimg.com", "csp.secureserver.net", "fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
+  "thirdPartyHostCountNote": "Four distinct third-party origins (fonts.googleapis.com and fonts.gstatic.com being one service), against ethnocare.ca's sixteen. A materially different privacy footprint.",
+
+  "brokenOnEveryLoad": [
+    { "what": "404", "url": "https://www.andrewrinehart.us/wp-content/et-cache/44-20/et-custom-divioverlays-44-20-1789602859449.min.css?ver=2.9.7.2", "note": "stale Divi cache file referenced in the HTML but no longer on disk" },
+    { "what": "301 x2", "url": "https://www.andrewrinehart.us/wp-content/plugins/divi-particles//assets/{particles.min.js,divi-particles.js}", "note": "doubled slash in the enqueued path; two extra round-trips per page load for a library that renders nothing" }
+  ],
+
+  "absent": [
+    { "name": "Any <canvas> element", "note": "Zero, on the only page. This is what disproves particles.js being the animated background." },
+    { "name": "GSAP, Lenis, Locomotive Scroll, Barba, ScrollTrigger, three.js, Swiper", "note": "None present. The whole motion vocabulary is: one looping video, one typewriter, CSS transitions, and Divi's Waypoints reveal system (configured with no animations)." },
+    { "name": "Divi scroll animations", "note": "window.et_animation_data === []" },
+    { "name": "Divi link options data", "note": "window.et_link_options_data === []" },
+    { "name": "Site-owner analytics", "note": "No GA, no GTM, no Meta Pixel, no LinkedIn, no Hotjar, no consent manager. Only the host's own telemetry." },
+    { "name": "A build step", "note": "Everything is unminified plugin source served directly; typed.js ships unminified at 15615 B." },
+    { "name": "More than one page", "note": "Navigation is Divi Overlays modals, not routes." }
+  ]
+}

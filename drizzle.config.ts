@@ -1,10 +1,5 @@
 import { defineConfig } from "drizzle-kit";
 
-/**
- * Drizzle owns only the app tables (leads, crm_outbox) in src/lib/db/schema.ts.
- * Payload manages its own content tables through its own migrations, in the
- * same database — the two must never be pointed at each other's tables.
- */
 export default defineConfig({
   schema: "./src/lib/db/schema.ts",
   out: "./drizzle",

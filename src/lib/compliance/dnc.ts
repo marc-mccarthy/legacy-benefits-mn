@@ -8,11 +8,7 @@ import type { DncInput } from "./dnc-schema";
 
 export { dncInputSchema, type DncInput } from "./dnc-schema";
 
-/**
- * Records an opt-out. Deliberately does not require identity verification for
- * revoke-contact: under TCPA, revocation must be honoured through any
- * reasonable means, and adding friction to a stop request is itself a risk.
- */
+// No identity check on the way in; a stop request is taken at face value.
 export async function recordDncRequest(
   input: DncInput,
   meta: { ip?: string } = {},

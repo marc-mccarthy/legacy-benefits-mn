@@ -12,12 +12,8 @@ import {
 import { Field, FormStatus, Input, Textarea } from "./fields";
 import { Turnstile } from "./turnstile";
 
-/**
- * Scope of Appointment. CMS requires this to be documented before a Medicare
- * Advantage or Part D sales meeting, and requires it to record the specific
- * product types the beneficiary agreed to discuss — hence checkboxes rather
- * than a single "Medicare" catch-all.
- */
+// Checkboxes rather than one catch-all: the submitted row names each product
+// type separately.
 export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",
@@ -130,9 +126,6 @@ export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
             <input
               type="checkbox"
               value={product.value}
-              // 24px. These select which products a licensed agent is
-              // permitted to discuss — a mis-tap here is a compliance record
-              // that says something the beneficiary did not agree to.
               className="mt-1 size-6 shrink-0"
               {...register("productTypes")}
             />
@@ -150,8 +143,6 @@ export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
         <Input id="agentName" {...register("agentName")} />
       </Field>
 
-      {/* The attestation is what the beneficiary is signing. It is read before
-          a signature, so it does not get to be the smallest text on the page. */}
       <div className="border-border-subtle rounded-(--radius-card) border p-5 leading-relaxed">
         {SOA_ATTESTATION}
       </div>

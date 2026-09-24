@@ -5,18 +5,15 @@ import { normalizePhone } from "./phone";
 /**
  * True when this person has previously asked not to be contacted.
  *
- * A suppression outlives the lead it suppresses, so this is checked on every
- * capture. A suppressed submission is still recorded (the person did fill in
- * the form) but is never auto-delivered to the CRM — releasing it is a human
- * decision, because re-contacting someone who revoked consent is the exact
- * failure TCPA penalises.
+ * Checked on every capture. A suppressed submission is still written, but is
+ * not queued to the CRM — releasing it is a manual step.
  */
 export async function isSuppressed(
   email?: string,
   phone?: string,
 ): Promise<boolean> {
-  // Must use the same canonical form recordDncRequest stored, or a number
-  // written differently on the way in would not match its own opt-out.
+  // Same canonical form recordDncRequest stored, or a differently-formatted
+  // number misses its own opt-out row.
   const digits = normalizePhone(phone);
   const clauses = [];
   if (email) clauses.push(eq(schema.dncRequests.email, email.toLowerCase()));
@@ -33,8 +30,7 @@ export async function isSuppressed(
 }
 
 /**
- * Re-exported so this module stays the one place server code reaches for
- * suppression concerns. The implementation lives in ./phone because the
- * validation schemas need it too and must not pull `pg` into a client bundle.
+ * Re-exported from ./phone, which has no `pg` import — the validation schemas
+ * pull the same function into client bundles.
  */
 export { normalizePhone };

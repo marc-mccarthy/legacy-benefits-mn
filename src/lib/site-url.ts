@@ -1,24 +1,16 @@
-import { headers } from "next/headers";
+import { env } from "@/lib/env";
 
 /**
- * The site's public origin.
+ * The site's public origin, with any trailing slash stripped.
  *
- * Prefers NEXT_PUBLIC_SITE_URL, but falls back to the incoming request's
- * forwarded host. That fallback is what lets the stack deploy without a custom
- * domain: the CloudFront URL is not known when the container's environment is
- * set, so the app works it out per request instead of being told.
- *
- * Only call this from a server component or route handler.
+ * Read at build time: a static export has no request to infer a host from, so
+ * `NEXT_PUBLIC_SITE_URL` is the only source. `https://example.invalid` is the
+ * placeholder when it is unset — reserved by RFC 6761 and never resolvable, so
+ * a missing variable shows up as a broken absolute URL rather than as a
+ * localhost origin baked into the shipped JSON-LD.
  */
-export async function getSiteUrl(): Promise<string> {
-  const configured = process.env["NEXT_PUBLIC_SITE_URL"];
-  if (configured) return configured.replace(/\/$/, "");
-
-  const h = await headers();
-  // CloudFront and the ALB both set these; the first entry is the original.
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return "http://localhost:3000";
-
-  const proto = h.get("x-forwarded-proto")?.split(",")[0] ?? "https";
-  return `${proto}://${host.split(",")[0].trim()}`;
+export function getSiteUrl(): string {
+  const configured = env("NEXT_PUBLIC_SITE_URL");
+  if (!configured) return "https://example.invalid";
+  return configured.replace(/\/+$/, "");
 }

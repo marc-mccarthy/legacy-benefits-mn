@@ -1,0 +1,296 @@
+{
+  "live": {
+    "particlesJsLoaded": true,
+    "instanceCount": 0,
+    "instances": []
+  },
+  "probe": {
+    "canvas": {
+      "width": 2880,
+      "height": 1800,
+      "pxratio": 2,
+      "elementId": ""
+    },
+    "particlesLiveCount": 162,
+    "particles": {
+      "number": {
+        "value": 100,
+        "density": {
+          "enable": true,
+          "value_area": 800
+        }
+      },
+      "color": {
+        "value": "#ffffff",
+        "rgb": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        }
+      },
+      "shape": {
+        "type": "circle",
+        "stroke": {
+          "width": 0,
+          "color": "#000000"
+        },
+        "polygon": {
+          "nb_sides": 5
+        },
+        "image": {
+          "src": "img/github.svg",
+          "width": 100,
+          "height": 100
+        }
+      },
+      "opacity": {
+        "value": 0.5,
+        "random": false,
+        "anim": {
+          "enable": false,
+          "speed": 1,
+          "opacity_min": 0.1,
+          "sync": false
+        }
+      },
+      "size": {
+        "value": 10,
+        "random": true,
+        "anim": {
+          "enable": false,
+          "speed": 80,
+          "size_min": 0.1,
+          "sync": false
+        }
+      },
+      "line_linked": {
+        "enable": true,
+        "distance": 300,
+        "color": "#ffffff",
+        "opacity": 0.4,
+        "width": 2,
+        "color_rgb_line": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        }
+      },
+      "move": {
+        "enable": true,
+        "speed": 12,
+        "direction": "none",
+        "random": false,
+        "straight": false,
+        "out_mode": "out",
+        "bounce": false,
+        "attract": {
+          "enable": false,
+          "rotateX": 600,
+          "rotateY": 1200
+        }
+      },
+      "array": "[array:162]"
+    },
+    "interactivity": {
+      "detect_on": "canvas",
+      "events": {
+        "onhover": {
+          "enable": true,
+          "mode": "repulse"
+        },
+        "onclick": {
+          "enable": true,
+          "mode": "push"
+        },
+        "resize": true
+      },
+      "modes": {
+        "grab": {
+          "distance": 800,
+          "line_linked": {
+            "opacity": 1
+          }
+        },
+        "bubble": {
+          "distance": 800,
+          "size": 80,
+          "duration": 2,
+          "opacity": 8,
+          "speed": 3
+        },
+        "repulse": {
+          "distance": 400,
+          "duration": 0.4
+        },
+        "push": {
+          "particles_nb": 4
+        },
+        "remove": {
+          "particles_nb": 2
+        }
+      },
+      "mouse": {},
+      "el": "[dom:CANVAS]"
+    },
+    "retina_detect": true,
+    "fn": {
+      "canvasSize": [
+        2880,
+        1800
+      ]
+    }
+  },
+  "source": {
+    "url": "https://www.andrewrinehart.us/wp-content/plugins/divi-particles//assets/divi-particles.js?ver=7.0.4",
+    "bytes": 10883,
+    "downloaded": false,
+    "initCalls": [
+      "divi-particles",
+      "divi-particles-1",
+      "divi-particles-2",
+      "divi-particles-3",
+      "divi-particles-4"
+    ],
+    "guardElementIds": [
+      "divi-particles",
+      "divi-particles-1",
+      "divi-particles-2",
+      "divi-particles-3",
+      "divi-particles-4"
+    ],
+    "allConfigsIdentical": true,
+    "authoredConfig": {
+      "particles": {
+        "number": {
+          "value": 100,
+          "density": {
+            "enable": true,
+            "value_area": 800
+          }
+        },
+        "color": {
+          "value": "#ffffff"
+        },
+        "shape": {
+          "type": "circle",
+          "stroke": {
+            "width": 0,
+            "color": "#000000"
+          },
+          "polygon": {
+            "nb_sides": 5
+          },
+          "image": {
+            "src": "img/github.svg",
+            "width": 100,
+            "height": 100
+          }
+        },
+        "opacity": {
+          "value": 0.5,
+          "random": false,
+          "anim": {
+            "enable": false,
+            "speed": 1,
+            "opacity_min": 0.1,
+            "sync": false
+          }
+        },
+        "size": {
+          "value": 5,
+          "random": true,
+          "anim": {
+            "enable": false,
+            "speed": 40,
+            "size_min": 0.1,
+            "sync": false
+          }
+        },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#ffffff",
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 6,
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out",
+          "bounce": false,
+          "attract": {
+            "enable": false,
+            "rotateX": 600,
+            "rotateY": 1200
+          }
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": {
+            "enable": true,
+            "mode": "repulse"
+          },
+          "onclick": {
+            "enable": true,
+            "mode": "push"
+          },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 400,
+            "line_linked": {
+              "opacity": 1
+            }
+          },
+          "bubble": {
+            "distance": 400,
+            "size": 40,
+            "duration": 2,
+            "opacity": 8,
+            "speed": 3
+          },
+          "repulse": {
+            "distance": 200,
+            "duration": 0.4
+          },
+          "push": {
+            "particles_nb": 4
+          },
+          "remove": {
+            "particles_nb": 2
+          }
+        }
+      },
+      "retina_detect": true
+    },
+    "guardElementsPresentOnPage": [
+      {
+        "id": "divi-particles",
+        "present": false
+      },
+      {
+        "id": "divi-particles-1",
+        "present": false
+      },
+      {
+        "id": "divi-particles-2",
+        "present": false
+      },
+      {
+        "id": "divi-particles-3",
+        "present": false
+      },
+      {
+        "id": "divi-particles-4",
+        "present": false
+      }
+    ]
+  },
+  "readThisFirst": "`live` is what the page runs. `source.authoredConfig` is what the plugin ships. `probe` is that config read back off a real pJS instance instantiated in the page this run. authoredConfig and probe disagree on purpose: particles.js with `retina_detect: true` multiplies size.value, line_linked.distance, line_linked.width, move.speed and every interactivity mode distance by window.devicePixelRatio at init. The probe ran at dpr 2, so those five families of number are exactly doubled. Copy authoredConfig into a reimplementation; expect probe's values at 2x."
+}

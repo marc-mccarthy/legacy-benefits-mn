@@ -1,25 +1,9 @@
 /**
- * Requirements:
- * - Derive D5, the server module map, from the code itself, so it cannot drift from what the
- *   repository actually imports.
- * - Treat anything that cannot be derived — which group a module belongs to, what its node is
- *   called — as a declared table, and validate every declared entry against disk, so a stale
- *   declaration fails loudly rather than rendering a lie.
- * - Read the shared style from a hand-authored diagram rather than restating it, so the init line
- *   and the classDef block can never disagree with the other figures.
- * - Stay offline and browser-free: this script only reads files, so it is safe in a commit hook.
- *
- *   node scripts/generate-derived-diagrams.mjs          # rewrite the derived .mmd source
+ *   node scripts/generate-derived-diagrams.mjs          # rewrite D5 from the imports under src/
  *   node scripts/generate-derived-diagrams.mjs --check  # fail if the committed source is stale
  *
- * Rendering the result is a separate step, because it needs a browser:
+ * Writing the manifest and SOURCES.md over the result is a separate step:
  *   node scripts/generate-diagrams.mjs
- *
- * Why a derived diagram at all. Every other figure in this atlas is a claim a human made about the
- * system, and a human has to re-check it. This one is a claim the code makes about itself: if a
- * module gains an import, the arrow appears without anyone remembering to draw it, and if a module
- * is added without being placed in a group, this script refuses rather than quietly leaving it off
- * the map. A map that silently omits a module is worse than no map, because it reads as complete.
  */
 import {
   existsSync,
@@ -33,7 +17,7 @@ import { relative, resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const srcDir = resolve(root, "src");
 const libDir = resolve(srcDir, "lib");
-const apiDir = resolve(srcDir, "app", "api");
+const apiDir = resolve(srcDir, "api");
 const diagramsDir = resolve(root, "docs", "diagrams");
 const CHECK = process.argv.includes("--check");
 
@@ -74,7 +58,7 @@ if (CLASSDEF_BLOCK.length !== 7) {
 //
 // Grouping is editorial, so it is declared here rather than guessed. The node id is declared
 // beside it because several ids are deliberately shorter than their path. Every non-test module
-// under src/lib and every route under src/app/api must appear exactly once: an unlisted module is
+// under src/lib and every module under src/api must appear exactly once: an unlisted module is
 // a hard error, which is what stops a new module from silently vanishing from the map.
 //
 // The class is declared too, because "is this thing a gate" is a judgement about behaviour that no
@@ -85,11 +69,12 @@ const GROUPS = [
   {
     title: "Route handlers",
     members: [
-      ["app/api/leads/route.ts", "leadsRoute", "ours"],
-      ["app/api/soa/route.ts", "soaRoute", "ours"],
-      ["app/api/do-not-contact/route.ts", "dncRoute", "ours"],
-      ["app/api/jobs/outbox/route.ts", "jobsRoute", "ours"],
-      ["app/api/health/route.ts", "healthRoute", "ours"],
+      ["api/index.ts", "apiRouter", "ours"],
+      ["api/leads.ts", "leadsRoute", "ours"],
+      ["api/soa.ts", "soaRoute", "ours"],
+      ["api/do-not-contact.ts", "dncRoute", "ours"],
+      ["api/jobs-outbox.ts", "jobsRoute", "ours"],
+      ["api/health.ts", "healthRoute", "ours"],
     ],
   },
   {
@@ -134,8 +119,8 @@ const GROUPS = [
     members: [
       ["lib/db/index.ts", "db", "artifact"],
       ["lib/db/schema.ts", "dbSchema", "phi"],
-      ["lib/payload.ts", "payloadLib", "artifact"],
       ["lib/media.ts", "media", "artifact"],
+      ["lib/image-loader.ts", "imageLoader", "artifact"],
     ],
   },
   {
@@ -146,6 +131,7 @@ const GROUPS = [
       ["lib/site-url.ts", "siteUrl", "artifact"],
       ["lib/business.ts", "business", "artifact"],
       ["lib/announcement.ts", "announcement", "artifact"],
+      ["lib/motion.ts", "motion", "artifact"],
       ["lib/utils.ts", "utils", "ours"],
     ],
   },
@@ -185,10 +171,7 @@ function walk(dir) {
   return found;
 }
 
-const onDisk = [
-  ...walk(libDir),
-  ...walk(apiDir).filter((path) => path.endsWith("route.ts")),
-].sort();
+const onDisk = [...walk(libDir), ...walk(apiDir)].sort();
 
 const missing = onDisk.filter((path) => !declared.has(path));
 const phantom = [...declared.keys()].filter(
@@ -292,8 +275,8 @@ function buildD5() {
       `subgraph ${group.title.replace(/\W+/g, "")} ["${group.title}"]`,
     );
     for (const [path, id] of group.members) {
-      const label = path.startsWith("app/api/")
-        ? `/${path.slice("app/api/".length).replace(/\/route\.ts$/, "")}`
+      const label = path.startsWith("api/")
+        ? path.slice("api/".length)
         : path.slice("lib/".length);
       lines.push(`  ${id}["${label}"]`);
     }

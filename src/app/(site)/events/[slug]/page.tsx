@@ -1,30 +1,38 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Container, Prose, Section } from "@/components/ui/section";
 import { RichTextBody } from "@/components/sections/rich-text";
 import { JsonLd, eventSchema } from "@/components/seo/json-ld";
+import { Morph } from "@/components/motion/morph";
 import { TpmoDisclaimer } from "@/components/compliance/disclosures";
-import { getDocBySlug, getSiteSettings } from "@/lib/payload";
+import { eventBySlug, events } from "@/content/events";
+import { site } from "@/content/site";
 import { formatDate, formatTime } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
 
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return events.map((event) => ({ slug: event.slug }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const doc = await getDocBySlug("events", slug).catch(() => null);
+  const doc = eventBySlug(slug);
   if (!doc) return {};
   return { title: doc.title, description: doc.summary };
 }
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug } = await params;
-  const [doc, settings] = await Promise.all([
-    getDocBySlug("events", slug).catch(() => null),
-    getSiteSettings().catch(() => null),
-  ]);
+  const doc = eventBySlug(slug);
 
   if (!doc) notFound();
+
+  const photo = doc.image;
 
   return (
     <Section>
@@ -40,9 +48,33 @@ export default async function EventDetailPage({ params }: Props) {
           isFree: doc.cost === "free",
         })}
       />
-      <Container>
+      <Container className="space-y-8">
+        {photo ? (
+          <Morph kind="event" slug={doc.slug}>
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              width={photo.width}
+              height={photo.height}
+              sizes="(min-width: 1152px) 72rem, 100vw"
+              className="aspect-[21/9] w-full rounded-(--radius-card) object-cover"
+              priority
+            />
+          </Morph>
+        ) : (
+          <p className="text-muted border-border-subtle tabular border-y py-6 text-base">
+            {formatDate(doc.startsAt, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}{" "}
+            · {doc.venue}
+          </p>
+        )}
+
         <Prose className="space-y-6">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="font-display text-(length:--text-display-page)">
             {doc.title}
           </h1>
 
@@ -50,7 +82,7 @@ export default async function EventDetailPage({ params }: Props) {
             <div>
               <dt className="font-semibold">When</dt>
               <dd>
-                <time dateTime={doc.startsAt}>
+                <time className="tabular" dateTime={doc.startsAt}>
                   {formatDate(doc.startsAt, {
                     weekday: "long",
                     month: "long",
@@ -70,8 +102,10 @@ export default async function EventDetailPage({ params }: Props) {
             </div>
           </dl>
 
-          <p className="text-lg leading-relaxed">{doc.summary}</p>
-          <RichTextBody data={doc.body} />
+          <p className="lead text-lg leading-relaxed">{doc.summary}</p>
+          <RichTextBody>
+            <p>{doc.body}</p>
+          </RichTextBody>
 
           {doc.registrationUrl ? (
             <Button asChild size="lg">
@@ -79,15 +113,15 @@ export default async function EventDetailPage({ params }: Props) {
             </Button>
           ) : null}
 
-          <p className="text-muted text-sm">
+          <p className="text-muted text-base">
             For accommodation of persons with special needs at meetings, please
             contact us. TTY users may dial 711.
           </p>
 
           <TpmoDisclaimer
             className="text-muted border-border-subtle border-t pt-6 leading-relaxed"
-            orgCount={settings?.compliance?.orgCount ?? undefined}
-            planCount={settings?.compliance?.planCount ?? undefined}
+            orgCount={site.compliance.orgCount ?? undefined}
+            planCount={site.compliance.planCount ?? undefined}
           />
         </Prose>
       </Container>

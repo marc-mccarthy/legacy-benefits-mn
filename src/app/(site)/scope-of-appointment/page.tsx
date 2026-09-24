@@ -13,10 +13,10 @@ export default function ScopeOfAppointmentPage() {
     <Section>
       <Container className="grid gap-12 lg:grid-cols-[1fr_1.2fr]">
         <Prose className="space-y-5">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="font-display text-(length:--text-display-page)">
             Scope of Appointment
           </h1>
-          <p className="text-muted text-lg">
+          <p className="lead text-muted text-lg">
             Medicare rules require us to document which types of plans you have
             agreed to discuss before we meet. It takes a minute, and it protects
             you: we may only talk about what you tick below.

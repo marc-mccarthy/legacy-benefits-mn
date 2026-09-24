@@ -74,10 +74,8 @@ describe("startsAt", () => {
 });
 
 describe("endsAt covers the whole closing day", () => {
-  // The CMS field is a dayOnly picker (SiteSettings.ts), so endsAt arrives as
-  // midnight at the START of the closing day. Comparing against it directly
-  // would hide the bar for the entirety of the day the editor chose, so a full
-  // day is added to reach the end of it.
+  // `endsAt` names the start of the closing day, so `announcementIsLive` adds a
+  // full day before comparing to reach the end of it.
 
   it("is live at midnight on the closing day", () => {
     now("2026-12-07T00:00:00.000Z");
@@ -137,21 +135,38 @@ describe("both dates together", () => {
   });
 });
 
-describe("the closing day is measured in UTC", () => {
-  it("ends at 19:00 Chicago time on the closing day during daylight saving", () => {
-    // WORTH KNOWING, not a defect. endsAt is stored as UTC midnight and the
-    // day is added in UTC, so the bar disappears at 2026-12-08T00:00Z. The
-    // site renders times in America/Chicago, where that instant is 18:00 on
-    // 7 December — so an announcement set to end on the 7th vanishes early
-    // that evening rather than at local midnight.
-    //
-    // It errs toward showing less, and the editor picks whole days, so the
-    // practical impact is a few hours on the final day. Fixing it would mean
-    // resolving the closing instant in the site's timezone rather than UTC.
-    now("2026-12-07T23:30:00.000Z"); // 17:30 in Chicago, still the 7th there
-    expect(announcementIsLive({ ...live, endsAt: "2026-12-07" })).toBe(true);
+describe("a zoned endsAt covers its own local day", () => {
+  // The shape `src/content/site.ts` authors: the closing day's local midnight
+  // written as an instant, so adding a day in UTC lands on the next local
+  // midnight and the bar covers exactly that day where the site is read.
+  const endsAt = "2026-12-07T06:00:00.000Z"; // 00:00 on 7 December in Chicago
 
-    now("2026-12-08T05:00:00.000Z"); // 23:00 in Chicago, still the 7th there
-    expect(announcementIsLive({ ...live, endsAt: "2026-12-07" })).toBe(false);
+  it("is live late on the closing day, local time", () => {
+    now("2026-12-08T05:59:00.000Z"); // 23:59 on the 7th in Chicago
+    expect(announcementIsLive({ ...live, endsAt })).toBe(true);
+  });
+
+  it("is not live once the next local day begins", () => {
+    now("2026-12-08T06:00:00.001Z"); // 00:00 on the 8th in Chicago
+    expect(announcementIsLive({ ...live, endsAt })).toBe(false);
+  });
+});
+
+describe("a date-only endsAt runs out before the local day does", () => {
+  // `endsAt` is typed `string | null` (src/content/types.ts), so a bare date is
+  // accepted. JS parses it as UTC midnight, and the day is added in UTC, so the
+  // bar goes dark at 00:00Z on the 8th — 18:00 on the 7th in Chicago, where the
+  // site is read. Asserted so that authoring a bare date in src/content/site.ts
+  // cannot change this silently.
+  const endsAt = "2026-12-07";
+
+  it("is still live in the early evening, Chicago time", () => {
+    now("2026-12-07T23:30:00.000Z"); // 17:30 on the 7th in Chicago
+    expect(announcementIsLive({ ...live, endsAt })).toBe(true);
+  });
+
+  it("is already dark late on the same local day", () => {
+    now("2026-12-08T05:00:00.000Z"); // 23:00 on the 7th in Chicago
+    expect(announcementIsLive({ ...live, endsAt })).toBe(false);
   });
 });

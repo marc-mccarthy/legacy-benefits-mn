@@ -36,28 +36,35 @@ export function Footer({
   const year = new Date().getFullYear();
 
   return (
-    <footer data-scheme="dark" className="bg-surface text-on-surface mt-auto">
+    <footer
+      data-scheme="dark"
+      className="bg-surface text-on-surface border-border-subtle mt-auto border-t"
+    >
+      <Container className="space-y-4 py-(--spacing-medium)">
+        {phone ? (
+          <p className="flex items-center gap-2">
+            <a
+              href={`tel:${phone.replace(/\D/g, "")}`}
+              className="inline-flex min-h-11 items-center hover:underline"
+            >
+              {phone}
+            </a>
+            <span className="text-muted">· TTY 711</span>
+          </p>
+        ) : null}
+        <FooterComplianceBlock
+          orgCount={orgCount ?? undefined}
+          planCount={planCount ?? undefined}
+          extra={extraDisclosure}
+        />
+      </Container>
+
       <Container className="grid gap-10 py-(--spacing-large) md:grid-cols-3">
         <div className="space-y-2">
           <p className="text-lg font-bold">{brand}</p>
           {address ? (
-            <p className="text-muted whitespace-pre-line">{address}</p>
-          ) : null}
-          {/* min-h-11 on every link in this footer, matching the floor argued
-           * for in button.tsx. At 390px these measured 22px tall — half the
-           * floor — and that included the phone number and, below, the
-           * do-not-contact and Scope of Appointment links. Those are the ones
-           * someone reaches for when they are already confused or annoyed, and
-           * a missed tap at that moment is the worst time to have one. */}
-          {phone ? (
-            <p className="flex items-center gap-2">
-              <a
-                href={`tel:${phone.replace(/\D/g, "")}`}
-                className="inline-flex min-h-11 items-center hover:underline"
-              >
-                {phone}
-              </a>
-              <span className="text-muted">· TTY 711</span>
+            <p className="text-muted whitespace-pre-line">
+              {address.replace(/\\r\\n|\\n/g, "\n")}
             </p>
           ) : null}
           {email ? (
@@ -73,10 +80,6 @@ export function Footer({
         </div>
 
         <nav aria-label="Legal">
-          {/* space-y-1 rather than the previous space-y-2: the 44px rows now
-           * supply most of the separation themselves, and a small gap is still
-           * worth keeping so a slightly-off tap lands on nothing rather than on
-           * the neighbouring link. */}
           <ul className="space-y-1">
             {legalLinks.map((l) => (
               <li key={l.href}>
@@ -106,13 +109,8 @@ export function Footer({
       </Container>
 
       <div className="border-border-subtle border-t">
-        <Container className="space-y-4 py-(--spacing-medium)">
-          <FooterComplianceBlock
-            orgCount={orgCount ?? undefined}
-            planCount={planCount ?? undefined}
-            extra={extraDisclosure}
-          />
-          <p className="text-muted text-sm">
+        <Container className="py-(--spacing-medium)">
+          <p className="text-muted">
             © {year} {brand}. All rights reserved.
           </p>
         </Container>

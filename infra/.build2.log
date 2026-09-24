@@ -1,0 +1,61 @@
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env
+✓ Running next.config.ts took 76ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.0s
+  Running TypeScript ...
+  Finished TypeScript in 4.2s ...
+  Collecting page data using 9 workers ...
+  Generating static pages using 9 workers (0/34) ...
+  Generating static pages using 9 workers (8/34) 
+  Generating static pages using 9 workers (16/34) 
+  Generating static pages using 9 workers (25/34) 
+✓ Generating static pages using 9 workers (34/34) in 434ms
+Turbopack build encountered 1 warning:
+./
+Warning: Failed to find font override values for font `Atkinson Hyperlegible Next`
+Skipping generating a fallback font.
+
+
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /accessibility
+├ ○ /captions/content-video.vtt
+├ ○ /contact
+├ ○ /disclosures
+├ ○ /do-not-contact
+├ ○ /events
+├   /events/[slug]
+│ ├ ● /events/medicare-basics-workshop
+│ ├ ● /events/turning-65-this-year
+│ ├ ● /events/annual-enrollment-clinic
+│ └ ● /events/medicare-and-travel
+├ ○ /learn
+├   /learn/[slug]
+│ ├ ● /learn/when-can-i-change-my-plan
+│ ├ ● /learn/enrollment-checklist
+│ ├ ● /learn/advantage-or-supplement
+│ └ ● [+4 more paths]
+├ ○ /privacy
+├ ○ /robots.txt
+├ ○ /scope-of-appointment
+├ ○ /services
+├   /services/[slug]
+│ ├ ● /services/medicare-advantage
+│ ├ ● /services/medicare-supplement
+│ └ ● /services/part-d
+├ ○ /sitemap.xml
+├ ○ /team
+└   /team/[slug]
+  ├ ● /team/owner
+  ├ ● /team/renata-cruz
+  └ ● /team/marcus-bell
+
+
+○  (Static)  prerendered as static content
+●  (SSG)     prerendered as static HTML (uses generateStaticParams)
+

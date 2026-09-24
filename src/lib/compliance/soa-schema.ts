@@ -26,11 +26,11 @@ export const soaInputSchema = z.object({
     .array(z.enum(productValues))
     .min(1, "Select at least one product type to discuss"),
   agentName: z.union([z.literal(""), z.string().trim().max(160)]).optional(),
-  /** Typed signature. CMS accepts an electronic signature for a remote SOA. */
+  /** Typed signature. */
   signature: z.string().trim().min(2, "Please type your name to sign").max(160),
   /**
-   * When the sales meeting is expected, used only to record whether the SOA
-   * met the CMS 48-hour guidance.
+   * When the sales meeting is expected. Only feeds the 48-hour flag recordSoa
+   * stores.
    *
    * Validated for parseability rather than for a fixed format: recordSoa feeds
    * this to `new Date()`, and an unparseable string used to become an Invalid

@@ -6,7 +6,7 @@ import {
   LanguageAccessNotice,
   TpmoDisclaimer,
 } from "@/components/compliance/disclosures";
-import { getSiteSettings } from "@/lib/payload";
+import { site } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Disclosures",
@@ -14,20 +14,21 @@ export const metadata: Metadata = {
     "Required Medicare marketing disclosures, licensing information, and plan availability statements.",
 };
 
-export default async function DisclosuresPage() {
-  const settings = await getSiteSettings().catch(() => null);
-  const compliance = settings?.compliance;
+export default function DisclosuresPage() {
+  const compliance = site.compliance;
 
   return (
     <Section>
       <Container>
         <Prose className="space-y-8">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="font-display text-(length:--text-display-page)">
             Disclosures
           </h1>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">Plan availability</h2>
+            <h2 className="font-display text-(length:--text-display-lg)">
+              Plan availability
+            </h2>
             <TpmoDisclaimer
               className="leading-relaxed"
               orgCount={compliance?.orgCount ?? undefined}
@@ -37,12 +38,16 @@ export default async function DisclosuresPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">Government affiliation</h2>
+            <h2 className="font-display text-(length:--text-display-lg)">
+              Government affiliation
+            </h2>
             <GovernmentDisclaimer className="leading-relaxed" />
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">Licensing</h2>
+            <h2 className="font-display text-(length:--text-display-lg)">
+              Licensing
+            </h2>
             {compliance?.npn ? (
               <p>National Producer Number (NPN): {compliance.npn}</p>
             ) : null}
@@ -63,7 +68,7 @@ export default async function DisclosuresPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">
+            <h2 className="font-display text-(length:--text-display-lg)">
               Nondiscrimination and language access
             </h2>
             <LanguageAccessNotice className="leading-relaxed" />
@@ -71,7 +76,9 @@ export default async function DisclosuresPage() {
 
           {compliance?.footerDisclosure ? (
             <section className="space-y-3">
-              <h2 className="text-xl font-semibold">Additional disclosures</h2>
+              <h2 className="font-display text-(length:--text-display-lg)">
+                Additional disclosures
+              </h2>
               <p className="leading-relaxed whitespace-pre-line">
                 {compliance.footerDisclosure}
               </p>

@@ -1,4 +1,3 @@
-import { getSiteSettings } from "@/lib/payload";
 import { env } from "@/lib/env";
 
 export type BusinessIdentity = {
@@ -10,30 +9,29 @@ export type BusinessIdentity = {
 };
 
 /**
- * The single source of truth for who this business is.
- *
- * Reads from site settings so the client can change their own phone number or
- * address without a redeploy — these are content, not configuration. The env
- * vars remain only as a fallback for first boot, before anything is seeded.
+ * The environment is the only source. There is no fallback: a missing
+ * `BUSINESS_NAME` throws at build time rather than rendering a stale value that
+ * looks deliberate, which is how the wrong trading name reached a deployed page
+ * once already.
  */
 export async function getBusinessIdentity(): Promise<BusinessIdentity> {
-  const settings = await getSiteSettings().catch(() => null);
+  const name = env("BUSINESS_NAME");
+  if (!name) {
+    throw new Error(
+      "BUSINESS_NAME is not set. It is required at build time and at API runtime.",
+    );
+  }
 
-  const notificationEmails = (
-    settings?.leadNotificationEmails ||
-    env("LEAD_NOTIFICATION_EMAILS") ||
-    ""
-  )
+  const notificationEmails = (env("LEAD_NOTIFICATION_EMAILS") ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
 
   return {
-    // `||` rather than `??`: a blank CMS field should fall through too.
-    name: settings?.businessName || env("BUSINESS_NAME") || "this agency",
-    phone: settings?.contact?.phone || env("BUSINESS_PHONE") || undefined,
-    email: settings?.contact?.email || undefined,
-    address: settings?.contact?.address || undefined,
+    name,
+    phone: env("BUSINESS_PHONE"),
+    email: env("BUSINESS_EMAIL"),
+    address: env("BUSINESS_ADDRESS"),
     notificationEmails,
   };
 }

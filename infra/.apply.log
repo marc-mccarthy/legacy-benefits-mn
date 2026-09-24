@@ -1,0 +1,1642 @@
+data.archive_file.bootstrap: Reading...
+data.archive_file.bootstrap: Read complete after 0s [id=73a66b87688e0d2befa9849391473858a095732b]
+data.aws_cloudfront_cache_policy.optimized: Reading...
+data.aws_availability_zones.available: Reading...
+data.aws_cloudfront_origin_request_policy.all_viewer_except_host: Reading...
+data.aws_caller_identity.current: Reading...
+data.aws_cloudfront_cache_policy.disabled: Reading...
+data.aws_iam_policy_document.lambda_assume: Reading...
+data.aws_iam_policy_document.lambda_assume: Read complete after 1s [id=2690255455]
+data.aws_caller_identity.current: Read complete after 1s [id=150701180133]
+data.aws_availability_zones.available: Read complete after 1s [id=us-east-1]
+data.aws_cloudfront_cache_policy.disabled: Read complete after 1s [id=4135ea2d-6df8-44a3-9df3-4b5a84be39ad]
+data.aws_cloudfront_cache_policy.optimized: Read complete after 1s [id=658327ea-f89d-4fab-a63d-7e88639e58f6]
+data.aws_cloudfront_origin_request_policy.all_viewer_except_host: Read complete after 1s [id=b689b0a8-53d0-40ab-baf2-68738e2966ac]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+Terraform will perform the following actions:
+
+  # data.aws_iam_policy_document.assets will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "assets" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "s3:GetObject",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+
+          + condition {
+              + test     = "StringEquals"
+              + values   = [
+                  + (known after apply),
+                ]
+              + variable = "AWS:SourceArn"
+            }
+
+          + principals {
+              + identifiers = [
+                  + "cloudfront.amazonaws.com",
+                ]
+              + type        = "Service"
+            }
+        }
+    }
+
+  # data.aws_iam_policy_document.deploy will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "deploy" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "lambda:GetFunction",
+              + "lambda:GetFunctionConfiguration",
+              + "lambda:InvokeFunction",
+              + "lambda:UpdateFunctionCode",
+              + "lambda:UpdateFunctionConfiguration",
+            ]
+          + resources = [
+              + (known after apply),
+              + (known after apply),
+            ]
+        }
+      + statement {
+          + actions   = [
+              + "s3:DeleteObject",
+              + "s3:GetObject",
+              + "s3:ListBucket",
+              + "s3:PutObject",
+            ]
+          + resources = [
+              + (known after apply),
+              + (known after apply),
+            ]
+        }
+      + statement {
+          + actions   = [
+              + "cloudfront:CreateInvalidation",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+        }
+    }
+
+  # data.aws_iam_policy_document.deploy_assume will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "deploy_assume" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions = [
+              + "sts:AssumeRoleWithWebIdentity",
+            ]
+
+          + condition {
+              + test     = "StringEquals"
+              + values   = [
+                  + "repo:marc-mccarthy@40575970/legacy-benefits-mn@1361037386:ref:refs/heads/main",
+                  + "repo:marc-mccarthy@40575970/legacy-benefits-mn@1361037386:environment:production",
+                ]
+              + variable = "token.actions.githubusercontent.com:sub"
+            }
+          + condition {
+              + test     = "StringEquals"
+              + values   = [
+                  + "sts.amazonaws.com",
+                ]
+              + variable = "token.actions.githubusercontent.com:aud"
+            }
+
+          + principals {
+              + identifiers = [
+                  + (known after apply),
+                ]
+              + type        = "Federated"
+            }
+        }
+    }
+
+  # data.aws_iam_policy_document.lambda will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "lambda" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "logs:CreateLogStream",
+              + "logs:PutLogEvents",
+            ]
+          + resources = [
+              + (known after apply),
+              + (known after apply),
+            ]
+        }
+      + statement {
+          + actions   = [
+              + "s3:AbortMultipartUpload",
+              + "s3:DeleteObject",
+              + "s3:GetObject",
+              + "s3:PutObject",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+        }
+      + statement {
+          + actions   = [
+              + "s3:ListBucket",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+        }
+    }
+
+  # aws_cloudfront_distribution.this will be created
+  + resource "aws_cloudfront_distribution" "this" {
+      + arn                             = (known after apply)
+      + caller_reference                = (known after apply)
+      + comment                         = "legacybenefitsgroupllc"
+      + continuous_deployment_policy_id = (known after apply)
+      + default_root_object             = "index.html"
+      + domain_name                     = (known after apply)
+      + enabled                         = true
+      + etag                            = (known after apply)
+      + hosted_zone_id                  = (known after apply)
+      + http_version                    = "http2"
+      + id                              = (known after apply)
+      + in_progress_validation_batches  = (known after apply)
+      + is_ipv6_enabled                 = true
+      + last_modified_time              = (known after apply)
+      + logging_v1_enabled              = (known after apply)
+      + price_class                     = "PriceClass_100"
+      + retain_on_delete                = false
+      + staging                         = false
+      + status                          = (known after apply)
+      + tags_all                        = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + trusted_key_groups              = (known after apply)
+      + trusted_signers                 = (known after apply)
+      + wait_for_deployment             = true
+
+      + custom_error_response {
+          + error_caching_min_ttl = 10
+          + error_code            = 403
+          + response_code         = 404
+          + response_page_path    = "/404.html"
+        }
+      + custom_error_response {
+          + error_caching_min_ttl = 10
+          + error_code            = 404
+          + response_code         = 404
+          + response_page_path    = "/404.html"
+        }
+
+      + default_cache_behavior {
+          + allowed_methods        = [
+              + "GET",
+              + "HEAD",
+            ]
+          + cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+          + cached_methods         = [
+              + "GET",
+              + "HEAD",
+            ]
+          + compress               = false
+          + default_ttl            = (known after apply)
+          + max_ttl                = (known after apply)
+          + min_ttl                = 0
+          + target_origin_id       = "s3"
+          + trusted_key_groups     = (known after apply)
+          + trusted_signers        = (known after apply)
+          + viewer_protocol_policy = "redirect-to-https"
+
+          + function_association {
+              + event_type   = "viewer-request"
+              + function_arn = (known after apply)
+            }
+
+          + grpc_config (known after apply)
+        }
+
+      + ordered_cache_behavior {
+          + allowed_methods          = [
+              + "DELETE",
+              + "GET",
+              + "HEAD",
+              + "OPTIONS",
+              + "PATCH",
+              + "POST",
+              + "PUT",
+            ]
+          + cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+          + cached_methods           = [
+              + "GET",
+              + "HEAD",
+            ]
+          + compress                 = false
+          + default_ttl              = (known after apply)
+          + max_ttl                  = (known after apply)
+          + min_ttl                  = 0
+          + origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+          + path_pattern             = "/api/*"
+          + target_origin_id         = "lambda"
+          + viewer_protocol_policy   = "redirect-to-https"
+
+          + grpc_config (known after apply)
+        }
+      + ordered_cache_behavior {
+          + allowed_methods        = [
+              + "GET",
+              + "HEAD",
+            ]
+          + cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+          + cached_methods         = [
+              + "GET",
+              + "HEAD",
+            ]
+          + compress               = false
+          + default_ttl            = (known after apply)
+          + max_ttl                = (known after apply)
+          + min_ttl                = 0
+          + path_pattern           = "/_next/static/*"
+          + target_origin_id       = "s3"
+          + viewer_protocol_policy = "redirect-to-https"
+
+          + grpc_config (known after apply)
+        }
+      + ordered_cache_behavior {
+          + allowed_methods        = [
+              + "GET",
+              + "HEAD",
+            ]
+          + cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+          + cached_methods         = [
+              + "GET",
+              + "HEAD",
+            ]
+          + compress               = false
+          + default_ttl            = (known after apply)
+          + max_ttl                = (known after apply)
+          + min_ttl                = 0
+          + path_pattern           = "/media/*"
+          + target_origin_id       = "s3"
+          + viewer_protocol_policy = "redirect-to-https"
+
+          + grpc_config (known after apply)
+        }
+      + ordered_cache_behavior {
+          + allowed_methods        = [
+              + "GET",
+              + "HEAD",
+            ]
+          + cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+          + cached_methods         = [
+              + "GET",
+              + "HEAD",
+            ]
+          + compress               = false
+          + default_ttl            = (known after apply)
+          + max_ttl                = (known after apply)
+          + min_ttl                = 0
+          + path_pattern           = "/video/*"
+          + target_origin_id       = "s3"
+          + viewer_protocol_policy = "redirect-to-https"
+
+          + grpc_config (known after apply)
+        }
+
+      + origin {
+          + connection_attempts         = 3
+          + connection_timeout          = 10
+          + domain_name                 = (known after apply)
+          + origin_id                   = "lambda"
+          + response_completion_timeout = (known after apply)
+            # (2 unchanged attributes hidden)
+
+          + custom_origin_config {
+              + http_port                = 80
+              + https_port               = 443
+              + origin_keepalive_timeout = 5
+              + origin_protocol_policy   = "https-only"
+              + origin_read_timeout      = 60
+              + origin_ssl_protocols     = [
+                  + "TLSv1.2",
+                ]
+                # (1 unchanged attribute hidden)
+            }
+        }
+      + origin {
+          + connection_attempts         = 3
+          + connection_timeout          = 10
+          + domain_name                 = (known after apply)
+          + origin_access_control_id    = (known after apply)
+          + origin_id                   = "s3"
+          + response_completion_timeout = (known after apply)
+            # (1 unchanged attribute hidden)
+        }
+
+      + restrictions {
+          + geo_restriction {
+              + locations        = (known after apply)
+              + restriction_type = "none"
+            }
+        }
+
+      + viewer_certificate {
+          + cloudfront_default_certificate = true
+          + minimum_protocol_version       = "TLSv1"
+        }
+    }
+
+  # aws_cloudfront_function.rewrite will be created
+  + resource "aws_cloudfront_function" "rewrite" {
+      + arn             = (known after apply)
+      + code            = <<-EOT
+            function handler(event) {
+              var uri = event.request.uri;
+              // Nothing the export emits ends in a slash, but a typed URL, an old
+              // bookmark or a mail client that normalises links can. Without this the
+              // path would become "/services/.html". The "/" guard keeps the root from
+              // being trimmed to "" and then to ".html".
+              if (uri !== "/" && uri.endsWith("/")) {
+                uri = uri.slice(0, -1);
+              }
+              if (uri === "/") {
+                uri = "/index.html";
+              } else if (!uri.includes(".")) {
+                uri = uri + ".html";
+              }
+              event.request.uri = uri;
+              return event.request;
+            }
+        EOT
+      + etag            = (known after apply)
+      + id              = (known after apply)
+      + live_stage_etag = (known after apply)
+      + name            = "legacybenefitsgroupllc-rewrite"
+      + publish         = true
+      + runtime         = "cloudfront-js-2.0"
+      + status          = (known after apply)
+      + tags_all        = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+    }
+
+  # aws_cloudfront_origin_access_control.s3 will be created
+  + resource "aws_cloudfront_origin_access_control" "s3" {
+      + arn                               = (known after apply)
+      + description                       = "Managed by Terraform"
+      + etag                              = (known after apply)
+      + id                                = (known after apply)
+      + name                              = "legacybenefitsgroupllc-s3"
+      + origin_access_control_origin_type = "s3"
+      + signing_behavior                  = "always"
+      + signing_protocol                  = "sigv4"
+    }
+
+  # aws_cloudwatch_log_group.lambda will be created
+  + resource "aws_cloudwatch_log_group" "lambda" {
+      + arn                         = (known after apply)
+      + deletion_protection_enabled = (known after apply)
+      + id                          = (known after apply)
+      + log_group_class             = (known after apply)
+      + name                        = "/aws/lambda/legacybenefitsgroupllc"
+      + name_prefix                 = (known after apply)
+      + region                      = "us-east-1"
+      + retention_in_days           = 14
+      + skip_destroy                = false
+      + tags_all                    = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+    }
+
+  # aws_cloudwatch_log_group.migrate will be created
+  + resource "aws_cloudwatch_log_group" "migrate" {
+      + arn                         = (known after apply)
+      + deletion_protection_enabled = (known after apply)
+      + id                          = (known after apply)
+      + log_group_class             = (known after apply)
+      + name                        = "/aws/lambda/legacybenefitsgroupllc-migrate"
+      + name_prefix                 = (known after apply)
+      + region                      = "us-east-1"
+      + retention_in_days           = 14
+      + skip_destroy                = false
+      + tags_all                    = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+    }
+
+  # aws_db_subnet_group.this will be created
+  + resource "aws_db_subnet_group" "this" {
+      + arn                     = (known after apply)
+      + description             = "Managed by Terraform"
+      + id                      = (known after apply)
+      + name                    = "legacybenefitsgroupllc"
+      + name_prefix             = (known after apply)
+      + region                  = "us-east-1"
+      + subnet_ids              = (known after apply)
+      + supported_network_types = (known after apply)
+      + tags_all                = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + vpc_id                  = (known after apply)
+    }
+
+  # aws_iam_openid_connect_provider.github will be created
+  + resource "aws_iam_openid_connect_provider" "github" {
+      + arn             = (known after apply)
+      + client_id_list  = [
+          + "sts.amazonaws.com",
+        ]
+      + id              = (known after apply)
+      + tags_all        = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + thumbprint_list = (known after apply)
+      + url             = "https://token.actions.githubusercontent.com"
+    }
+
+  # aws_iam_role.deploy will be created
+  + resource "aws_iam_role" "deploy" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = (known after apply)
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "legacybenefitsgroupllc-github-deploy"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role.lambda will be created
+  + resource "aws_iam_role" "lambda" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "lambda.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "legacybenefitsgroupllc-lambda"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role_policy.deploy will be created
+  + resource "aws_iam_role_policy" "deploy" {
+      + id          = (known after apply)
+      + name        = "legacybenefitsgroupllc-github-deploy"
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # aws_iam_role_policy.lambda will be created
+  + resource "aws_iam_role_policy" "lambda" {
+      + id          = (known after apply)
+      + name        = "legacybenefitsgroupllc-lambda"
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # aws_iam_role_policy_attachment.lambda_vpc will be created
+  + resource "aws_iam_role_policy_attachment" "lambda_vpc" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+      + role       = "legacybenefitsgroupllc-lambda"
+    }
+
+  # aws_lambda_function.app will be created
+  + resource "aws_lambda_function" "app" {
+      + architectures                  = [
+          + "arm64",
+        ]
+      + arn                            = (known after apply)
+      + code_sha256                    = (known after apply)
+      + filename                       = "./.bootstrap.zip"
+      + function_name                  = "legacybenefitsgroupllc"
+      + handler                        = "index.handler"
+      + id                             = (known after apply)
+      + invoke_arn                     = (known after apply)
+      + last_modified                  = (known after apply)
+      + memory_size                    = 1769
+      + package_type                   = "Zip"
+      + publish                        = false
+      + qualified_arn                  = (known after apply)
+      + qualified_invoke_arn           = (known after apply)
+      + region                         = "us-east-1"
+      + reserved_concurrent_executions = -1
+      + response_streaming_invoke_arn  = (known after apply)
+      + role                           = (known after apply)
+      + runtime                        = "nodejs22.x"
+      + signing_job_arn                = (known after apply)
+      + signing_profile_version_arn    = (known after apply)
+      + skip_destroy                   = false
+      + source_code_hash               = "SrxSH123uYOV2PNW+pSdOcPDZH69gXhRrmAi0HRR4gg="
+      + source_code_size               = (known after apply)
+      + tags_all                       = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + timeout                        = 60
+      + version                        = (known after apply)
+
+      + environment {
+          + variables = (known after apply)
+        }
+
+      + ephemeral_storage (known after apply)
+
+      + logging_config (known after apply)
+
+      + tracing_config (known after apply)
+
+      + vpc_config {
+          + ipv6_allowed_for_dual_stack = false
+          + security_group_ids          = (known after apply)
+          + subnet_ids                  = (known after apply)
+          + vpc_id                      = (known after apply)
+        }
+    }
+
+  # aws_lambda_function.migrate will be created
+  + resource "aws_lambda_function" "migrate" {
+      + architectures                  = [
+          + "arm64",
+        ]
+      + arn                            = (known after apply)
+      + code_sha256                    = (known after apply)
+      + filename                       = "./.bootstrap.zip"
+      + function_name                  = "legacybenefitsgroupllc-migrate"
+      + handler                        = "migrate.handler"
+      + id                             = (known after apply)
+      + invoke_arn                     = (known after apply)
+      + last_modified                  = (known after apply)
+      + memory_size                    = 1024
+      + package_type                   = "Zip"
+      + publish                        = false
+      + qualified_arn                  = (known after apply)
+      + qualified_invoke_arn           = (known after apply)
+      + region                         = "us-east-1"
+      + reserved_concurrent_executions = -1
+      + response_streaming_invoke_arn  = (known after apply)
+      + role                           = (known after apply)
+      + runtime                        = "nodejs22.x"
+      + signing_job_arn                = (known after apply)
+      + signing_profile_version_arn    = (known after apply)
+      + skip_destroy                   = false
+      + source_code_hash               = "SrxSH123uYOV2PNW+pSdOcPDZH69gXhRrmAi0HRR4gg="
+      + source_code_size               = (known after apply)
+      + tags_all                       = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + timeout                        = 300
+      + version                        = (known after apply)
+
+      + environment {
+          + variables = (known after apply)
+        }
+
+      + ephemeral_storage (known after apply)
+
+      + logging_config (known after apply)
+
+      + tracing_config (known after apply)
+
+      + vpc_config {
+          + ipv6_allowed_for_dual_stack = false
+          + security_group_ids          = (known after apply)
+          + subnet_ids                  = (known after apply)
+          + vpc_id                      = (known after apply)
+        }
+    }
+
+  # aws_lambda_function_url.app will be created
+  + resource "aws_lambda_function_url" "app" {
+      + authorization_type = "NONE"
+      + function_arn       = (known after apply)
+      + function_name      = "legacybenefitsgroupllc"
+      + function_url       = (known after apply)
+      + id                 = (known after apply)
+      + invoke_mode        = "BUFFERED"
+      + region             = "us-east-1"
+      + url_id             = (known after apply)
+    }
+
+  # aws_lambda_permission.cloudfront will be created
+  + resource "aws_lambda_permission" "cloudfront" {
+      + action                 = "lambda:InvokeFunctionUrl"
+      + function_name          = "legacybenefitsgroupllc"
+      + function_url_auth_type = "AWS_IAM"
+      + id                     = (known after apply)
+      + principal              = "cloudfront.amazonaws.com"
+      + region                 = "us-east-1"
+      + source_arn             = (known after apply)
+      + statement_id           = "AllowCloudFront"
+      + statement_id_prefix    = (known after apply)
+    }
+
+  # aws_lambda_permission.cloudfront_invoke will be created
+  + resource "aws_lambda_permission" "cloudfront_invoke" {
+      + action              = "lambda:InvokeFunction"
+      + function_name       = "legacybenefitsgroupllc"
+      + id                  = (known after apply)
+      + principal           = "cloudfront.amazonaws.com"
+      + region              = "us-east-1"
+      + source_arn          = (known after apply)
+      + statement_id        = "AllowCloudFrontInvoke"
+      + statement_id_prefix = (known after apply)
+    }
+
+  # aws_rds_cluster.this will be created
+  + resource "aws_rds_cluster" "this" {
+      + allocated_storage                     = (known after apply)
+      + apply_immediately                     = true
+      + arn                                   = (known after apply)
+      + auto_minor_version_upgrade            = (known after apply)
+      + availability_zones                    = (known after apply)
+      + backup_retention_period               = (known after apply)
+      + ca_certificate_identifier             = (known after apply)
+      + ca_certificate_valid_till             = (known after apply)
+      + cluster_identifier                    = "legacybenefitsgroupllc"
+      + cluster_identifier_prefix             = (known after apply)
+      + cluster_members                       = (known after apply)
+      + cluster_resource_id                   = (known after apply)
+      + cluster_scalability_type              = (known after apply)
+      + copy_tags_to_snapshot                 = false
+      + database_insights_mode                = (known after apply)
+      + database_name                         = "legacybenefitsgroupllc"
+      + db_cluster_parameter_group_name       = (known after apply)
+      + db_subnet_group_name                  = "legacybenefitsgroupllc"
+      + db_system_id                          = (known after apply)
+      + delete_automated_backups              = true
+      + enable_global_write_forwarding        = false
+      + enable_http_endpoint                  = false
+      + enable_local_write_forwarding         = false
+      + endpoint                              = (known after apply)
+      + engine                                = "aurora-postgresql"
+      + engine_lifecycle_support              = (known after apply)
+      + engine_mode                           = "provisioned"
+      + engine_version                        = "16.8"
+      + engine_version_actual                 = (known after apply)
+      + hosted_zone_id                        = (known after apply)
+      + iam_roles                             = (known after apply)
+      + id                                    = (known after apply)
+      + kms_key_id                            = (known after apply)
+      + master_password                       = (sensitive value)
+      + master_password_wo                    = (write-only attribute)
+      + master_user_secret                    = (known after apply)
+      + master_user_secret_kms_key_id         = (known after apply)
+      + master_username                       = "postgres"
+      + monitoring_interval                   = (known after apply)
+      + monitoring_role_arn                   = (known after apply)
+      + network_type                          = (known after apply)
+      + performance_insights_kms_key_id       = (known after apply)
+      + performance_insights_retention_period = (known after apply)
+      + port                                  = (known after apply)
+      + preferred_backup_window               = (known after apply)
+      + preferred_maintenance_window          = (known after apply)
+      + reader_endpoint                       = (known after apply)
+      + region                                = "us-east-1"
+      + skip_final_snapshot                   = true
+      + storage_encrypted                     = (known after apply)
+      + storage_type                          = (known after apply)
+      + tags_all                              = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + upgrade_rollout_order                 = (known after apply)
+      + vpc_security_group_ids                = (known after apply)
+
+      + serverlessv2_scaling_configuration {
+          + max_capacity             = 2
+          + min_capacity             = 0
+          + seconds_until_auto_pause = 300
+        }
+    }
+
+  # aws_rds_cluster_instance.this will be created
+  + resource "aws_rds_cluster_instance" "this" {
+      + apply_immediately                     = (known after apply)
+      + arn                                   = (known after apply)
+      + auto_minor_version_upgrade            = true
+      + availability_zone                     = (known after apply)
+      + ca_cert_identifier                    = (known after apply)
+      + cluster_identifier                    = (known after apply)
+      + copy_tags_to_snapshot                 = false
+      + db_parameter_group_name               = (known after apply)
+      + db_subnet_group_name                  = (known after apply)
+      + dbi_resource_id                       = (known after apply)
+      + endpoint                              = (known after apply)
+      + engine                                = "aurora-postgresql"
+      + engine_version                        = "16.8"
+      + engine_version_actual                 = (known after apply)
+      + force_destroy                         = false
+      + id                                    = (known after apply)
+      + identifier                            = "legacybenefitsgroupllc"
+      + identifier_prefix                     = (known after apply)
+      + instance_class                        = "db.serverless"
+      + kms_key_id                            = (known after apply)
+      + monitoring_interval                   = 0
+      + monitoring_role_arn                   = (known after apply)
+      + network_type                          = (known after apply)
+      + performance_insights_enabled          = (known after apply)
+      + performance_insights_kms_key_id       = (known after apply)
+      + performance_insights_retention_period = (known after apply)
+      + port                                  = (known after apply)
+      + preferred_backup_window               = (known after apply)
+      + preferred_maintenance_window          = (known after apply)
+      + promotion_tier                        = 0
+      + publicly_accessible                   = (known after apply)
+      + region                                = "us-east-1"
+      + storage_encrypted                     = (known after apply)
+      + tags_all                              = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + writer                                = (known after apply)
+    }
+
+  # aws_route_table.private will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + region           = "us-east-1"
+      + route            = (known after apply)
+      + tags             = {
+          + "Name" = "legacybenefitsgroupllc"
+        }
+      + tags_all         = {
+          + "ManagedBy" = "terraform"
+          + "Name"      = "legacybenefitsgroupllc"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # aws_route_table_association.private[0] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + region         = "us-east-1"
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # aws_route_table_association.private[1] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + region         = "us-east-1"
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # aws_s3_bucket.assets will be created
+  + resource "aws_s3_bucket" "assets" {
+      + acceleration_status         = (known after apply)
+      + acl                         = (known after apply)
+      + arn                         = (known after apply)
+      + bucket                      = "legacybenefitsgroupllc-assets-150701180133"
+      + bucket_domain_name          = (known after apply)
+      + bucket_namespace            = (known after apply)
+      + bucket_prefix               = (known after apply)
+      + bucket_region               = (known after apply)
+      + bucket_regional_domain_name = (known after apply)
+      + force_destroy               = true
+      + hosted_zone_id              = (known after apply)
+      + id                          = (known after apply)
+      + object_lock_enabled         = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = "us-east-1"
+      + request_payer               = (known after apply)
+      + tags_all                    = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + website_domain              = (known after apply)
+      + website_endpoint            = (known after apply)
+
+      + cors_rule (known after apply)
+
+      + grant (known after apply)
+
+      + lifecycle_rule (known after apply)
+
+      + logging (known after apply)
+
+      + object_lock_configuration (known after apply)
+
+      + replication_configuration (known after apply)
+
+      + server_side_encryption_configuration (known after apply)
+
+      + versioning (known after apply)
+
+      + website (known after apply)
+    }
+
+  # aws_s3_bucket_policy.assets will be created
+  + resource "aws_s3_bucket_policy" "assets" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+      + policy = (known after apply)
+      + region = "us-east-1"
+    }
+
+  # aws_s3_bucket_public_access_block.assets will be created
+  + resource "aws_s3_bucket_public_access_block" "assets" {
+      + block_public_acls       = true
+      + block_public_policy     = true
+      + bucket                  = (known after apply)
+      + id                      = (known after apply)
+      + ignore_public_acls      = true
+      + region                  = "us-east-1"
+      + restrict_public_buckets = true
+    }
+
+  # aws_security_group.db will be created
+  + resource "aws_security_group" "db" {
+      + arn                    = (known after apply)
+      + description            = "Managed by Terraform"
+      + egress                 = (known after apply)
+      + id                     = (known after apply)
+      + ingress                = (known after apply)
+      + name                   = "legacybenefitsgroupllc-db"
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + region                 = "us-east-1"
+      + revoke_rules_on_delete = false
+      + tags                   = {
+          + "Name" = "legacybenefitsgroupllc-db"
+        }
+      + tags_all               = {
+          + "ManagedBy" = "terraform"
+          + "Name"      = "legacybenefitsgroupllc-db"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + vpc_id                 = (known after apply)
+    }
+
+  # aws_security_group.lambda will be created
+  + resource "aws_security_group" "lambda" {
+      + arn                    = (known after apply)
+      + description            = "Managed by Terraform"
+      + egress                 = (known after apply)
+      + id                     = (known after apply)
+      + ingress                = (known after apply)
+      + name                   = "legacybenefitsgroupllc-lambda"
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + region                 = "us-east-1"
+      + revoke_rules_on_delete = false
+      + tags                   = {
+          + "Name" = "legacybenefitsgroupllc-lambda"
+        }
+      + tags_all               = {
+          + "ManagedBy" = "terraform"
+          + "Name"      = "legacybenefitsgroupllc-lambda"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + vpc_id                 = (known after apply)
+    }
+
+  # aws_subnet.private[0] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.20.1.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block                                = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + region                                         = "us-east-1"
+      + tags                                           = {
+          + "Name" = "legacybenefitsgroupllc-1"
+        }
+      + tags_all                                       = {
+          + "ManagedBy" = "terraform"
+          + "Name"      = "legacybenefitsgroupllc-1"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # aws_subnet.private[1] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.20.2.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block                                = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + region                                         = "us-east-1"
+      + tags                                           = {
+          + "Name" = "legacybenefitsgroupllc-2"
+        }
+      + tags_all                                       = {
+          + "ManagedBy" = "terraform"
+          + "Name"      = "legacybenefitsgroupllc-2"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # aws_vpc.this will be created
+  + resource "aws_vpc" "this" {
+      + arn                                  = (known after apply)
+      + cidr_block                           = "10.20.0.0/16"
+      + default_network_acl_id               = (known after apply)
+      + default_route_table_id               = (known after apply)
+      + default_security_group_id            = (known after apply)
+      + dhcp_options_id                      = (known after apply)
+      + enable_dns_hostnames                 = true
+      + enable_dns_support                   = true
+      + enable_network_address_usage_metrics = (known after apply)
+      + id                                   = (known after apply)
+      + instance_tenancy                     = "default"
+      + ipv6_association_id                  = (known after apply)
+      + ipv6_cidr_block                      = (known after apply)
+      + ipv6_cidr_block_network_border_group = (known after apply)
+      + main_route_table_id                  = (known after apply)
+      + owner_id                             = (known after apply)
+      + region                               = "us-east-1"
+      + tags                                 = {
+          + "Name" = "legacybenefitsgroupllc"
+        }
+      + tags_all                             = {
+          + "ManagedBy" = "terraform"
+          + "Name"      = "legacybenefitsgroupllc"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+    }
+
+  # aws_vpc_endpoint.s3 will be created
+  + resource "aws_vpc_endpoint" "s3" {
+      + arn                   = (known after apply)
+      + cidr_blocks           = (known after apply)
+      + dns_entry             = (known after apply)
+      + id                    = (known after apply)
+      + ip_address_type       = (known after apply)
+      + network_interface_ids = (known after apply)
+      + owner_id              = (known after apply)
+      + policy                = (known after apply)
+      + prefix_list_id        = (known after apply)
+      + private_dns_enabled   = (known after apply)
+      + region                = "us-east-1"
+      + requester_managed     = (known after apply)
+      + route_table_ids       = (known after apply)
+      + security_group_ids    = (known after apply)
+      + service_name          = "com.amazonaws.us-east-1.s3"
+      + service_region        = (known after apply)
+      + state                 = (known after apply)
+      + subnet_ids            = (known after apply)
+      + tags                  = {
+          + "Name" = "legacybenefitsgroupllc"
+        }
+      + tags_all              = {
+          + "ManagedBy" = "terraform"
+          + "Name"      = "legacybenefitsgroupllc"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + vpc_endpoint_type     = "Gateway"
+      + vpc_id                = (known after apply)
+
+      + dns_options (known after apply)
+
+      + subnet_configuration (known after apply)
+    }
+
+  # aws_vpc_security_group_egress_rule.lambda_all will be created
+  + resource "aws_vpc_security_group_egress_rule" "lambda_all" {
+      + arn                    = (known after apply)
+      + cidr_ipv4              = "0.0.0.0/0"
+      + id                     = (known after apply)
+      + ip_protocol            = "-1"
+      + region                 = "us-east-1"
+      + security_group_id      = (known after apply)
+      + security_group_rule_id = (known after apply)
+      + tags_all               = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+    }
+
+  # aws_vpc_security_group_ingress_rule.db_from_lambda will be created
+  + resource "aws_vpc_security_group_ingress_rule" "db_from_lambda" {
+      + arn                          = (known after apply)
+      + from_port                    = 5432
+      + id                           = (known after apply)
+      + ip_protocol                  = "tcp"
+      + referenced_security_group_id = (known after apply)
+      + region                       = "us-east-1"
+      + security_group_id            = (known after apply)
+      + security_group_rule_id       = (known after apply)
+      + tags_all                     = {
+          + "ManagedBy" = "terraform"
+          + "Project"   = "legacybenefitsgroupllc"
+        }
+      + to_port                      = 5432
+    }
+
+  # github_actions_variable.this["ASSETS_BUCKET"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = "legacybenefitsgroupllc-assets-150701180133"
+      + variable_name = "ASSETS_BUCKET"
+    }
+
+  # github_actions_variable.this["AWS_DEPLOY_ROLE_ARN"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = (known after apply)
+      + variable_name = "AWS_DEPLOY_ROLE_ARN"
+    }
+
+  # github_actions_variable.this["AWS_REGION"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = "us-east-1"
+      + variable_name = "AWS_REGION"
+    }
+
+  # github_actions_variable.this["BUSINESS_ADDRESS"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + variable_name = "BUSINESS_ADDRESS"
+        # (1 unchanged attribute hidden)
+    }
+
+  # github_actions_variable.this["BUSINESS_EMAIL"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + variable_name = "BUSINESS_EMAIL"
+        # (1 unchanged attribute hidden)
+    }
+
+  # github_actions_variable.this["BUSINESS_NAME"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = "Legacy Benefits Group LLC"
+      + variable_name = "BUSINESS_NAME"
+    }
+
+  # github_actions_variable.this["BUSINESS_PHONE"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = "(651) 260-1003"
+      + variable_name = "BUSINESS_PHONE"
+    }
+
+  # github_actions_variable.this["CLOUDFRONT_ID"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = (known after apply)
+      + variable_name = "CLOUDFRONT_ID"
+    }
+
+  # github_actions_variable.this["LAMBDA_FUNCTION_NAME"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = "legacybenefitsgroupllc"
+      + variable_name = "LAMBDA_FUNCTION_NAME"
+    }
+
+  # github_actions_variable.this["MIGRATE_FUNCTION_NAME"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = "legacybenefitsgroupllc-migrate"
+      + variable_name = "MIGRATE_FUNCTION_NAME"
+    }
+
+  # github_actions_variable.this["NEXT_PUBLIC_CALENDLY_URL"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + variable_name = "NEXT_PUBLIC_CALENDLY_URL"
+        # (1 unchanged attribute hidden)
+    }
+
+  # github_actions_variable.this["NEXT_PUBLIC_GTM_ID"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + variable_name = "NEXT_PUBLIC_GTM_ID"
+        # (1 unchanged attribute hidden)
+    }
+
+  # github_actions_variable.this["NEXT_PUBLIC_MEDIA_HOST"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + variable_name = "NEXT_PUBLIC_MEDIA_HOST"
+        # (1 unchanged attribute hidden)
+    }
+
+  # github_actions_variable.this["NEXT_PUBLIC_SITE_URL"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = (known after apply)
+      + variable_name = "NEXT_PUBLIC_SITE_URL"
+    }
+
+  # github_actions_variable.this["NEXT_PUBLIC_TURNSTILE_SITE_KEY"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + variable_name = "NEXT_PUBLIC_TURNSTILE_SITE_KEY"
+        # (1 unchanged attribute hidden)
+    }
+
+  # github_actions_variable.this["SITE_URL"] will be created
+  + resource "github_actions_variable" "this" {
+      + created_at    = (known after apply)
+      + id            = (known after apply)
+      + repository    = "legacy-benefits-mn"
+      + repository_id = (known after apply)
+      + updated_at    = (known after apply)
+      + value         = (known after apply)
+      + variable_name = "SITE_URL"
+    }
+
+  # random_password.db will be created
+  + resource "random_password" "db" {
+      + bcrypt_hash = (sensitive value)
+      + id          = (known after apply)
+      + length      = 32
+      + lower       = true
+      + min_lower   = 0
+      + min_numeric = 0
+      + min_special = 0
+      + min_upper   = 0
+      + number      = true
+      + numeric     = true
+      + result      = (sensitive value)
+      + special     = false
+      + upper       = true
+    }
+
+  # random_password.outbox_token will be created
+  + resource "random_password" "outbox_token" {
+      + bcrypt_hash = (sensitive value)
+      + id          = (known after apply)
+      + length      = 32
+      + lower       = true
+      + min_lower   = 0
+      + min_numeric = 0
+      + min_special = 0
+      + min_upper   = 0
+      + number      = true
+      + numeric     = true
+      + result      = (sensitive value)
+      + special     = false
+      + upper       = true
+    }
+
+  # random_password.payload_secret will be created
+  + resource "random_password" "payload_secret" {
+      + bcrypt_hash = (sensitive value)
+      + id          = (known after apply)
+      + length      = 48
+      + lower       = true
+      + min_lower   = 0
+      + min_numeric = 0
+      + min_special = 0
+      + min_upper   = 0
+      + number      = true
+      + numeric     = true
+      + result      = (sensitive value)
+      + special     = false
+      + upper       = true
+    }
+
+Plan: 52 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + assets_bucket              = "legacybenefitsgroupllc-assets-150701180133"
+  + cloudfront_distribution_id = (known after apply)
+  + cloudfront_domain          = (known after apply)
+  + db_endpoint                = (known after apply)
+  + deploy_role_arn            = (known after apply)
+  + lambda_function_name       = "legacybenefitsgroupllc"
+  + migrate_function_name      = "legacybenefitsgroupllc-migrate"
+  + name                       = "legacybenefitsgroupllc"
+  + region                     = "us-east-1"
+  + site_url                   = (known after apply)
+random_password.payload_secret: Creating...
+random_password.db: Creating...
+random_password.outbox_token: Creating...
+random_password.outbox_token: Creation complete after 0s [id=none]
+random_password.db: Creation complete after 0s [id=none]
+random_password.payload_secret: Creation complete after 0s [id=none]
+aws_cloudwatch_log_group.lambda: Creating...
+aws_iam_openid_connect_provider.github: Creating...
+aws_cloudwatch_log_group.migrate: Creating...
+aws_cloudfront_function.rewrite: Creating...
+aws_cloudfront_origin_access_control.s3: Creating...
+aws_vpc.this: Creating...
+aws_iam_role.lambda: Creating...
+aws_s3_bucket.assets: Creating...
+aws_cloudfront_origin_access_control.s3: Creation complete after 0s [id=E1PEH9BYBU5CUU]
+aws_iam_openid_connect_provider.github: Creation complete after 0s [id=arn:aws:iam::150701180133:oidc-provider/token.actions.githubusercontent.com]
+data.aws_iam_policy_document.deploy_assume: Reading...
+data.aws_iam_policy_document.deploy_assume: Read complete after 0s [id=3170281599]
+aws_iam_role.deploy: Creating...
+aws_cloudwatch_log_group.lambda: Creation complete after 0s [id=/aws/lambda/legacybenefitsgroupllc]
+aws_cloudwatch_log_group.migrate: Creation complete after 0s [id=/aws/lambda/legacybenefitsgroupllc-migrate]
+aws_iam_role.lambda: Creation complete after 0s [id=legacybenefitsgroupllc-lambda]
+aws_iam_role_policy_attachment.lambda_vpc: Creating...
+aws_iam_role_policy_attachment.lambda_vpc: Creation complete after 1s [id=legacybenefitsgroupllc-lambda/arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole]
+aws_iam_role.deploy: Creation complete after 1s [id=legacybenefitsgroupllc-github-deploy]
+aws_s3_bucket.assets: Creation complete after 2s [id=legacybenefitsgroupllc-assets-150701180133]
+data.aws_iam_policy_document.lambda: Reading...
+aws_s3_bucket_public_access_block.assets: Creating...
+data.aws_iam_policy_document.lambda: Read complete after 0s [id=669026856]
+aws_iam_role_policy.lambda: Creating...
+aws_vpc.this: Creation complete after 2s [id=vpc-0f2cde5a7e4f64ef5]
+aws_route_table.private: Creating...
+aws_subnet.private[0]: Creating...
+aws_subnet.private[1]: Creating...
+aws_security_group.lambda: Creating...
+aws_security_group.db: Creating...
+aws_cloudfront_function.rewrite: Creation complete after 2s [id=legacybenefitsgroupllc-rewrite]
+aws_iam_role_policy.lambda: Creation complete after 0s [id=legacybenefitsgroupllc-lambda:legacybenefitsgroupllc-lambda]
+aws_s3_bucket_public_access_block.assets: Creation complete after 0s [id=legacybenefitsgroupllc-assets-150701180133]
+aws_subnet.private[1]: Creation complete after 1s [id=subnet-02d4a35827bbcf507]
+aws_route_table.private: Creation complete after 1s [id=rtb-03aca801c13e5f8c7]
+aws_subnet.private[0]: Creation complete after 1s [id=subnet-0535553c93269751a]
+aws_vpc_endpoint.s3: Creating...
+aws_route_table_association.private[0]: Creating...
+aws_route_table_association.private[1]: Creating...
+aws_db_subnet_group.this: Creating...
+aws_route_table_association.private[0]: Creation complete after 0s [id=rtbassoc-0def3c4f6af0999d6]
+aws_route_table_association.private[1]: Creation complete after 0s [id=rtbassoc-0b879bc83a2204fab]
+aws_security_group.lambda: Creation complete after 2s [id=sg-0220a817b11b53249]
+aws_security_group.db: Creation complete after 2s [id=sg-0ee58a86a4641ec55]
+aws_vpc_security_group_ingress_rule.db_from_lambda: Creating...
+aws_vpc_security_group_egress_rule.lambda_all: Creating...
+aws_vpc_security_group_egress_rule.lambda_all: Creation complete after 0s [id=sgr-07757ebca366eabd8]
+aws_vpc_security_group_ingress_rule.db_from_lambda: Creation complete after 0s [id=sgr-00ac459e4dc2ebdff]
+aws_db_subnet_group.this: Creation complete after 1s [id=legacybenefitsgroupllc]
+aws_rds_cluster.this: Creating...
+aws_vpc_endpoint.s3: Creation complete after 7s [id=vpce-03f87d6e4981e7db8]
+aws_rds_cluster.this: Still creating... [00m10s elapsed]
+aws_rds_cluster.this: Still creating... [00m20s elapsed]
+aws_rds_cluster.this: Still creating... [00m30s elapsed]
+aws_rds_cluster.this: Creation complete after 32s [id=legacybenefitsgroupllc]
+aws_rds_cluster_instance.this: Creating...
+aws_lambda_function.migrate: Creating...
+aws_lambda_function.app: Creating...
+aws_rds_cluster_instance.this: Still creating... [00m10s elapsed]
+aws_lambda_function.app: Still creating... [00m10s elapsed]
+aws_lambda_function.migrate: Still creating... [00m10s elapsed]
+aws_rds_cluster_instance.this: Still creating... [00m20s elapsed]
+aws_lambda_function.migrate: Still creating... [00m20s elapsed]
+aws_lambda_function.app: Still creating... [00m20s elapsed]
+aws_rds_cluster_instance.this: Still creating... [00m30s elapsed]
+aws_lambda_function.app: Still creating... [00m30s elapsed]
+aws_lambda_function.migrate: Still creating... [00m30s elapsed]
+aws_rds_cluster_instance.this: Still creating... [00m40s elapsed]
+aws_lambda_function.migrate: Still creating... [00m40s elapsed]
+aws_lambda_function.app: Still creating... [00m40s elapsed]
+aws_lambda_function.migrate: Still creating... [00m50s elapsed]
+aws_lambda_function.app: Still creating... [00m50s elapsed]
+aws_rds_cluster_instance.this: Still creating... [00m50s elapsed]
+aws_rds_cluster_instance.this: Still creating... [01m00s elapsed]
+aws_lambda_function.migrate: Still creating... [01m00s elapsed]
+aws_lambda_function.app: Still creating... [01m00s elapsed]
+aws_lambda_function.app: Still creating... [01m10s elapsed]
+aws_lambda_function.migrate: Still creating... [01m10s elapsed]
+aws_rds_cluster_instance.this: Still creating... [01m10s elapsed]
+aws_lambda_function.app: Still creating... [01m20s elapsed]
+aws_rds_cluster_instance.this: Still creating... [01m20s elapsed]
+aws_lambda_function.migrate: Still creating... [01m20s elapsed]
+aws_lambda_function.migrate: Still creating... [01m30s elapsed]
+aws_lambda_function.app: Still creating... [01m30s elapsed]
+aws_rds_cluster_instance.this: Still creating... [01m30s elapsed]
+aws_rds_cluster_instance.this: Still creating... [01m40s elapsed]
+aws_lambda_function.migrate: Still creating... [01m40s elapsed]
+aws_lambda_function.app: Still creating... [01m40s elapsed]
+aws_rds_cluster_instance.this: Still creating... [01m50s elapsed]
+aws_lambda_function.app: Still creating... [01m50s elapsed]
+aws_lambda_function.migrate: Still creating... [01m50s elapsed]
+aws_lambda_function.migrate: Still creating... [02m00s elapsed]
+aws_rds_cluster_instance.this: Still creating... [02m00s elapsed]
+aws_lambda_function.app: Still creating... [02m00s elapsed]
+aws_lambda_function.app: Still creating... [02m10s elapsed]
+aws_lambda_function.migrate: Still creating... [02m10s elapsed]
+aws_rds_cluster_instance.this: Still creating... [02m10s elapsed]
+aws_rds_cluster_instance.this: Still creating... [02m20s elapsed]
+aws_lambda_function.app: Still creating... [02m20s elapsed]
+aws_lambda_function.migrate: Still creating... [02m20s elapsed]
+aws_lambda_function.migrate: Still creating... [02m30s elapsed]
+aws_rds_cluster_instance.this: Still creating... [02m30s elapsed]
+aws_lambda_function.app: Still creating... [02m30s elapsed]
+aws_lambda_function.app: Still creating... [02m40s elapsed]
+aws_lambda_function.migrate: Still creating... [02m40s elapsed]
+aws_rds_cluster_instance.this: Still creating... [02m40s elapsed]
+aws_lambda_function.app: Still creating... [02m50s elapsed]
+aws_rds_cluster_instance.this: Still creating... [02m50s elapsed]
+aws_lambda_function.migrate: Still creating... [02m50s elapsed]
+aws_lambda_function.migrate: Still creating... [03m00s elapsed]
+aws_lambda_function.app: Still creating... [03m00s elapsed]
+aws_rds_cluster_instance.this: Still creating... [03m00s elapsed]
+aws_rds_cluster_instance.this: Still creating... [03m10s elapsed]
+aws_lambda_function.migrate: Still creating... [03m10s elapsed]
+aws_lambda_function.app: Still creating... [03m10s elapsed]
+aws_lambda_function.migrate: Still creating... [03m20s elapsed]
+aws_lambda_function.app: Still creating... [03m20s elapsed]
+aws_rds_cluster_instance.this: Still creating... [03m20s elapsed]
+aws_rds_cluster_instance.this: Still creating... [03m30s elapsed]
+aws_lambda_function.migrate: Still creating... [03m30s elapsed]
+aws_lambda_function.app: Still creating... [03m30s elapsed]
+aws_rds_cluster_instance.this: Still creating... [03m40s elapsed]
+aws_lambda_function.migrate: Still creating... [03m40s elapsed]
+aws_lambda_function.app: Still creating... [03m40s elapsed]
+aws_lambda_function.migrate: Creation complete after 3m45s [id=legacybenefitsgroupllc-migrate]
+aws_lambda_function.app: Still creating... [03m50s elapsed]
+aws_rds_cluster_instance.this: Still creating... [03m50s elapsed]
+aws_lambda_function.app: Creation complete after 3m52s [id=legacybenefitsgroupllc]
+aws_lambda_function_url.app: Creating...
+aws_lambda_function_url.app: Creation complete after 1s [id=legacybenefitsgroupllc]
+aws_cloudfront_distribution.this: Creating...
+aws_rds_cluster_instance.this: Still creating... [04m00s elapsed]
+aws_cloudfront_distribution.this: Still creating... [00m10s elapsed]
+aws_rds_cluster_instance.this: Still creating... [04m10s elapsed]
+aws_cloudfront_distribution.this: Still creating... [00m20s elapsed]
+aws_rds_cluster_instance.this: Still creating... [04m20s elapsed]
+aws_cloudfront_distribution.this: Still creating... [00m30s elapsed]
+aws_rds_cluster_instance.this: Still creating... [04m30s elapsed]
+aws_cloudfront_distribution.this: Still creating... [00m40s elapsed]
+aws_rds_cluster_instance.this: Still creating... [04m40s elapsed]
+aws_cloudfront_distribution.this: Still creating... [00m50s elapsed]
+aws_rds_cluster_instance.this: Still creating... [04m50s elapsed]
+aws_cloudfront_distribution.this: Still creating... [01m00s elapsed]
+aws_rds_cluster_instance.this: Still creating... [05m00s elapsed]
+aws_cloudfront_distribution.this: Still creating... [01m10s elapsed]
+aws_rds_cluster_instance.this: Still creating... [05m10s elapsed]
+aws_cloudfront_distribution.this: Still creating... [01m20s elapsed]
+aws_rds_cluster_instance.this: Still creating... [05m20s elapsed]
+aws_cloudfront_distribution.this: Still creating... [01m30s elapsed]
+aws_rds_cluster_instance.this: Still creating... [05m30s elapsed]
+aws_cloudfront_distribution.this: Still creating... [01m40s elapsed]
+aws_rds_cluster_instance.this: Still creating... [05m40s elapsed]
+aws_cloudfront_distribution.this: Still creating... [01m50s elapsed]
+aws_rds_cluster_instance.this: Still creating... [05m50s elapsed]
+aws_cloudfront_distribution.this: Still creating... [02m00s elapsed]
+aws_rds_cluster_instance.this: Still creating... [06m00s elapsed]
+aws_cloudfront_distribution.this: Still creating... [02m10s elapsed]
+aws_rds_cluster_instance.this: Creation complete after 6m10s [id=legacybenefitsgroupllc]
+aws_cloudfront_distribution.this: Still creating... [02m20s elapsed]
+aws_cloudfront_distribution.this: Still creating... [02m30s elapsed]
+aws_cloudfront_distribution.this: Still creating... [02m40s elapsed]
+aws_cloudfront_distribution.this: Creation complete after 2m43s [id=EIZ92HTJ7XFY2]
+data.aws_iam_policy_document.assets: Reading...
+data.aws_iam_policy_document.deploy: Reading...
+aws_lambda_permission.cloudfront: Creating...
+data.aws_iam_policy_document.assets: Read complete after 0s [id=1234621671]
+aws_lambda_permission.cloudfront_invoke: Creating...
+data.aws_iam_policy_document.deploy: Read complete after 0s [id=3629814934]
+github_actions_variable.this["BUSINESS_ADDRESS"]: Creating...
+github_actions_variable.this["CLOUDFRONT_ID"]: Creating...
+github_actions_variable.this["NEXT_PUBLIC_SITE_URL"]: Creating...
+github_actions_variable.this["NEXT_PUBLIC_TURNSTILE_SITE_KEY"]: Creating...
+github_actions_variable.this["BUSINESS_NAME"]: Creating...
+github_actions_variable.this["BUSINESS_EMAIL"]: Creating...
+github_actions_variable.this["MIGRATE_FUNCTION_NAME"]: Creating...
+github_actions_variable.this["SITE_URL"]: Creating...
+aws_lambda_permission.cloudfront: Creation complete after 0s [id=AllowCloudFront]
+github_actions_variable.this["NEXT_PUBLIC_MEDIA_HOST"]: Creating...
+aws_lambda_permission.cloudfront_invoke: Creation complete after 0s [id=AllowCloudFrontInvoke]
+github_actions_variable.this["ASSETS_BUCKET"]: Creating...
+github_actions_variable.this["LAMBDA_FUNCTION_NAME"]: Creating...
+github_actions_variable.this["BUSINESS_PHONE"]: Creating...
+github_actions_variable.this["AWS_REGION"]: Creating...
+github_actions_variable.this["NEXT_PUBLIC_SITE_URL"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["CLOUDFRONT_ID"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["BUSINESS_NAME"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["MIGRATE_FUNCTION_NAME"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["SITE_URL"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["AWS_DEPLOY_ROLE_ARN"]: Creating...
+github_actions_variable.this["ASSETS_BUCKET"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["LAMBDA_FUNCTION_NAME"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["BUSINESS_PHONE"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["AWS_REGION"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["CLOUDFRONT_ID"]: Creation complete after 19s [id=legacy-benefits-mn:CLOUDFRONT_ID]
+github_actions_variable.this["NEXT_PUBLIC_CALENDLY_URL"]: Creating...
+github_actions_variable.this["NEXT_PUBLIC_SITE_URL"]: Creation complete after 20s [id=legacy-benefits-mn:NEXT_PUBLIC_SITE_URL]
+github_actions_variable.this["NEXT_PUBLIC_GTM_ID"]: Creating...
+github_actions_variable.this["BUSINESS_NAME"]: Still creating... [00m20s elapsed]
+github_actions_variable.this["MIGRATE_FUNCTION_NAME"]: Still creating... [00m20s elapsed]
+github_actions_variable.this["SITE_URL"]: Still creating... [00m20s elapsed]
+github_actions_variable.this["BUSINESS_NAME"]: Creation complete after 20s [id=legacy-benefits-mn:BUSINESS_NAME]
+aws_s3_bucket_policy.assets: Creating...
+github_actions_variable.this["AWS_DEPLOY_ROLE_ARN"]: Still creating... [00m10s elapsed]
+github_actions_variable.this["ASSETS_BUCKET"]: Still creating... [00m20s elapsed]
+aws_s3_bucket_policy.assets: Creation complete after 0s [id=legacybenefitsgroupllc-assets-150701180133]
+aws_iam_role_policy.deploy: Creating...
+github_actions_variable.this["MIGRATE_FUNCTION_NAME"]: Creation complete after 21s [id=legacy-benefits-mn:MIGRATE_FUNCTION_NAME]
+github_actions_variable.this["SITE_URL"]: Creation complete after 21s [id=legacy-benefits-mn:SITE_URL]
+aws_iam_role_policy.deploy: Creation complete after 1s [id=legacybenefitsgroupllc-github-deploy:legacybenefitsgroupllc-github-deploy]
+github_actions_variable.this["LAMBDA_FUNCTION_NAME"]: Still creating... [00m20s elapsed]
+github_actions_variable.this["ASSETS_BUCKET"]: Creation complete after 24s [id=legacy-benefits-mn:ASSETS_BUCKET]
+github_actions_variable.this["LAMBDA_FUNCTION_NAME"]: Creation complete after 23s [id=legacy-benefits-mn:LAMBDA_FUNCTION_NAME]
+github_actions_variable.this["BUSINESS_PHONE"]: Creation complete after 19s [id=legacy-benefits-mn:BUSINESS_PHONE]
+github_actions_variable.this["AWS_REGION"]: Creation complete after 18s [id=legacy-benefits-mn:AWS_REGION]
+github_actions_variable.this["AWS_DEPLOY_ROLE_ARN"]: Creation complete after 14s [id=legacy-benefits-mn:AWS_DEPLOY_ROLE_ARN]
+
+Warning: Value for undeclared variable
+
+The root module does not declare a variable named "dmarc_record" but a value
+was found in file "terraform.tfvars". If you meant to use this value, add a
+"variable" block to the configuration.
+
+To silence these warnings, use TF_VAR_... environment variables to provide
+certain "global" settings to all configurations in your organization. To
+reduce the verbosity of these warnings, use the -compact-warnings option.
+
+Warning: Value for undeclared variable
+
+The root module does not declare a variable named "database_name" but a value
+was found in file "terraform.tfvars". If you meant to use this value, add a
+"variable" block to the configuration.
+
+To silence these warnings, use TF_VAR_... environment variables to provide
+certain "global" settings to all configurations in your organization. To
+reduce the verbosity of these warnings, use the -compact-warnings option.
+
+Warning: Values for undeclared variables
+
+In addition to the other similar warnings shown, 8 other variable(s) defined
+without being declared.
+
+Error: POST https://api.github.com/repos/marc-mccarthy/legacy-benefits-mn/actions/variables: 422 Variable value cannot be empty. []
+
+  with github_actions_variable.this["NEXT_PUBLIC_TURNSTILE_SITE_KEY"],
+  on github.tf line 38, in resource "github_actions_variable" "this":
+  38: resource "github_actions_variable" "this" {
+
+
+Error: POST https://api.github.com/repos/marc-mccarthy/legacy-benefits-mn/actions/variables: 422 Variable value cannot be empty. []
+
+  with github_actions_variable.this["NEXT_PUBLIC_GTM_ID"],
+  on github.tf line 38, in resource "github_actions_variable" "this":
+  38: resource "github_actions_variable" "this" {
+
+
+Error: POST https://api.github.com/repos/marc-mccarthy/legacy-benefits-mn/actions/variables: 422 Variable value cannot be empty. []
+
+  with github_actions_variable.this["NEXT_PUBLIC_MEDIA_HOST"],
+  on github.tf line 38, in resource "github_actions_variable" "this":
+  38: resource "github_actions_variable" "this" {
+
+
+Error: POST https://api.github.com/repos/marc-mccarthy/legacy-benefits-mn/actions/variables: 422 Variable value cannot be empty. []
+
+  with github_actions_variable.this["BUSINESS_EMAIL"],
+  on github.tf line 38, in resource "github_actions_variable" "this":
+  38: resource "github_actions_variable" "this" {
+
+
+Error: POST https://api.github.com/repos/marc-mccarthy/legacy-benefits-mn/actions/variables: 422 Variable value cannot be empty. []
+
+  with github_actions_variable.this["NEXT_PUBLIC_CALENDLY_URL"],
+  on github.tf line 38, in resource "github_actions_variable" "this":
+  38: resource "github_actions_variable" "this" {
+
+
+Error: POST https://api.github.com/repos/marc-mccarthy/legacy-benefits-mn/actions/variables: 422 Variable value cannot be empty. []
+
+  with github_actions_variable.this["BUSINESS_ADDRESS"],
+  on github.tf line 38, in resource "github_actions_variable" "this":
+  38: resource "github_actions_variable" "this" {
+

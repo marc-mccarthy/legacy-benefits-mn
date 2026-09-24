@@ -181,7 +181,7 @@ describe("captureLead lead row", () => {
     expect(leadRow().consentedAt).toBeInstanceOf(Date);
   });
 
-  it("retains the record for the CMS-mandated ten years", async () => {
+  it("retains the record for the Medicare-mandated ten years", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-08T12:00:00.000Z"));
 
@@ -216,9 +216,9 @@ describe("captureLead consent evidence", () => {
   it("prefers the business identity over the environment", async () => {
     vi.stubEnv("BUSINESS_NAME", "Env Agency");
 
-    await captureLead(lead, { business: { name: "CMS Agency" } });
+    await captureLead(lead, { business: { name: "Caller Agency" } });
 
-    expect(leadRow().consentText).toContain("CMS Agency");
+    expect(leadRow().consentText).toContain("Caller Agency");
   });
 
   it("falls back to BUSINESS_NAME", async () => {

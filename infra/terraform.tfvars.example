@@ -1,0 +1,88 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# Every key here is declared in variables.tf. REQUIRED means the variable has no
+# default, so an unset value stops the plan; a REQUIRED key may still take "",
+# which src/lib/env.ts reads as "not configured". OPTIONAL means variables.tf
+# supplies a default and the line can be deleted.
+
+# --- Identity ---------------------------------------------------------------
+# REQUIRED. Prefix for every AWS resource name. Also the Aurora database name,
+# via replace(name, "-", "_") in main.tf.
+name = ""
+
+# REQUIRED. Reaches the Lambda environment and the GitHub Actions variables the
+# build reads. business_name is interpolated into the TCPA consent text stored
+# with each lead.
+business_name    = ""
+business_phone   = ""
+business_email   = ""
+business_address = ""
+
+# REQUIRED. Blank sends no lead notification.
+lead_notification_email = ""
+
+# --- Deployment -------------------------------------------------------------
+# REQUIRED. owner/repo allowed to assume the deploy role through GitHub OIDC.
+github_repository = ""
+
+# REQUIRED. The OIDC token subject, carrying numeric owner and repo IDs rather
+# than names. Not derivable from github_repository. Read it with:
+#   gh api repos/<owner>/<repo>/actions/oidc/customization/sub --jq .sub_claim_prefix
+github_subject_prefix = ""
+
+# REQUIRED.
+region = "us-east-1"
+
+# REQUIRED. Lambda scales CPU with memory; 1769 MB is one full vCPU.
+lambda_memory_mb = 1769
+
+# OPTIONAL. Default true. When false, Terraform writes no GitHub Actions
+# variables and the workflow reads whatever is already set there.
+manage_github_variables = true
+
+# --- Database ---------------------------------------------------------------
+# REQUIRED. Aurora Serverless v2 ceiling in ACUs.
+db_max_acu = 2
+
+# REQUIRED. Aurora resumes from a pause in ~15s, charged on the next request.
+db_seconds_until_auto_pause = 300
+
+# --- Domain -----------------------------------------------------------------
+# OPTIONAL. Blank serves the CloudFront URL — `terraform output site_url`.
+# Set to the bare domain and both it and www.<domain> serve the site, with
+# www redirected to the bare domain by the CloudFront function in compute.tf.
+domain_name = ""
+
+# OPTIONAL, unless domain_name is set. Must be issued in us-east-1, which is the
+# only region CloudFront reads certificates from, and must cover both the bare
+# domain and www.<domain>.
+acm_certificate_arn = ""
+
+# --- Spam protection --------------------------------------------------------
+# REQUIRED, both; either may be "".
+#
+# Cloudflare Turnstile on the contact, SOA and do-not-contact forms.
+# dash.cloudflare.com -> Turnstile -> Add site, widget mode "Managed".
+#
+# Blank site key -> the widget renders nothing, so no token is produced. Blank
+# secret -> verification is skipped. A non-empty secret is treated as
+# configured, so a placeholder makes every form submission answer 403.
+#
+# The Lambda reaches challenges.cloudflare.com only through a NAT gateway.
+# Without one, leave the secret blank.
+turnstile_site_key = ""
+turnstile_secret   = ""
+
+# --- Optional integrations --------------------------------------------------
+# REQUIRED keys; "" is the supported "not configured" value. An empty GitHub
+# Actions variable is omitted rather than written, because the API rejects one
+# with a 422.
+#
+#   media_host    CloudFront host serving /media, for next/image remotePatterns
+#   gtm_id        Google Tag Manager container, GTM-XXXXXXX
+#   calendly_url  plain Calendly event URL, not the <script> snippet
+media_host   = ""
+gtm_id       = ""
+calendly_url = ""

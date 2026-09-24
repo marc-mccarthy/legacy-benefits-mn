@@ -4,7 +4,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { EventImage } from "@/components/sections/event-image";
 import { Container, Section } from "@/components/ui/section";
 import { Reveal } from "@/components/motion/reveal";
-import { getUpcomingEvents } from "@/lib/payload";
+import { upcomingEvents } from "@/content/events";
 import { formatDate, formatTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -13,17 +13,17 @@ export const metadata: Metadata = {
     "Free educational Medicare workshops and community events. No obligation to enrol.",
 };
 
-export default async function EventsPage() {
-  const events = await getUpcomingEvents(50).catch(() => []);
+export default function EventsPage() {
+  const events = upcomingEvents(new Date()).slice(0, 50);
 
   return (
     <Section>
       <Container className="space-y-10">
         <div className="max-w-2xl space-y-4">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="font-display text-(length:--text-display-page)">
             Upcoming events
           </h1>
-          <p className="text-muted text-lg">
+          <p className="lead text-muted text-lg">
             Educational sessions on how Medicare works. Attending does not enrol
             you in a plan and carries no obligation.
           </p>
@@ -46,16 +46,20 @@ export default async function EventsPage() {
                   className="flex w-full"
                 >
                   <Card className="w-full">
-                    <EventImage image={event.image} cost={event.cost} />
+                    <EventImage
+                      image={event.image}
+                      cost={event.cost}
+                      morphSlug={event.slug}
+                    />
                     <CardBody>
                       <time
                         dateTime={event.startsAt}
-                        className="text-muted text-sm"
+                        className="text-muted tabular text-base"
                       >
                         {formatDate(event.startsAt)} ·{" "}
                         {formatTime(event.startsAt)}
                       </time>
-                      <p className="text-muted text-sm">{event.venue}</p>
+                      <p className="text-muted text-base">{event.venue}</p>
                       <h2 className="text-lg font-semibold">
                         <Link
                           href={`/events/${event.slug}`}
@@ -64,7 +68,7 @@ export default async function EventsPage() {
                           {event.title}
                         </Link>
                       </h2>
-                      <p className="text-muted flex-1 text-sm">
+                      <p className="text-muted flex-1 text-base">
                         {event.summary}
                       </p>
                     </CardBody>

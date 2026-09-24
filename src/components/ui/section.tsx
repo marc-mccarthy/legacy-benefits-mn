@@ -3,35 +3,57 @@ import { cn } from "@/lib/utils";
 
 export type Scheme = "light" | "muted" | "dark";
 
+export type Signature = "F1" | "F2" | "F3" | "F4" | "F5" | "F6" | "F7";
+
+const SIGNATURE_SCHEME: Record<Signature, Scheme | null> = {
+  F1: "dark",
+  F2: "dark",
+  F3: "light",
+  F4: null,
+  F5: "light",
+  F6: "light",
+  F7: "dark",
+};
+
+const SIGNATURE_PADDING: Partial<Record<Signature, string>> = {
+  F3: "py-(--spacing-large) md:py-(--spacing-big)",
+  F4: "py-(--spacing-large) md:py-(--spacing-big)",
+  F5: "py-(--spacing-medium) md:py-(--spacing-medium)",
+  F6: "py-(--spacing-medium) md:py-(--spacing-large)",
+  F7: "py-(--spacing-big) md:py-(--spacing-huge)",
+};
+
 type SectionProps = {
   children: ReactNode;
+  signature?: Signature;
   scheme?: Scheme;
   className?: string;
-  /** Rendered as <section> by default; pass "div" for nested bands. */
   as?: "section" | "div";
   id?: string;
   "aria-labelledby"?: string;
 };
 
-/**
- * A full-bleed band. `scheme` swaps the semantic token set for everything
- * inside via [data-scheme] (see globals.css), which is how the reference sites
- * alternate light and dark sections without per-section colour classes.
- */
 export function Section({
   children,
-  scheme = "light",
+  signature,
+  scheme,
   className,
   as: Tag = "section",
   ...rest
 }: SectionProps) {
+  const resolvedScheme =
+    (signature ? SIGNATURE_SCHEME[signature] : null) ?? scheme ?? "light";
+
+  const padding = signature
+    ? SIGNATURE_PADDING[signature]
+    : "py-(--spacing-large) md:py-(--spacing-big)";
+
   return (
     <Tag
-      data-scheme={scheme}
-      className={cn(
-        "bg-surface text-on-surface py-(--spacing-large) md:py-(--spacing-big)",
-        className,
-      )}
+      data-scheme={resolvedScheme}
+      data-band=""
+      data-signature={signature}
+      className={cn("bg-surface text-on-surface", padding, className)}
       {...rest}
     >
       {children}
@@ -53,7 +75,6 @@ export function Container({
   );
 }
 
-/** Narrow measure for body copy — roughly the 830px column used on McGill. */
 export function Prose({
   children,
   className,
@@ -61,10 +82,5 @@ export function Prose({
   children: ReactNode;
   className?: string;
 }) {
-  // 65ch, not a fixed rem width. 52rem was ~92 characters at 18px, well past the
-  // 45–75 range readable-line-length research converges on, and older readers
-  // track toward the shorter half of it — long lines cost more when re-finding
-  // the start of the next line. `ch` also holds the measure if the base size or
-  // typeface changes.
   return <div className={cn("max-w-[65ch]", className)}>{children}</div>;
 }

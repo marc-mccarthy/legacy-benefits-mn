@@ -9,14 +9,6 @@ export type Carrier = {
   approved?: boolean | null;
 };
 
-/**
- * Carrier trust strip.
- *
- * Only carriers marked `approved` are shown, because carrier co-marketing
- * rules govern how their marks may be displayed. Carriers without an uploaded
- * logo fall back to their name set as a wordmark, which is also the safe
- * default until real logo files are cleared for use.
- */
 export function CarrierStrip({
   heading,
   carriers,
@@ -38,7 +30,7 @@ export function CarrierStrip({
       <Container className="space-y-8">
         <h2
           id="carriers-heading"
-          className="text-muted text-center text-sm font-semibold tracking-wider uppercase"
+          className="text-muted text-center text-base font-semibold"
         >
           {heading ?? "We represent"}
         </h2>
@@ -47,19 +39,21 @@ export function CarrierStrip({
           {visible.map((carrier) => {
             const logo = mediaProps(carrier.logo as never);
             return (
-              <li key={carrier.id}>
+              <li key={carrier.id} translate="no">
                 {logo ? (
                   <Image
                     src={logo.src}
                     alt={carrier.name}
                     width={160}
                     height={48}
-                    // Greyscale until hover keeps a row of clashing brand
-                    // colours from competing with the page.
+                    translate="no"
                     className="h-10 w-auto object-contain opacity-70 grayscale transition hover:opacity-100 hover:grayscale-0"
                   />
                 ) : (
-                  <span className="text-muted text-lg font-semibold tracking-tight">
+                  <span
+                    translate="no"
+                    className="text-muted text-lg font-semibold tracking-tight"
+                  >
                     {carrier.name}
                   </span>
                 )}

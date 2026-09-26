@@ -10,22 +10,31 @@ import { media } from "@/content/media";
  * avatar slots in `media-manifest.json` — returns unchanged.
  */
 
-type Derivative = { width: number; src: string };
+type Derivative = { width: number; src: string; bytes: number };
 
-const BY_SOURCE: Map<string, Derivative[]> = (() => {
+type Indexable = {
+  src: string;
+  srcSet: { width: number; src: string; bytes: number }[];
+};
+
+export function indexBySource(assets: Indexable[]): Map<string, Derivative[]> {
   const index = new Map<string, Derivative[]>();
 
-  for (const asset of Object.values(media)) {
+  for (const asset of assets) {
     if (asset.srcSet.length === 0) continue;
 
     // One format per width, so a single `src` attribute stays deterministic.
-    // AVIF is preferred where both exist; `<picture>` is what negotiates
-    // formats, and this loader only ever fills `src` and `srcSet`.
+    // The smaller measured file wins; the first variant at a width holds the
+    // width on a tie, which `src/content/media.ts`'s fixed order makes stable.
     const byWidth = new Map<number, Derivative>();
     for (const variant of asset.srcSet) {
       const existing = byWidth.get(variant.width);
-      if (!existing || variant.format === "avif") {
-        byWidth.set(variant.width, { width: variant.width, src: variant.src });
+      if (!existing || variant.bytes < existing.bytes) {
+        byWidth.set(variant.width, {
+          width: variant.width,
+          src: variant.src,
+          bytes: variant.bytes,
+        });
       }
     }
 
@@ -36,7 +45,9 @@ const BY_SOURCE: Map<string, Derivative[]> = (() => {
   }
 
   return index;
-})();
+}
+
+const BY_SOURCE = indexBySource(Object.values(media));
 
 export default function imageLoader({
   src,

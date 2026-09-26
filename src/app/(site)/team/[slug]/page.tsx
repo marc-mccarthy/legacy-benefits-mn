@@ -56,7 +56,7 @@ export default async function TeamMemberPage({ params }: Props) {
 
         <div className="space-y-5">
           <div>
-            <h1 className="font-display text-(length:--text-display-page)">
+            <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
               {doc.name}
             </h1>
             <p className="lead text-muted text-lg">{doc.role}</p>

@@ -16,6 +16,7 @@ export default async function ServicesPage() {
   return (
     <>
       <ServiceGrid
+        headingLevel="h1"
         heading="How we help"
         intro="Independent guidance across the coverage types we are appointed to offer."
         services={services as never}

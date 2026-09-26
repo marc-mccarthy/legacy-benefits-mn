@@ -26,7 +26,7 @@ export function Monogram({
     <span
       aria-hidden
       className={cn(
-        "bg-navy-800 grid shrink-0 place-items-center font-semibold text-white",
+        "bg-night-900 text-paper grid shrink-0 place-items-center font-semibold",
         className,
       )}
     >

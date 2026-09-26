@@ -12,6 +12,10 @@ import * as NavigationMenu from "@radix-ui/react-navigation-menu";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/section";
+import {
+  pauseSmoothScroll,
+  resumeSmoothScroll,
+} from "@/components/motion/smooth-scroll";
 import { cn } from "@/lib/utils";
 
 function suppressPointerOpen(event: ReactPointerEvent<HTMLElement>) {
@@ -58,13 +62,20 @@ export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    pauseSmoothScroll();
+    return resumeSmoothScroll;
+  }, [mobileOpen]);
+
   return (
     <header
       data-scheme="light"
       data-site-header
+      data-stuck={scrolled ? "" : undefined}
       style={{ viewTransitionName: "site-header" }}
       className={cn(
-        "bg-surface sticky top-0 z-50 transition-shadow duration-200",
+        "bg-surface text-on-surface sticky top-0 z-50 transition-shadow duration-(--duration-house)",
         scrolled && "shadow-sm",
       )}
     >
@@ -191,7 +202,7 @@ export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
 
         <div className="hidden items-center gap-3 lg:flex">
           {cta?.href ? (
-            <Button asChild size="sm">
+            <Button asChild size="sm" data-header-cta>
               <Link href={cta.href}>{cta.label ?? "Get started"}</Link>
             </Button>
           ) : null}
@@ -212,6 +223,7 @@ export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
             />
             <Dialog.Content
               data-nav-sheet
+              data-lenis-prevent
               data-scheme="light"
               className="bg-surface text-on-surface fixed inset-y-0 right-0 z-50 flex w-80 max-w-[calc(100vw-3rem)] flex-col overscroll-contain"
             >

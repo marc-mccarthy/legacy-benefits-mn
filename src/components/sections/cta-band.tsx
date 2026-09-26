@@ -26,7 +26,7 @@ export function CtaBand({
       {isNightBand ? <ParticleField /> : null}
       <Container>
         <Reveal className="flex max-w-4xl flex-col items-start gap-6">
-          <h2 className="text-(length:--text-display-md) font-semibold text-balance">
+          <h2 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em] text-balance">
             {heading}
           </h2>
           {body ? <p className="text-muted lead max-w-2xl">{body}</p> : null}

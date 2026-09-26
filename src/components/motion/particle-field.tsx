@@ -6,18 +6,20 @@ import { useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/section";
 
-const REFERENCE_WIDTH = 1440;
-const REFERENCE_HEIGHT = 600;
-const REFERENCE_COUNT = 40;
 const MAX_POINTS = 80;
+const DENSITY_DIVISOR = 8000;
 
 const RADIUS_MIN = 1;
-const RADIUS_MAX = 2;
-const ALPHA_MIN = 0.06;
-const ALPHA_MAX = 0.22;
+const RADIUS_MAX = 5;
+const POINT_ALPHA = 0.5;
+const POINT_COLOR = "#FFFFFF";
 
-const SPEED_MIN = 6;
-const SPEED_MAX = 14;
+const SPEED = 6;
+
+const LINK_DISTANCE = 150;
+const LINK_ALPHA_MAX = 0.4;
+const LINK_WIDTH = 1;
+const LINK_COLOR = "#FFFFFF";
 
 const MAX_FRAME_MS = 50;
 
@@ -31,8 +33,6 @@ type Point = {
   vx: number;
   vy: number;
   radius: number;
-  alpha: number;
-  color: string;
 };
 
 type Field = { points: Point[]; width: number; height: number };
@@ -44,6 +44,10 @@ const wrap = (value: number, extent: number) => {
   const span = extent + WRAP_MARGIN * 2;
   return ((((value + WRAP_MARGIN) % span) + span) % span) - WRAP_MARGIN;
 };
+
+export function computePointCount(width: number, height: number): number {
+  return Math.min(MAX_POINTS, Math.round((width * height) / DENSITY_DIVISOR));
+}
 
 const subscribeNothing = () => () => {};
 const subscribeVisibility = (onChange: () => void) => {
@@ -65,31 +69,16 @@ function seedField(
   canvas.height = Math.round(height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-  const styles = getComputedStyle(root);
-  const palette = [
-    styles.getPropertyValue("--scheme-accent").trim(),
-    styles.getPropertyValue("--scheme-on-surface").trim(),
-  ].filter(Boolean);
-  if (palette.length === 0) palette.push(styles.color);
-
-  const count = Math.min(
-    MAX_POINTS,
-    Math.round(
-      (width * height * REFERENCE_COUNT) / (REFERENCE_WIDTH * REFERENCE_HEIGHT),
-    ),
-  );
+  const count = computePointCount(width, height);
 
   const points = Array.from({ length: count }, () => {
     const heading = Math.random() * Math.PI * 2;
-    const speed = between(SPEED_MIN, SPEED_MAX);
     return {
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: Math.cos(heading) * speed,
-      vy: Math.sin(heading) * speed,
+      vx: Math.cos(heading) * SPEED,
+      vy: Math.sin(heading) * SPEED,
       radius: between(RADIUS_MIN, RADIUS_MAX),
-      alpha: between(ALPHA_MIN, ALPHA_MAX),
-      color: palette[Math.floor(Math.random() * palette.length)],
     };
   });
 
@@ -101,9 +90,27 @@ function draw(
   { points, width, height }: Field,
 ): void {
   ctx.clearRect(0, 0, width, height);
+
+  // Links first so the points sit on top of them.
+  ctx.strokeStyle = LINK_COLOR;
+  ctx.lineWidth = LINK_WIDTH;
+  for (let i = 0; i < points.length; i++) {
+    for (let j = i + 1; j < points.length; j++) {
+      const dx = points[i].x - points[j].x;
+      const dy = points[i].y - points[j].y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance >= LINK_DISTANCE) continue;
+      ctx.globalAlpha = LINK_ALPHA_MAX * (1 - distance / LINK_DISTANCE);
+      ctx.beginPath();
+      ctx.moveTo(points[i].x, points[i].y);
+      ctx.lineTo(points[j].x, points[j].y);
+      ctx.stroke();
+    }
+  }
+
+  ctx.globalAlpha = POINT_ALPHA;
+  ctx.fillStyle = POINT_COLOR;
   for (const point of points) {
-    ctx.globalAlpha = point.alpha;
-    ctx.fillStyle = point.color;
     ctx.beginPath();
     ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
     ctx.fill();

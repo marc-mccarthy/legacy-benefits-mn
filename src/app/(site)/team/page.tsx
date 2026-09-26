@@ -8,5 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default function TeamPage() {
-  return <TeamGrid heading="Our team" members={team as never} />;
+  return (
+    <TeamGrid headingLevel="h1" heading="Our team" members={team as never} />
+  );
 }

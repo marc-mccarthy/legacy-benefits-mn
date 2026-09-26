@@ -37,7 +37,7 @@ export default async function ServiceDetailPage({ params }: Props) {
       <Section>
         <Container>
           <Prose className="space-y-6">
-            <h1 className="font-display text-(length:--text-display-page)">
+            <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
               {doc.title}
             </h1>
             <p className="lead text-muted text-lg leading-relaxed">

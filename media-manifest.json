@@ -3,234 +3,73 @@
   "generator": "sourcing-media",
   "assets": [
     {
-      "slot": "pages.poster",
-      "lane": "photo",
-      "file": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro.jpg",
+      "slot": "services.image",
+      "lane": "archival",
+      "file": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh.jpg",
       "variants": [
         {
           "width": 1920,
           "format": "avif",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-1920.avif",
-          "bytes": 138507
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-1920.avif",
+          "bytes": 434831
         },
         {
           "width": 1920,
           "format": "webp",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-1920.webp",
-          "bytes": 103156
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-1920.webp",
+          "bytes": 338304
         },
         {
           "width": 900,
           "format": "avif",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-900.avif",
-          "bytes": 46573
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-900.avif",
+          "bytes": 84699
         },
         {
           "width": 900,
           "format": "webp",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-900.webp",
-          "bytes": 32128
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-900.webp",
+          "bytes": 68200
         },
         {
           "width": 480,
           "format": "avif",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-480.avif",
-          "bytes": 18829
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-480.avif",
+          "bytes": 26056
         },
         {
           "width": 480,
           "format": "webp",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-480.webp",
-          "bytes": 13010
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-480.webp",
+          "bytes": 20258
         }
       ],
       "intrinsic": {
-        "width": 6016,
-        "height": 4016
+        "width": 1920,
+        "height": 1080
       },
-      "alt": "An older couple walking outdoors on an autumn afternoon",
+      "alt": "The downtown Minneapolis skyline seen from the air on a clear autumn morning",
       "altNeedsReview": false,
       "source": {
-        "name": "pexels",
-        "provider": "pexels",
-        "id": "6128921",
-        "pageUrl": "https://www.pexels.com/photo/an-elderly-man-kissing-an-elderly-woman-6128921/",
-        "downloadUrl": "https://images.pexels.com/photos/6128921/pexels-photo-6128921.jpeg"
+        "name": "wikimedia",
+        "provider": "wikimedia-commons",
+        "id": "155968640",
+        "pageUrl": "https://commons.wikimedia.org/wiki/File:Minneapolis_skyline_from_Loring_Park_neighborhood_aerial,_October_2024.jpg",
+        "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Minneapolis_skyline_from_Loring_Park_neighborhood_aerial%2C_October_2024.jpg/1920px-Minneapolis_skyline_from_Loring_Park_neighborhood_aerial%2C_October_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
       },
       "license": {
-        "id": "pexels-license",
-        "name": "Pexels License",
-        "url": "https://www.pexels.com/license/",
+        "id": "cc0",
+        "name": "CC0 1.0",
+        "url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
         "commercial": true,
         "derivatives": true,
         "attributionRequired": false,
         "shareAlike": false,
-        "publicDomain": false,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [
-          "No redistribution of Pexels content on a competing stock platform.",
-          "Identifiable people may not be shown in a bad light or in an offensive way."
-        ],
-        "creditLine": "Photo by Leeloo The First on Pexels (https://www.pexels.com/photo/an-elderly-man-kissing-an-elderly-woman-6128921/)"
-      },
-      "risk": {
-        "recognizablePerson": true,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": false
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "pages.slides",
-      "lane": "photo",
-      "file": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p.jpg",
-      "variants": [
-        {
-          "width": 1920,
-          "format": "avif",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-1920.avif",
-          "bytes": 1067720
-        },
-        {
-          "width": 1920,
-          "format": "webp",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-1920.webp",
-          "bytes": 1007472
-        },
-        {
-          "width": 900,
-          "format": "avif",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-900.avif",
-          "bytes": 249192
-        },
-        {
-          "width": 900,
-          "format": "webp",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-900.webp",
-          "bytes": 214840
-        },
-        {
-          "width": 480,
-          "format": "avif",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-480.avif",
-          "bytes": 66248
-        },
-        {
-          "width": 480,
-          "format": "webp",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-480.webp",
-          "bytes": 56076
-        }
-      ],
-      "intrinsic": {
-        "width": 1920,
-        "height": 1280
-      },
-      "alt": "Autumn colour along the Superior Hiking Trail in Tettegouche State Park, Minnesota",
-      "altNeedsReview": false,
-      "source": {
-        "name": "wikimedia",
-        "provider": "wikimedia-commons",
-        "id": "44812496",
-        "pageUrl": "https://commons.wikimedia.org/wiki/File:Superior_Hiking_Trail_Autumn_-_Tettegouche_State_Park,_Minnesota_(22399172757).jpg",
-        "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Superior_Hiking_Trail_Autumn_-_Tettegouche_State_Park%2C_Minnesota_%2822399172757%29.jpg/1920px-Superior_Hiking_Trail_Autumn_-_Tettegouche_State_Park%2C_Minnesota_%2822399172757%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
-      },
-      "license": {
-        "id": "by-sa",
-        "name": "CC BY-SA",
-        "url": "https://creativecommons.org/licenses/by-sa/2.0",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": true,
-        "shareAlike": true,
-        "publicDomain": false,
+        "publicDomain": true,
         "verifyRequired": false,
         "hotlinkAllowed": false,
         "caveats": [],
-        "creditLine": "\"Superior Hiking Trail Autumn - Tettegouche State Park, Minnesota (22399172757)\" by Tony Webster from San Francisco, California, CC BY-SA, https://commons.wikimedia.org/wiki/File:Superior_Hiking_Trail_Autumn_-_Tettegouche_State_Park,_Minnesota_(22399172757).jpg"
-      },
-      "risk": {
-        "recognizablePerson": false,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": true
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "services.image",
-      "lane": "photo",
-      "file": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi.jpg",
-      "variants": [
-        {
-          "width": 1920,
-          "format": "avif",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-1920.avif",
-          "bytes": 409924
-        },
-        {
-          "width": 1920,
-          "format": "webp",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-1920.webp",
-          "bytes": 316256
-        },
-        {
-          "width": 900,
-          "format": "avif",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-900.avif",
-          "bytes": 88826
-        },
-        {
-          "width": 900,
-          "format": "webp",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-900.webp",
-          "bytes": 62894
-        },
-        {
-          "width": 480,
-          "format": "avif",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-480.avif",
-          "bytes": 23616
-        },
-        {
-          "width": 480,
-          "format": "webp",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-480.webp",
-          "bytes": 14812
-        }
-      ],
-      "intrinsic": {
-        "width": 1920,
-        "height": 1280
-      },
-      "alt": "The Minneapolis skyline above the Mississippi River",
-      "altNeedsReview": false,
-      "source": {
-        "name": "wikimedia",
-        "provider": "wikimedia-commons",
-        "id": "164795872",
-        "pageUrl": "https://commons.wikimedia.org/wiki/File:Minneapolis_April_2025_28_(skyline_and_Mississippi_River).jpg",
-        "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Minneapolis_April_2025_28_%28skyline_and_Mississippi_River%29.jpg/1920px-Minneapolis_April_2025_28_%28skyline_and_Mississippi_River%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
-      },
-      "license": {
-        "id": "by-sa",
-        "name": "CC BY-SA",
-        "url": "https://creativecommons.org/licenses/by-sa/4.0",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": true,
-        "shareAlike": true,
-        "publicDomain": false,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [],
-        "creditLine": "\"Minneapolis April 2025 28 (skyline and Mississippi River)\" by Michael Barera, CC BY-SA, https://commons.wikimedia.org/wiki/File:Minneapolis_April_2025_28_(skyline_and_Mississippi_River).jpg"
+        "creditLine": "Minneapolis skyline from Loring Park neighborhood aerial, October 2024 — CC0 1.0, via Wikimedia Commons"
       },
       "risk": {
         "recognizablePerson": false,
@@ -395,96 +234,6 @@
         "modelRelease": false,
         "propertyRelease": false,
         "safeForPaidAds": true
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "team.headshot",
-      "lane": "avatar",
-      "file": "public/media/teamheadshot-confident-handsome-adult-man-in-blue-shirt-sitt.jpg",
-      "variants": [],
-      "intrinsic": {
-        "width": 3840,
-        "height": 3840
-      },
-      "alt": "Portrait of a licensed insurance agent in a blue shirt, seated at a desk",
-      "altNeedsReview": false,
-      "source": {
-        "name": "pexels",
-        "provider": "pexels",
-        "id": "7752811",
-        "pageUrl": "https://www.pexels.com/photo/cheerful-mature-man-in-shirt-smiling-7752811/",
-        "downloadUrl": "https://images.pexels.com/photos/7752811/pexels-photo-7752811.jpeg"
-      },
-      "license": {
-        "id": "pexels-license",
-        "name": "Pexels License",
-        "url": "https://www.pexels.com/license/",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": false,
-        "shareAlike": false,
-        "publicDomain": false,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [
-          "No redistribution of Pexels content on a competing stock platform.",
-          "Identifiable people may not be shown in a bad light or in an offensive way."
-        ],
-        "creditLine": "Photo by Apunto Group Agencia de publicidad on Pexels (https://www.pexels.com/photo/cheerful-mature-man-in-shirt-smiling-7752811/)"
-      },
-      "risk": {
-        "recognizablePerson": true,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": false
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "testimonials.photo",
-      "lane": "avatar",
-      "file": "public/media/testimonialsphoto-happy-senior-couple-sitting-outdoors-on-a.jpg",
-      "variants": [],
-      "intrinsic": {
-        "width": 8400,
-        "height": 8400
-      },
-      "alt": "A senior couple sitting outdoors on a sunny winter day",
-      "altNeedsReview": false,
-      "source": {
-        "name": "pexels",
-        "provider": "pexels",
-        "id": "28589008",
-        "pageUrl": "https://www.pexels.com/photo/senior-couple-enjoying-outdoor-winter-relaxation-28589008/",
-        "downloadUrl": "https://images.pexels.com/photos/28589008/pexels-photo-28589008.jpeg"
-      },
-      "license": {
-        "id": "pexels-license",
-        "name": "Pexels License",
-        "url": "https://www.pexels.com/license/",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": false,
-        "shareAlike": false,
-        "publicDomain": false,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [
-          "No redistribution of Pexels content on a competing stock platform.",
-          "Identifiable people may not be shown in a bad light or in an offensive way."
-        ],
-        "creditLine": "Photo by Nishant Aneja on Pexels (https://www.pexels.com/photo/senior-couple-enjoying-outdoor-winter-relaxation-28589008/)"
-      },
-      "risk": {
-        "recognizablePerson": true,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": false
       },
       "usage": "commercial",
       "query": null,

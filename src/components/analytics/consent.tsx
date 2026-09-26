@@ -78,9 +78,9 @@ export function Analytics({ gtmId }: { gtmId?: string }) {
         <div
           role="dialog"
           aria-label="Cookie choices"
-          className="border-border-subtle bg-surface text-on-surface fixed inset-x-0 bottom-0 z-50 border-t p-5 shadow-lg"
+          className="border-border-subtle bg-surface text-on-surface fixed inset-x-5 bottom-5 z-50 rounded-(--radius-card) border p-5 shadow-(--shadow-lifted) md:inset-x-auto md:right-8 md:bottom-8 md:max-w-md"
         >
-          <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4">
             <p className="leading-relaxed">
               We use cookies to understand how this site is used. We do not sell
               your personal information. See our{" "}

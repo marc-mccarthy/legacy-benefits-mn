@@ -22,17 +22,11 @@ test.describe("the service band", () => {
     const band = page.locator(SERVICE_BAND);
     await expect(band, "no service band on the home route").toHaveCount(1);
 
-    // Zero cards *in this band*, not on the page. Read across the document the
-    // criterion is unsatisfiable against a requirement it does not conflict
-    // with: the learning band on the same page is required to KEEP its cards,
-    // because an article preview is a card honestly. The card component
-    // carries a stable attribute for exactly this distinction — a test
-    // asserting presence or absence needs something that does not move when a
-    // utility class is reordered.
+    // Scoped to this band, not the page: the learning band also emits
+    // [data-card], so an unscoped count would never reach zero.
     await expect(band.locator("[data-card]")).toHaveCount(0);
 
-    // And the learning band still has its, so this is not passing because the
-    // attribute was never added anywhere.
+    // Counted here so the zero above cannot pass by the attribute going missing.
     await expect(
       page.locator("[data-card]"),
       "no cards anywhere on the page: the marker is missing rather than the band being card-free",

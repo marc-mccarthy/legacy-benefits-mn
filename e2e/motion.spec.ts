@@ -113,124 +113,6 @@ test.describe("scroll reveal", () => {
           .display === "none",
     }));
     expect(kept).toEqual({ disclosures: true, mainNavHidden: true });
-
-    // The hero's cross-fade frames are <img> elements, so zeroing backgrounds
-    // does not stop them printing — three full-bleed photographs on page one.
-    const heroMotion = page.locator("[data-hero-motion]");
-    if (await heroMotion.count()) {
-      await expect(heroMotion).toBeHidden();
-    }
-  });
-});
-
-/**
- * The hero cross-fade. Every assertion here is about the motion NOT running:
- * the still photograph is the hero, and the moving version is an addition that
- * has to remove itself cleanly in each of the contexts below.
- */
-test.describe("hero motion", () => {
-  // Exact text, not `has-text`. `has-text` is substring matching, and the
-  // closing band's point field names its own control "Pause background field"
-  // — which contains this string. The two controls are deliberately named
-  // differently so that a count of zero for one is not satisfied by the other,
-  // and a substring locator throws that distinction away: it resolved to 2
-  // elements here and failed in strict mode, which reads as "the hero control
-  // is missing" when both are present and correct.
-  const pauseButton = "button:text-is('Pause background')";
-
-  test("cross-fades, and the pause control stops it", async ({ page }) => {
-    await page.goto("/");
-
-    const layer = page.locator("[data-hero-motion]");
-    // The layer only exists after hydration — it is deliberately absent from
-    // the server render, so counting immediately after goto() always finds
-    // zero and silently skips the whole test. Wait for it first, and treat a
-    // real absence (a hero with no slides authored, which is a still hero by
-    // design) as the only reason to skip.
-    const present = await layer
-      .waitFor({ state: "attached", timeout: 10_000 })
-      .then(() => true)
-      .catch(() => false);
-    test.skip(!present, "home hero has no slides authored; nothing to pause");
-
-    // The tab must be foregrounded for the timer to run at all, which is
-    // itself one of the guarantees: no animation in a background tab.
-    await expect(layer).toHaveAttribute("data-running", "true");
-
-    const pause = page.locator(pauseButton);
-    await expect(pause).toBeVisible();
-    await pause.click();
-
-    await expect(
-      page.locator("button:has-text('Play background')"),
-    ).toHaveAttribute("aria-pressed", "true");
-    await expect(layer).toHaveAttribute("data-running", "false");
-
-    // Sampled rather than waited out: the dwell between photographs is nine
-    // seconds and must not become this test's runtime. A frozen transform and
-    // a frozen slide index are what "paused" means.
-    const sample = () =>
-      page.evaluate(() => {
-        const root = document.querySelector("[data-hero-motion]")!;
-        const frame = root.querySelector(
-          '[data-hero-frame][data-active="true"]',
-        );
-        return {
-          slide: root.getAttribute("data-slide"),
-          transform: frame ? getComputedStyle(frame).transform : null,
-          playState: frame ? getComputedStyle(frame).animationPlayState : null,
-        };
-      });
-
-    // Two animation frames between the pause landing and the first sample.
-    // Without them this compares a transform read mid-commit against one read
-    // 1200ms later and fails on a difference of 4e-5 —
-    // `matrix(1.00007…)` against `matrix(1.00011…)` — which is one frame of a
-    // 22-second drift across 6% of scale, not a running animation. The
-    // assertion that matters is the one below it: `animationPlayState` reports
-    // `paused`, and a paused animation that had kept running would drift by a
-    // great deal more than the fifth decimal place over 1200ms.
-    await page.evaluate(
-      () =>
-        new Promise((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(resolve)),
-        ),
-    );
-
-    const before = await sample();
-    await page.waitForTimeout(1200);
-    expect(await sample()).toEqual(before);
-    expect(before.playState).toBe("paused");
-  });
-
-  test("with reduced motion there is no moving layer and no control", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({ reducedMotion: "reduce" });
-    const page = await context.newPage();
-    await page.goto("/");
-
-    // The photograph and the copy are untouched; only the motion is absent,
-    // and with it the control — nobody is offered a button that does nothing.
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.locator("[data-hero-motion]")).toHaveCount(0);
-    await expect(page.locator(pauseButton)).toHaveCount(0);
-
-    await context.close();
-  });
-
-  test("without JavaScript the hero is the still photograph", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const page = await context.newPage();
-    await page.goto("/");
-
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.locator("[data-hero-motion]")).toHaveCount(0);
-    await expect(page.locator(pauseButton)).toHaveCount(0);
-
-    await context.close();
   });
 });
 
@@ -252,14 +134,11 @@ test.describe("hero motion", () => {
  * frame and stops satisfies every presence check ever written about it and is
  * not a particle field.
  *
- * There is deliberately no `test.skip` anywhere in this block.
- * `e2e/motion.spec.ts` is the file the spec points at as the shape a new
- * motion test should take, and the shape it teaches is a skip on an attach
- * wait — correct for the hero, whose comment above records the bug of counting
- * before hydration, and whose absence is a real authored state (a poster with
- * no slides is a still hero by design). The particle field has no such state:
- * exactly one instance exists, unconditionally, in the closing band. A timeout
- * waiting for it is a failure and must be reported as one.
+ * There is deliberately no `test.skip` anywhere in this block. A skip on an
+ * attach wait is right for a component with a real authored absence; the
+ * particle field has no such state — exactly one instance exists,
+ * unconditionally, in the closing band. A timeout waiting for it is a failure
+ * and must be reported as one.
  *
  * Each test opens its own context with an explicit motion preference, because
  * this file also runs under the `reduced-motion` project in
@@ -466,19 +345,13 @@ test.describe("particle field", () => {
       "the control is narrow enough to be icon-only: the words are not being painted",
     ).toBeGreaterThan(100);
 
-    // Distinct from the hero's control, and that matters rather than being
-    // tidy: the hero's strings are asserted at a count of zero under reduced
-    // motion, and a shared string would let that assertion pass with the wrong
-    // component on screen.
-    //
-    // `text-is`, not `has-text`. This assertion is the one that proves the two
-    // names are distinct, so matching it by substring defeats its own purpose:
-    // "Pause background field" contains "Pause background", so `has-text`
-    // returns both controls and the count is 2. Exact matching is what makes
-    // the claim in the paragraph above actually checked.
+    // `text-is`, not `has-text`: "Pause background field" contains "Pause
+    // background", so a substring locator returns this very control and the
+    // count could never be zero. Exact matching is what makes renaming this
+    // control to the bare string fail here.
     await expect(
       page.locator("button:text-is('Pause background')"),
-    ).toHaveCount(1);
+    ).toHaveCount(0);
 
     await context.close();
   });
@@ -610,6 +483,120 @@ test.describe("particle field", () => {
       points,
       `the density calculation returned ${points} points at 2560px wide`,
     ).toBeLessThanOrEqual(80);
+
+    await context.close();
+  });
+});
+
+test.describe("hero shader", () => {
+  const SHADER = "[data-hero-shader]";
+  const SHADER_CANVAS = "[data-hero-shader] canvas";
+  // `:text-is`, not `:has-text`: substring matching collides with the particle
+  // field's "Pause background field".
+  const SHADER_PAUSE = "button:text-is('Pause background gradient')";
+
+  // §9.2 item 4 — SC-2, FR-53.
+  test("renders zero canvases with JavaScript disabled", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/");
+
+    await expect(page.locator(SHADER)).toHaveCount(0);
+    await expect(page.locator(SHADER_CANVAS)).toHaveCount(0);
+    await expect(page.locator(SHADER_PAUSE)).toHaveCount(0);
+
+    await context.close();
+  });
+
+  // §9.2 item 5 — SC-1, FR-53.
+  test("renders zero canvases under reduced motion", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("/");
+
+    await expect(page.locator(SHADER)).toHaveCount(0);
+    await expect(page.locator(SHADER_CANVAS)).toHaveCount(0);
+    await expect(page.locator(SHADER_PAUSE)).toHaveCount(0);
+
+    await expect(page.locator("main h1")).toBeVisible();
+
+    await context.close();
+  });
+
+  // §9.2 item 6 — SC-5, FR-53.
+  test("the hero band has a non-zero painted height with the shader absent", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    // Same shape as `item 8` above, switched to the WebGL keys so the 2D
+    // context — and so the particle field — is left alone.
+    await context.addInitScript(() => {
+      const original = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (
+        this: HTMLCanvasElement,
+        ...args: unknown[]
+      ) {
+        if (args[0] === "webgl2" || args[0] === "webgl") return null;
+        return (
+          original as unknown as (
+            this: HTMLCanvasElement,
+            ...rest: unknown[]
+          ) => unknown
+        ).apply(this, args);
+      } as typeof HTMLCanvasElement.prototype.getContext;
+    });
+
+    const page = await context.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto("/");
+
+    await expect(page.locator(SHADER)).toHaveCount(0);
+    await expect(page.locator(SHADER_CANVAS)).toHaveCount(0);
+    await expect(page.locator(SHADER_PAUSE)).toHaveCount(0);
+
+    const band = page.locator("main section[data-band]").first();
+    const box = await band.boundingBox();
+    expect(box, "the hero band has no box at all").not.toBeNull();
+    expect(
+      box!.height,
+      `the hero band painted ${box!.height}px tall without the shader`,
+    ).toBeGreaterThan(0);
+
+    expect(errors, `uncaught errors: ${errors.join(" | ")}`).toEqual([]);
+
+    await context.close();
+  });
+
+  // AC-36 — the one presence assertion in this block.
+  test("the shader mounts once and runs, including below 700px", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+
+    const root = page.locator(SHADER);
+    await root.waitFor({ state: "attached", timeout: 15_000 });
+    await expect(root).toHaveCount(1);
+    await expect(page.locator(SHADER_CANVAS)).toHaveCount(1);
+    await expect(root).toHaveAttribute("data-running", "true");
+    await expect(page.locator(SHADER_PAUSE)).toBeVisible();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+
+    const narrow = page.locator(SHADER);
+    await narrow.waitFor({ state: "attached", timeout: 15_000 });
+    await expect(narrow).toHaveCount(1);
+    await expect(page.locator(SHADER_CANVAS)).toHaveCount(1);
+    await expect(narrow).toHaveAttribute("data-running", "true");
 
     await context.close();
   });
@@ -1005,7 +992,7 @@ test.describe("motion added by the scroll pass", () => {
     await context.close();
   });
 
-  test("print: 13 of 13 sections render", async ({ page }) => {
+  test("print: 9 of 9 sections render", async ({ page }) => {
     await page.goto("/");
     await page.emulateMedia({ media: "print" });
 
@@ -1089,16 +1076,12 @@ test.describe("motion added by the scroll pass", () => {
     const litColours = await page.evaluate(() => {
       const root = document.querySelector("[data-lit-words]");
       if (!root) return [];
-      const onSurface = getComputedStyle(root)
-        .getPropertyValue("--scheme-on-surface")
-        .trim();
-      return [...root.querySelectorAll("span[aria-hidden]")].map((el) => ({
+      return [...root.querySelectorAll("[data-lit-word]")].map((el) => ({
         opacity: Number(getComputedStyle(el).opacity),
-        onSurface,
       }));
     });
 
-    expect(litColours.length, "no lit layer rendered").toBeGreaterThan(3);
+    expect(litColours.length, "no lit words rendered").toBeGreaterThan(3);
     for (const word of litColours) {
       expect(word.opacity, "a word is not fully lit under reduced motion").toBe(
         1,
@@ -1107,28 +1090,46 @@ test.describe("motion added by the scroll pass", () => {
 
     await context.close();
   });
+});
 
-  test("the hero background does not translate under reduced motion", async ({
-    browser,
-  }) => {
+test.describe("lenis smooth scroll", () => {
+  test("is never constructed with reduced motion", async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
-    await page.evaluate(() => window.scrollTo(0, 600));
-    await page.waitForTimeout(200);
 
-    const transform = await page.evaluate(() => {
-      const el = document.querySelector("[data-hero-parallax]");
-      return el ? getComputedStyle(el).transform : null;
-    });
-
-    expect(
-      transform === null ||
-        transform === "none" ||
-        transform === "matrix(1, 0, 0, 1, 0, 0)",
-      `hero background moved under reduced motion: ${transform}`,
-    ).toBe(true);
+    const lenisVersion = await page.evaluate(
+      () => (window as { lenisVersion?: string }).lenisVersion,
+    );
+    expect(lenisVersion).toBeUndefined();
 
     await context.close();
+  });
+
+  test("is constructed without reduced motion and torn down when the preference changes", async ({
+    page,
+  }) => {
+    // Set before navigating: the `reduced-motion` project sets `reduce` at
+    // context level, and this test supplies both halves of the change itself.
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/");
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.classList.contains("lenis"),
+        ),
+      )
+      .toBe(true);
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.classList.contains("lenis"),
+        ),
+      )
+      .toBe(false);
   });
 });

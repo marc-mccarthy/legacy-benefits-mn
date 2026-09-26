@@ -69,6 +69,7 @@ function Word({
       <span className="text-muted">{word}</span>
       <motion.span
         aria-hidden
+        data-lit-word
         className="text-on-surface absolute inset-0"
         style={reduced ? { opacity: 1 } : { opacity }}
         transition={{ duration: DURATION_REVEAL / 1000, ease: EASE_ENTER }}

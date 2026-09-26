@@ -118,15 +118,12 @@ test.describe("the 36px display floor", () => {
     }
   }
 
-  test("item 21: the display face is the serif, so the floor is measuring the right thing", async ({
+  test("item 21: the display face is the extended grotesque, so the floor is measuring the right thing", async ({
     page,
   }) => {
-    // A 36px floor on a class that resolves to the browser's default sans
-    // would pass every assertion above while the display face was not being
-    // used at all. The font variables in this stylesheet carry no fallback
-    // argument, so a mismatched variable name makes the declaration invalid at
-    // computed-value time and the element inherits the sans stack instead —
-    // silently, with contrast, zoom, axe, typecheck and build all still green.
+    // `--font-display` carries a generic tail, so a misspelled
+    // `--font-archivo` degrades to that tail rather than invalidating the
+    // declaration — the size assertions above stay green either way.
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
 
@@ -139,7 +136,7 @@ test.describe("the 36px display floor", () => {
     expect(
       families.display,
       "the display class is not resolving to a named family",
-    ).toMatch(/Newsreader/i);
+    ).toMatch(/Archivo/i);
     expect(
       families.body,
       "the body face is a bare fallback stack, not a named family",

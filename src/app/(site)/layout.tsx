@@ -6,6 +6,7 @@ import { AnnouncementLive } from "@/components/layout/announcement-live";
 import { announcementIsLive } from "@/lib/announcement";
 import { Analytics } from "@/components/analytics/consent";
 import { PageTransition } from "@/components/motion/page-transition";
+import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { site } from "@/content/site";
 import { getBusinessIdentity } from "@/lib/business";
 import { env } from "@/lib/env";
@@ -23,6 +24,7 @@ export default async function SiteLayout({
         Skip to main content
       </a>
       <Analytics gtmId={env("NEXT_PUBLIC_GTM_ID")} />
+      <SmoothScroll />
       {announcementIsLive(site.announcement) ? (
         <AnnouncementLive announcement={site.announcement}>
           <AnnouncementBar

@@ -5,7 +5,12 @@ export type MediaAsset = {
   width: number;
   height: number;
   alt: string;
-  srcSet: { width: number; format: "avif" | "webp" | "jpeg"; src: string }[];
+  srcSet: {
+    width: number;
+    format: "avif" | "webp" | "jpeg";
+    src: string;
+    bytes: number;
+  }[];
 };
 
 export type NavItem = {

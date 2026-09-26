@@ -63,12 +63,8 @@ export function RenderBlocks({
             return (
               <Hero
                 key={key}
-                scheme={scheme}
                 heading={block.heading as string}
                 subheading={block.subheading as string | null}
-                poster={block.poster}
-                slides={block.slides}
-                videoSrc="/video/hero-bg.mp4"
                 ctaLabel={block.ctaLabel as string | null}
                 ctaHref={block.ctaHref as string | null}
               />

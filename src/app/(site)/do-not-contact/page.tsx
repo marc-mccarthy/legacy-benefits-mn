@@ -13,7 +13,7 @@ export default function DoNotContactPage() {
     <Section>
       <Container className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
         <Prose className="space-y-5">
-          <h1 className="font-display text-(length:--text-display-page)">
+          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
             Stop contact or remove my information
           </h1>
           <p className="lead text-muted text-lg">

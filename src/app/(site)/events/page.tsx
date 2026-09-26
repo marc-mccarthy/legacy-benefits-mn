@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Card, CardBody } from "@/components/ui/card";
-import { EventImage } from "@/components/sections/event-image";
+import { EventCard } from "@/components/sections/event-card";
 import { Container, Section } from "@/components/ui/section";
 import { Reveal } from "@/components/motion/reveal";
 import { upcomingEvents } from "@/content/events";
-import { formatDate, formatTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -20,7 +18,7 @@ export default function EventsPage() {
     <Section>
       <Container className="space-y-10">
         <div className="max-w-2xl space-y-4">
-          <h1 className="font-display text-(length:--text-display-page)">
+          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
             Upcoming events
           </h1>
           <p className="lead text-muted text-lg">
@@ -45,34 +43,11 @@ export default function EventsPage() {
                   delay={Math.min(i * 0.05, 0.15)}
                   className="flex w-full"
                 >
-                  <Card className="w-full">
-                    <EventImage
-                      image={event.image}
-                      cost={event.cost}
-                      morphSlug={event.slug}
-                    />
-                    <CardBody>
-                      <time
-                        dateTime={event.startsAt}
-                        className="text-muted tabular text-base"
-                      >
-                        {formatDate(event.startsAt)} ·{" "}
-                        {formatTime(event.startsAt)}
-                      </time>
-                      <p className="text-muted text-base">{event.venue}</p>
-                      <h2 className="text-lg font-semibold">
-                        <Link
-                          href={`/events/${event.slug}`}
-                          className="after:absolute after:inset-0"
-                        >
-                          {event.title}
-                        </Link>
-                      </h2>
-                      <p className="text-muted flex-1 text-base">
-                        {event.summary}
-                      </p>
-                    </CardBody>
-                  </Card>
+                  <EventCard
+                    event={event}
+                    headingLevel="h2"
+                    className="w-full"
+                  />
                 </Reveal>
               </li>
             ))}

@@ -15,6 +15,7 @@ export default function LearnPage() {
     <Suspense
       fallback={
         <LearningGrid
+          headingLevel="h1"
           scheme="light"
           heading="Learning Center"
           intro="Straight answers to the questions we get asked most."
@@ -24,6 +25,7 @@ export default function LearnPage() {
     >
       <LearningFilter>
         <LearningGrid
+          headingLevel="h1"
           scheme="light"
           heading="Learning Center"
           intro="Straight answers to the questions we get asked most."

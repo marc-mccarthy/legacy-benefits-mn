@@ -51,7 +51,7 @@ export default async function ArticlePage({ params }: Props) {
               {formatDate(doc.publishedAt)}
             </time>
           </p>
-          <h1 className="font-display text-(length:--text-display-page)">
+          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
             {doc.title}
           </h1>
           <p className="lead text-muted text-lg leading-relaxed">

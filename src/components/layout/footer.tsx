@@ -42,7 +42,7 @@ export function Footer({
     >
       <Container className="space-y-4 py-(--spacing-medium)">
         {phone ? (
-          <p className="flex items-center gap-2">
+          <p className="flex items-center gap-(--spacing-micro)">
             <a
               href={`tel:${phone.replace(/\D/g, "")}`}
               className="inline-flex min-h-11 items-center hover:underline"

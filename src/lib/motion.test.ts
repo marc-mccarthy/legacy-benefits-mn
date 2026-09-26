@@ -1,15 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  DURATION_ENTER,
-  DURATION_EXIT,
-  DURATION_MORPH,
+  DURATION_HOUSE,
   DURATION_REVEAL,
-  DURATION_SHEET,
-  DURATION_STATE,
   EASE_ENTER,
-  EASE_EXIT,
-  EASE_MOVE,
+  EASE_QUINT,
 } from "./motion";
 
 const css = readFileSync(
@@ -25,20 +20,30 @@ function customProperty(name: string): string {
 }
 
 const DURATIONS: ReadonlyArray<readonly [string, number]> = [
-  ["duration-state", DURATION_STATE],
-  ["duration-exit", DURATION_EXIT],
-  ["duration-enter", DURATION_ENTER],
-  ["duration-sheet", DURATION_SHEET],
   ["duration-reveal", DURATION_REVEAL],
-  ["duration-morph", DURATION_MORPH],
+  ["duration-house", DURATION_HOUSE],
 ];
 
 const EASES: ReadonlyArray<
   readonly [string, readonly [number, number, number, number]]
 > = [
   ["ease-enter", EASE_ENTER],
-  ["ease-exit", EASE_EXIT],
-  ["ease-move", EASE_MOVE],
+  ["ease-quint", EASE_QUINT],
+];
+
+const CSS_ONLY_DURATIONS: ReadonlyArray<readonly [string, string]> = [
+  ["duration-state", "140ms"],
+  ["duration-exit", "180ms"],
+  ["duration-enter", "240ms"],
+  ["duration-sheet", "220ms"],
+  ["duration-morph", "400ms"],
+  ["duration-stage", "900ms"],
+];
+
+const CSS_ONLY_EASES: ReadonlyArray<readonly [string, string]> = [
+  ["ease-exit", "cubic-bezier(0.4, 0, 1, 1)"],
+  ["ease-move", "cubic-bezier(0.4, 0, 0.2, 1)"],
+  ["ease-quart", "cubic-bezier(0.165, 0.84, 0.44, 1)"],
 ];
 
 describe("motion tokens match globals.css", () => {
@@ -48,6 +53,16 @@ describe("motion tokens match globals.css", () => {
 
   it.each(EASES)("--%s is the same curve", (name, curve) => {
     expect(customProperty(name)).toBe(`cubic-bezier(${curve.join(", ")})`);
+  });
+});
+
+describe("motion tokens with no TypeScript twin", () => {
+  it.each(CSS_ONLY_DURATIONS)("--%s is %s", (name, value) => {
+    expect(customProperty(name)).toBe(value);
+  });
+
+  it.each(CSS_ONLY_EASES)("--%s is %s", (name, value) => {
+    expect(customProperty(name)).toBe(value);
   });
 });
 

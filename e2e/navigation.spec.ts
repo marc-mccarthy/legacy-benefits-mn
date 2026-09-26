@@ -186,13 +186,9 @@ test.describe("navigation state and anchors", () => {
       page.locator('nav[aria-label="Filter resources by type"]'),
     ).toHaveCount(0);
 
-    // The visible half of the same requirement, which no acceptance criterion
-    // reads: the marker is a 2px rule in navy, and specifically not in the
-    // accent colour. Navy-800 measures 12.22:1 against the paper background.
-    // The accent on a light ground is a gold — it clears the 3:1 that a
-    // non-text indicator needs, so this is not a floor being breached, but the
-    // requirement names the token outright and the indicator that tells
-    // somebody which page they are on is worth the stronger of the two.
+    // `.nav-active-rule` draws through `var(--color-accent)`, so the value
+    // read back is whichever `data-scheme` the header sits in — `light` here,
+    // resolving to `#020B44`.
     const rule = await current.evaluate((el) => {
       const style = getComputedStyle(el);
       return {
@@ -203,8 +199,8 @@ test.describe("navigation state and anchors", () => {
     expect(rule.width).toBe("2px");
     expect(
       rule.colour,
-      `the active marker is drawn in ${rule.colour}, not navy-800`,
-    ).toBe("rgb(23, 48, 77)");
+      `the active marker is drawn in ${rule.colour}, not the light-scheme accent`,
+    ).toBe("rgb(2, 11, 68)");
   });
 
   // §9.2 item 19 — SC-22, FR-85.

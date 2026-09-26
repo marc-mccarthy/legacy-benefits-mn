@@ -27,7 +27,7 @@ export function CarrierStrip({
       className="py-(--spacing-medium) md:py-(--spacing-large)"
       aria-labelledby="carriers-heading"
     >
-      <Container className="space-y-8">
+      <Container className="space-y-(--spacing-small)">
         <h2
           id="carriers-heading"
           className="text-muted text-center text-base font-semibold"

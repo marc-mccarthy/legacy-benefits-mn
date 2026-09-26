@@ -1,5 +1,4 @@
 import { faq } from "./faq";
-import { media } from "./media";
 import type { PageBlock } from "./types";
 
 export const homeBlocks: PageBlock[] = [
@@ -9,8 +8,6 @@ export const homeBlocks: PageBlock[] = [
     heading: "Medicare decisions.",
     subheading:
       "Independent, licensed guidance on Medicare Advantage, Supplement, and Part D — from people who answer the phone when you call back.",
-    poster: media["pages.poster"] ?? null,
-    slides: [media["pages.slides"], media["pages.image"]].filter(Boolean),
     ctaLabel: "Talk to a licensed agent",
     ctaHref: "/contact",
   },

@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import {
+  Archivo,
   Atkinson_Hyperlegible_Next as AtkinsonHyperlegibleNext,
-  Newsreader,
 } from "next/font/google";
 import "./globals.css";
 import { getBusinessIdentity } from "@/lib/business";
@@ -13,11 +13,12 @@ const atkinson = AtkinsonHyperlegibleNext({
   display: "swap",
 });
 
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
   display: "swap",
-  style: ["normal", "italic"],
+  // wght ships by default on a variable font; wdth does not.
+  axes: ["wdth"],
 });
 
 export const viewport: Viewport = {
@@ -43,7 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${atkinson.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${atkinson.variable} ${archivo.variable} h-full antialiased`}
     >
       <head>
         <script

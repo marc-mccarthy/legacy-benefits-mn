@@ -21,7 +21,7 @@ export default function DisclosuresPage() {
     <Section>
       <Container>
         <Prose className="space-y-8">
-          <h1 className="font-display text-(length:--text-display-page)">
+          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
             Disclosures
           </h1>
 

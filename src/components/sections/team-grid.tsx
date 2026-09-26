@@ -18,22 +18,30 @@ export function TeamGrid({
   heading,
   members,
   scheme = "light",
+  headingLevel = "h2",
 }: {
   heading?: string | null;
   members: TeamMember[];
   scheme?: Scheme;
+  headingLevel?: "h1" | "h2";
 }) {
   if (members.length === 0) return null;
+
+  const Heading = headingLevel;
 
   return (
     <Section scheme={scheme} aria-labelledby="team-heading">
       <Container className="space-y-10">
-        <h2
+        <Heading
           id="team-heading"
-          className="font-display text-(length:--text-display-lg)"
+          className={
+            headingLevel === "h1"
+              ? "font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]"
+              : "font-display text-(length:--text-display-lg)"
+          }
         >
           {heading ?? "Meet the team"}
-        </h2>
+        </Heading>
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((member, i) => {
             const photo = mediaProps(member.photo as never);

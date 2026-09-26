@@ -24,9 +24,9 @@ const TYPE_LABEL: Record<ArticleItem["type"], string> = {
 };
 
 const TYPE_PANEL: Record<ArticleItem["type"], string> = {
-  article: "bg-navy-800 text-white",
-  tool: "bg-gold-500 text-navy-900",
-  video: "bg-navy-600 text-white",
+  article: "bg-night-900 text-paper",
+  tool: "bg-cyan-400 text-night-900",
+  video: "bg-abyss-900 text-paper",
 };
 
 export function LearningFilters({
@@ -76,6 +76,7 @@ export function LearningGrid({
   scheme = "muted",
   showFilters = false,
   activeType,
+  headingLevel = "h2",
 }: {
   heading?: string | null;
   intro?: string | null;
@@ -83,17 +84,24 @@ export function LearningGrid({
   scheme?: Scheme;
   showFilters?: boolean;
   activeType?: string;
+  headingLevel?: "h1" | "h2";
 }) {
+  const Heading = headingLevel;
+
   return (
     <Section scheme={scheme} aria-labelledby="learn-heading">
       <Container className="space-y-8">
         <Reveal className="max-w-2xl space-y-4">
-          <h2
+          <Heading
             id="learn-heading"
-            className="font-display text-(length:--text-display-lg)"
+            className={
+              headingLevel === "h1"
+                ? "font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]"
+                : "font-display text-(length:--text-display-lg)"
+            }
           >
             {heading ?? "Learning center"}
-          </h2>
+          </Heading>
           {intro ? <p className="lead text-muted text-lg">{intro}</p> : null}
         </Reveal>
 

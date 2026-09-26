@@ -10,7 +10,9 @@ function CountUp({ value, suffix }: { value: number; suffix?: string | null }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-15% 0px" });
   const reduced = useReducedMotion();
-  const [display, setDisplay] = useState(reduced ? value : 0);
+  // Starts at the real figure so the served HTML carries it; the count-up
+  // rewinds to 0 in the effect, which only runs where it will animate.
+  const [display, setDisplay] = useState(value);
 
   useEffect(() => {
     if (reduced || !inView) return;

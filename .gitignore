@@ -96,6 +96,7 @@ tfplan-*
 
 # technomancy
 technomancy_artifacts/
+SPEC_*.md
 
 # project-local postgres cluster (db:server:*)
 .pgdata/

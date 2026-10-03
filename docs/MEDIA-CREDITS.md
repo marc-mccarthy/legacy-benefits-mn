@@ -13,6 +13,8 @@ _None. No asset in this project carries an attribution obligation._
 - **events.image** — Public Domain Mark · [source](https://commons.wikimedia.org/wiki/File:Mission_Farms_Tepee_Village,_Plymouth,_Minnesota_-_DPLA_-_470f5911a614a8065b99ab491302764f.jpg) · `public/media/eventsimage-mission-farms-tepee-village-plymouth-minnesota-d.jpg`
 - **articles.coverImage** — Public Domain Mark · [source](https://commons.wikimedia.org/wiki/File:Prairie_sunrise_(54762711587).jpg) · `public/media/articlescoverimage-prairie-sunrise-54762711587.jpg`
 - **pages.image** — Pexels License · [source](https://www.pexels.com/photo/an-elderly-man-consulting-an-insurance-agent-8441780/) · `public/media/pagesimage-a-business-meeting-between-an-elderly-client-and.jpg`
+- **nate.cutout** — Owner-owned · `public/media/nate-cutout.png`
+- **nate.duotone** — Owner-owned · `public/media/nate-duotone.jpg`
 
 ## Usage restrictions
 

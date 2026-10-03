@@ -320,6 +320,103 @@
       "usage": "commercial",
       "query": null,
       "fetchedBy": "sourcing-media"
+    },
+    {
+      "slot": "nate.cutout",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-cutout.png",
+      "variants": [],
+      "intrinsic": {
+        "width": 651,
+        "height": 1229
+      },
+      "alt": "Nate Best",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "scripts/portrait-assets.sh"
+    },
+    {
+      "slot": "nate.duotone",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-duotone.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/nate-duotone-480.avif",
+          "bytes": 72876
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/nate-duotone-480.webp",
+          "bytes": 55832
+        }
+      ],
+      "intrinsic": {
+        "width": 651,
+        "height": 1229
+      },
+      "alt": "Nate Best, founder of Legacy Benefits Group",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "scripts/portrait-assets.sh"
     }
   ]
 }

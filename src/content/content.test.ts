@@ -62,11 +62,13 @@ describe("row counts recorded in the spec's extraction table", () => {
 });
 
 describe("media slots", () => {
-  it("exposes exactly the four slots the manifest names", () => {
+  it("exposes exactly the slots the manifest names", () => {
     expect(Object.keys(media).sort()).toEqual(
       [
         "articles.coverImage",
         "events.image",
+        "nate.cutout",
+        "nate.duotone",
         "pages.image",
         "services.image",
       ].sort(),

@@ -182,4 +182,31 @@ export const media: Record<string, MediaAsset> = {
       },
     ],
   },
+  "nate.cutout": {
+    src: "/media/nate-cutout.png",
+    width: 651,
+    height: 1229,
+    alt: "Nate Best",
+    srcSet: [],
+  },
+  "nate.duotone": {
+    src: "/media/nate-duotone.jpg",
+    width: 651,
+    height: 1229,
+    alt: "Nate Best, founder of Legacy Benefits Group",
+    srcSet: [
+      {
+        width: 480,
+        format: "avif",
+        src: "/media/nate-duotone-480.avif",
+        bytes: 72876,
+      },
+      {
+        width: 480,
+        format: "webp",
+        src: "/media/nate-duotone-480.webp",
+        bytes: 55832,
+      },
+    ],
+  },
 };

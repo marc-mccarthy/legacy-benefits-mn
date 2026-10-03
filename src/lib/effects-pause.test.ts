@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type EffectsPauseModule = typeof import("./effects-pause");
@@ -13,6 +15,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   sessionStorage.clear();
 });
 
@@ -48,5 +51,30 @@ describe("effects pause store", () => {
 
     expect(mod.getEffectsPaused()).toBe(true);
     expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("defaults to false when sessionStorage does not exist", async () => {
+    vi.stubGlobal("sessionStorage", undefined);
+    vi.resetModules();
+
+    const fresh = await import("./effects-pause");
+
+    expect(fresh.getEffectsPaused()).toBe(false);
+  });
+
+  it("sets the in-memory value without touching storage when sessionStorage does not exist", () => {
+    vi.stubGlobal("sessionStorage", undefined);
+
+    mod.setEffectsPaused(true);
+
+    expect(mod.getEffectsPaused()).toBe(true);
+  });
+
+  it("returns false during server-side rendering, via getServerSnapshot", () => {
+    function Probe() {
+      return createElement("span", null, String(mod.useEffectsPaused()));
+    }
+
+    expect(renderToString(createElement(Probe))).toContain("false");
   });
 });

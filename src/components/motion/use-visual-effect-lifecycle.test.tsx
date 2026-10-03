@@ -168,4 +168,14 @@ describe("useVisualEffectLifecycle", () => {
     act(() => finePointerQuery.set(true));
     expect(readState().finePointer).toBe(true);
   });
+
+  it("stays onscreen false and running false when IntersectionObserver is unavailable", () => {
+    vi.stubGlobal("IntersectionObserver", undefined);
+
+    render(<Probe />);
+
+    const state = readState();
+    expect(state.onscreen).toBe(false);
+    expect(state.running).toBe(false);
+  });
 });

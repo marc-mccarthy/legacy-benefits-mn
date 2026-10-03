@@ -372,13 +372,13 @@
           "width": 480,
           "format": "avif",
           "path": "public/media/nate-duotone-480.avif",
-          "bytes": 72876
+          "bytes": 70625
         },
         {
           "width": 480,
           "format": "webp",
           "path": "public/media/nate-duotone-480.webp",
-          "bytes": 55832
+          "bytes": 56850
         }
       ],
       "intrinsic": {

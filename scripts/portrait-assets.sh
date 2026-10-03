@@ -83,7 +83,16 @@ if [[ ! -s "$CUTOUT" ]]; then
   exit 1
 fi
 
-magick "$SRC" -colorspace gray \( -size 256x1 gradient:"#081A3A-#FFE7A3" \) -clut "$DUOTONE_PNG"
+magick "$CUTOUT" -channel A -level 15%,85% +channel "$CUTOUT"
+
+DUOTONE_RGB="$TMPDIR_LOCAL/duotone-rgb.png"
+ALPHA="$TMPDIR_LOCAL/alpha.png"
+DUOTONE_RGBA="$TMPDIR_LOCAL/duotone-rgba.png"
+
+magick "$CUTOUT" -alpha off -colorspace gray -sigmoidal-contrast 4x50% \( -size 256x1 gradient:"#081A3A-#FFE7A3" \) -clut "$DUOTONE_RGB"
+magick "$CUTOUT" -alpha extract "$ALPHA"
+magick "$DUOTONE_RGB" "$ALPHA" -alpha off -compose CopyOpacity -composite "$DUOTONE_RGBA"
+magick "$DUOTONE_RGBA" -background "#081A3A" -alpha remove -alpha off "$DUOTONE_PNG"
 magick "$DUOTONE_PNG" -colorspace sRGB -quality 90 "$DUOTONE"
 
 SRC_WIDTH="$(magick identify -format "%w" "$SRC")"

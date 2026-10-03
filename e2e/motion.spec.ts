@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import {
   builtCss,
   lastTransitionAnimations,
@@ -348,86 +348,80 @@ test.describe("particle field", () => {
   });
 });
 
-test.describe("hero shader", () => {
-  const SHADER = "[data-hero-shader]";
-  const SHADER_CANVAS = "[data-hero-shader] canvas";
+test.describe("hero signal field", () => {
+  const HERO = "main [data-hero]";
+  const STAGE = "[data-hero-stage]";
+  const CANVAS = '[data-three-stage="signal-hero"]';
+  const PORTRAIT = `${HERO} img[alt*="Nate Best"]`;
 
-  const SHADER_PAUSE = "button:text-is('Pause background gradient')";
+  const portraitShown = async (page: Page) => {
+    const portrait = page.locator(PORTRAIT);
+    await expect(portrait).toBeVisible();
+    await expect(portrait).toHaveCSS("opacity", "1");
+    await expect
+      .poll(() =>
+        portrait.evaluate((img: HTMLImageElement) => img.naturalWidth),
+      )
+      .toBeGreaterThan(0);
+  };
 
-  test("renders zero canvases with JavaScript disabled", async ({
+  const panelHeight = (page: Page) =>
+    page
+      .locator(STAGE)
+      .evaluate((el) => el.parentElement!.getBoundingClientRect().height);
+
+  const heroHeightInViewports = async (page: Page) => {
+    const hero = await page
+      .locator(HERO)
+      .evaluate((el) => el.getBoundingClientRect().height);
+    return hero / (await panelHeight(page));
+  };
+
+  const scrollHeroTo = (page: Page, viewports: number) =>
+    page.locator(STAGE).evaluate((stage, v) => {
+      const panel = stage.parentElement!;
+      const track = panel.parentElement!;
+      const top = track.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, top + panel.getBoundingClientRect().height * v);
+    }, viewports);
+
+  const settle = async (page: Page) => {
+    await page.waitForLoadState("networkidle");
+    await scrollHeroTo(page, 0.2);
+    await page.waitForTimeout(1500);
+  };
+
+  test("with JavaScript disabled: the headline and Nate's photo, no canvas, no pin", async ({
     browser,
   }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/");
 
-    await expect(page.locator(SHADER)).toHaveCount(0);
-    await expect(page.locator(SHADER_CANVAS)).toHaveCount(0);
-    await expect(page.locator(SHADER_PAUSE)).toHaveCount(0);
+    await expect(page.locator(`${HERO} h1`)).toHaveText("Medicare, decoded.");
+    await portraitShown(page);
+    await expect(page.locator(CANVAS)).toHaveCount(0);
+    expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
 
     await context.close();
   });
 
-  test("renders zero canvases under reduced motion", async ({ browser }) => {
+  test("with reduced motion: Nate's photo stays, no canvas ever mounts, no pin", async ({
+    browser,
+  }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
 
-    await expect(page.locator(SHADER)).toHaveCount(0);
-    await expect(page.locator(SHADER_CANVAS)).toHaveCount(0);
-    await expect(page.locator(SHADER_PAUSE)).toHaveCount(0);
-
-    await expect(page.locator("main h1")).toBeVisible();
-
-    await context.close();
-  });
-
-  test("the hero band has a non-zero painted height with the shader absent", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({
-      reducedMotion: "no-preference",
-    });
-
-    await context.addInitScript(() => {
-      const original = HTMLCanvasElement.prototype.getContext;
-      HTMLCanvasElement.prototype.getContext = function (
-        this: HTMLCanvasElement,
-        ...args: unknown[]
-      ) {
-        if (args[0] === "webgl2" || args[0] === "webgl") return null;
-        return (
-          original as unknown as (
-            this: HTMLCanvasElement,
-            ...rest: unknown[]
-          ) => unknown
-        ).apply(this, args);
-      } as typeof HTMLCanvasElement.prototype.getContext;
-    });
-
-    const page = await context.newPage();
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto("/");
-
-    await expect(page.locator(SHADER)).toHaveCount(0);
-    await expect(page.locator(SHADER_CANVAS)).toHaveCount(0);
-    await expect(page.locator(SHADER_PAUSE)).toHaveCount(0);
-
-    const band = page.locator("main section[data-band]").first();
-    const box = await band.boundingBox();
-    expect(box, "the hero band has no box at all").not.toBeNull();
-    expect(
-      box!.height,
-      `the hero band painted ${box!.height}px tall without the shader`,
-    ).toBeGreaterThan(0);
-
-    expect(errors, `uncaught errors: ${errors.join(" | ")}`).toEqual([]);
+    await settle(page);
+    await expect(page.locator(CANVAS)).toHaveCount(0);
+    await portraitShown(page);
+    expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
 
     await context.close();
   });
 
-  test("the shader mounts once and runs, including below 700px", async ({
+  test("the field mounts once, rises with scroll, and resolves into the photo", async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -435,29 +429,32 @@ test.describe("hero shader", () => {
     });
     const page = await context.newPage();
     await page.goto("/");
+    expect(await heroHeightInViewports(page)).toBeGreaterThan(1.8);
 
-    const root = page.locator(SHADER);
-    await root.waitFor({ state: "attached", timeout: 15_000 });
-    await expect(root).toHaveCount(1);
-    await expect(page.locator(SHADER_CANVAS)).toHaveCount(1);
-    await expect(root).toHaveAttribute("data-running", "true");
-    await expect(page.locator(EFFECTS_PAUSE)).toBeVisible();
+    await scrollHeroTo(page, 0.05);
+    const canvas = page.locator(CANVAS);
+    await canvas.waitFor({ state: "attached", timeout: 15_000 });
+    await expect(canvas).toHaveCount(1);
+    await expect(page.locator(PORTRAIT)).toHaveCSS("opacity", "0");
 
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.reload();
+    const progressOf = async () =>
+      Number(await canvas.getAttribute("data-stage-progress"));
+    const start = await progressOf();
 
-    const narrow = page.locator(SHADER);
-    await narrow.waitFor({ state: "attached", timeout: 15_000 });
-    await expect(narrow).toHaveCount(1);
-    await expect(page.locator(SHADER_CANVAS)).toHaveCount(1);
-    await expect(narrow).toHaveAttribute("data-running", "true");
+    await scrollHeroTo(page, 0.5);
+    await expect.poll(progressOf).toBeGreaterThan(start + 0.3);
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "false");
+
+    await scrollHeroTo(page, 0.98);
+    await expect.poll(progressOf).toBeGreaterThan(0.85);
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true");
+    await expect(canvas).toHaveCSS("opacity", "0");
+    await portraitShown(page);
 
     await context.close();
   });
-});
 
-test.describe("shared pause control", () => {
-  test("one press pauses both the hero shader and the particle field", async ({
+  test("in print with the field mounted: Nate's photo shows, no pin", async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -465,16 +462,38 @@ test.describe("shared pause control", () => {
     });
     const page = await context.newPage();
     await page.goto("/");
+    await scrollHeroTo(page, 0.05);
+    await page.locator(CANVAS).waitFor({ state: "attached", timeout: 15_000 });
+    await scrollHeroTo(page, 0);
 
-    const shader = page.locator("[data-hero-shader]");
-    const field = page.locator("[data-particle-field]");
-    await shader.waitFor({ state: "attached", timeout: 15_000 });
-    await field.waitFor({ state: "attached", timeout: 15_000 });
+    await page.emulateMedia({ media: "print" });
+    await expect(page.locator(CANVAS)).toBeHidden();
+    await portraitShown(page);
+    expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
 
-    await page.locator(EFFECTS_PAUSE).click();
+    await context.close();
+  });
 
-    await expect(shader).toHaveAttribute("data-paused", "true");
-    await expect(field).toHaveAttribute("data-paused", "true");
+  test("paused before load: no canvas until the visitor resumes", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    await context.addInitScript(() =>
+      sessionStorage.setItem("effects-paused", "true"),
+    );
+    const page = await context.newPage();
+    await page.goto("/");
+
+    const pause = page.locator(EFFECTS_PAUSE).first();
+    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await settle(page);
+    await expect(page.locator(CANVAS)).toHaveCount(0);
+    await portraitShown(page);
+
+    await pause.click();
+    await expect(page.locator(CANVAS)).toHaveCount(1, { timeout: 15_000 });
 
     await context.close();
   });

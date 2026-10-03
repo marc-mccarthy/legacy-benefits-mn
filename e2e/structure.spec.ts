@@ -169,7 +169,7 @@ test.describe("authored content", () => {
     const html = await response.text();
 
     for (const copy of [
-      "Medicare decisions.",
+      "Medicare, decoded.",
       "How we help",
       "What clients say",
       "Learning Center",

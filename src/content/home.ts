@@ -5,7 +5,7 @@ export const homeBlocks: PageBlock[] = [
   {
     blockType: "hero",
     scheme: "dark",
-    heading: "Medicare decisions.",
+    heading: "Medicare, decoded.",
     subheading:
       "Independent, licensed guidance on Medicare Advantage, Supplement, and Part D — from people who answer the phone when you call back.",
     ctaLabel: "Talk to a licensed agent",

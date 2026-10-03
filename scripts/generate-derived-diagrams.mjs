@@ -134,6 +134,8 @@ const GROUPS = [
       ["lib/motion.ts", "motion", "artifact"],
       ["lib/effects-pause.ts", "effectsPause", "ours"],
       ["lib/webgl-registry.ts", "webglRegistry", "ours"],
+      ["lib/portrait-points.ts", "portraitPoints", "ours"],
+      ["lib/signal-field.ts", "signalField", "ours"],
       ["lib/utils.ts", "utils", "ours"],
     ],
   },

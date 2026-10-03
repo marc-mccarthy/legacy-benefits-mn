@@ -418,7 +418,7 @@ accDescr {
   and the one that decides whether a person may be contacted are drawn as gates, because their
   job is to reject. The database schema is drawn as regulated data, because that is what it
   declares. Test files are excluded: a test importing a module says nothing about how the
-  application is wired. 36 modules and 53 imports are drawn.
+  application is wired. 38 modules and 54 imports are drawn.
 }
 
 subgraph Routehandlers ["Route handlers"]
@@ -475,6 +475,8 @@ subgraph Outboundandconfiguration ["Outbound and configuration"]
   motion["motion.ts"]
   effectsPause["effects-pause.ts"]
   webglRegistry["webgl-registry.ts"]
+  portraitPoints["portrait-points.ts"]
+  signalField["signal-field.ts"]
   utils["utils.ts"]
 end
 
@@ -515,6 +517,7 @@ leadsRoute --> turnstile
 mock --> crmTypes
 outbox --> crm
 outbox --> db
+signalField --> portraitPoints
 siteUrl --> env
 soa --> db
 soa --> disclosures
@@ -540,7 +543,7 @@ classDef vendor   fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
 classDef phi      fill:#FEE2E2,stroke:#B91C1C,stroke-width:2px,color:#0F172A
 classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
-class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,leadService,leadSchema,outbox,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,effectsPause,webglRegistry,utils ours
+class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,leadService,leadSchema,outbox,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,effectsPause,webglRegistry,portraitPoints,signalField,utils ours
 class turnstile,request,suppression guard
 class webhook,zapier,mock,email vendor
 class dbSchema phi

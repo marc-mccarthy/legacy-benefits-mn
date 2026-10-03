@@ -28,7 +28,7 @@
     {
       "id": "D5-module-map",
       "summary": "D5 — every server module and its imports",
-      "mmd_sha256": "e2fd80b893fbcbeacd3c4b34e0fb641ef058664d43c41d989921642b8a70cff7"
+      "mmd_sha256": "880a043951bf8d7011f51b2f6e8bf6459bed3b51c616cce5af695bcf2109af19"
     },
     {
       "id": "D7-pipeline",

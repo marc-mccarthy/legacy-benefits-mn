@@ -133,6 +133,7 @@ const GROUPS = [
       ["lib/announcement.ts", "announcement", "artifact"],
       ["lib/motion.ts", "motion", "artifact"],
       ["lib/effects-pause.ts", "effectsPause", "ours"],
+      ["lib/webgl-registry.ts", "webglRegistry", "ours"],
       ["lib/utils.ts", "utils", "ours"],
     ],
   },

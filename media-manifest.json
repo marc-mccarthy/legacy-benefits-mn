@@ -350,7 +350,9 @@
         "publicDomain": false,
         "verifyRequired": false,
         "hotlinkAllowed": false,
-        "caveats": [],
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
         "creditLine": "Nate Best — owner-supplied photograph"
       },
       "risk": {
@@ -372,13 +374,13 @@
           "width": 480,
           "format": "avif",
           "path": "public/media/nate-duotone-480.avif",
-          "bytes": 70625
+          "bytes": 70742
         },
         {
           "width": 480,
           "format": "webp",
           "path": "public/media/nate-duotone-480.webp",
-          "bytes": 56850
+          "bytes": 56808
         }
       ],
       "intrinsic": {
@@ -405,7 +407,9 @@
         "publicDomain": false,
         "verifyRequired": false,
         "hotlinkAllowed": false,
-        "caveats": [],
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
         "creditLine": "Nate Best — owner-supplied photograph"
       },
       "risk": {

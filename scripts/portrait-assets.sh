@@ -84,6 +84,7 @@ if [[ ! -s "$CUTOUT" ]]; then
 fi
 
 magick "$CUTOUT" -channel A -level 15%,85% +channel "$CUTOUT"
+magick "$CUTOUT" -channel G -fx "g>((r+b)/2) ? ((r+b)/2) : g" +channel "$CUTOUT"
 
 DUOTONE_RGB="$TMPDIR_LOCAL/duotone-rgb.png"
 ALPHA="$TMPDIR_LOCAL/alpha.png"

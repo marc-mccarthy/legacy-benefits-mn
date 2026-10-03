@@ -14,6 +14,7 @@ _None. No asset in this project carries an attribution obligation._
 - **articles.coverImage** — Public Domain Mark · [source](https://commons.wikimedia.org/wiki/File:Prairie_sunrise_(54762711587).jpg) · `public/media/articlescoverimage-prairie-sunrise-54762711587.jpg`
 - **pages.image** — Pexels License · [source](https://www.pexels.com/photo/an-elderly-man-consulting-an-insurance-agent-8441780/) · `public/media/pagesimage-a-business-meeting-between-an-elderly-client-and.jpg`
 - **nate.cutout** — Owner-owned · `public/media/nate-cutout.png`
+- **nate.cutoutSample** — Owner-owned · `public/media/nate-cutout-sample.webp`
 - **nate.duotone** — Owner-owned · `public/media/nate-duotone.jpg`
 
 ## Usage restrictions

@@ -68,6 +68,7 @@ describe("media slots", () => {
         "articles.coverImage",
         "events.image",
         "nate.cutout",
+        "nate.cutoutSample",
         "nate.duotone",
         "pages.image",
         "services.image",

@@ -497,6 +497,83 @@ test.describe("hero signal field", () => {
 
     await context.close();
   });
+
+  test("paused while live: the hero canvas goes and the particle field pauses", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await scrollHeroTo(page, 0.05);
+    await expect(page.locator(CANVAS)).toHaveCount(1, { timeout: 15_000 });
+    const field = page.locator("[data-particle-field]");
+    await field.waitFor({ state: "attached", timeout: 15_000 });
+
+    await page.locator(EFFECTS_PAUSE).first().click();
+
+    await expect(page.locator(CANVAS)).toHaveCount(0);
+    await expect(field).toHaveAttribute("data-paused", "true");
+    await portraitShown(page);
+
+    await context.close();
+  });
+
+  test("the largest contentful paint is the headline or Nate's portrait", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const lcp = await page.evaluate(
+      () =>
+        new Promise<string>((resolve) => {
+          new PerformanceObserver((list) => {
+            const entries = list.getEntries() as (PerformanceEntry & {
+              element: Element | null;
+            })[];
+            const element = entries.at(-1)?.element;
+            resolve(
+              element
+                ? `${element.tagName}|${element.closest("[data-hero]") ? "hero" : "elsewhere"}`
+                : "none",
+            );
+          }).observe({ type: "largest-contentful-paint", buffered: true });
+        }),
+    );
+
+    expect(["H1|hero", "IMG|hero"]).toContain(lcp);
+  });
+
+  test("on a phone, the call to action sits above the fold under the announcement bar", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "a phone-only fold check");
+    const { site } = await import("../src/content/site");
+    const { announcementIsLive } = await import("../src/lib/announcement");
+    test.skip(
+      !announcementIsLive(site.announcement),
+      "the announcement window is closed",
+    );
+
+    await page.goto("/");
+    await expect(
+      page.getByRole("button", { name: "Dismiss announcement" }),
+    ).toBeVisible();
+
+    const cta = page
+      .locator(HERO)
+      .getByRole("link", { name: "Talk to a licensed agent" });
+    await expect(cta).toBeVisible();
+    const fold = await cta.evaluate((el) => ({
+      top: el.getBoundingClientRect().top,
+      bottom: el.getBoundingClientRect().bottom,
+      height: document.documentElement.clientHeight,
+    }));
+    expect(fold.top).toBeGreaterThanOrEqual(0);
+    expect(fold.bottom).toBeLessThanOrEqual(fold.height);
+  });
 });
 
 test.describe("view transitions", () => {

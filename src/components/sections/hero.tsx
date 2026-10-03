@@ -49,11 +49,11 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
         ref={trackRef}
         className="relative -mt-(--header-stack) print:h-auto! [@media(scripting:enabled)]:motion-safe:h-[200svh]"
       >
-        <div className="sticky top-0 flex h-svh min-h-[36rem] flex-col justify-end overflow-hidden bg-[#081A3A]">
+        <div className="sticky top-0 flex h-svh min-h-[36rem] flex-col overflow-hidden bg-[#081A3A] md:justify-end">
           <div
             data-hero-stage=""
             data-resolved={progress > RESOLVE_AT}
-            className="absolute inset-x-0 top-(--header-stack) bottom-[42%] [mask-image:linear-gradient(to_bottom,black_65%,transparent)] md:top-[calc(var(--header-stack)/2)] md:bottom-0 md:left-1/2 md:[mask-image:none] [&_canvas]:transition-opacity [&_canvas]:duration-(--duration-stage) data-[resolved=true]:[&_canvas]:opacity-0"
+            className="relative mt-(--header-stack) mb-6 min-h-0 flex-1 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] md:absolute md:top-[calc(var(--header-stack)/2)] md:right-0 md:bottom-0 md:left-1/2 md:m-0 md:[mask-image:none] [&_canvas]:transition-opacity [&_canvas]:duration-(--duration-stage) data-[resolved=true]:[&_canvas]:opacity-0"
           >
             <ThreeStage
               scene="signal-hero"
@@ -62,6 +62,8 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
               fallback={
                 portrait ? (
                   <Image
+                    loading="eager"
+                    fetchPriority="high"
                     src={portrait.src}
                     alt={portrait.alt}
                     width={portrait.width}
@@ -74,13 +76,13 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
             />
           </div>
 
-          <Container className="relative pb-16 md:pb-24">
-            <div className="space-y-6 text-white md:max-w-[48%]">
-              <h1 className="font-display text-[clamp(3.5rem,0.33rem+8vw,8.5rem)] leading-none font-bold tracking-[-0.06em] text-balance [font-stretch:125%]">
+          <Container className="relative pb-32 md:pb-24">
+            <div className="space-y-5 text-white md:max-w-[48%] md:space-y-6">
+              <h1 className="font-display text-[clamp(3rem,8.5vw_-_0.5rem,5.75rem)] leading-none font-bold tracking-[-0.06em] text-balance [font-stretch:125%]">
                 {heading}
               </h1>
               {subheading ? (
-                <p className="lead max-w-xl text-lg leading-relaxed text-white md:text-xl">
+                <p className="lead max-w-xl text-base leading-relaxed text-white md:text-xl">
                   {subheading}
                 </p>
               ) : null}

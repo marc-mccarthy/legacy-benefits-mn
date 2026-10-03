@@ -51,7 +51,7 @@ void main() {
 `;
 
 async function loadCutout(): Promise<ImageData> {
-  const cutout = media["nate.cutout"];
+  const cutout = media["nate.cutoutSample"];
   const image = new Image();
   image.src = cutout.src;
   await image.decode();
@@ -71,8 +71,11 @@ function alphaChannel(data: Uint8ClampedArray): Uint8ClampedArray {
 }
 
 function luminance(image: ImageData, x: number, y: number): number {
-  const px = Math.floor(((x + 1) / 2) * image.width);
-  const py = Math.floor(((1 - y) / 2) * image.height);
+  const px = Math.min(Math.floor(((x + 1) / 2) * image.width), image.width - 1);
+  const py = Math.min(
+    Math.floor(((1 - y) / 2) * image.height),
+    image.height - 1,
+  );
   const o = (py * image.width + px) * 4;
   const { data } = image;
   return (0.2126 * data[o] + 0.7152 * data[o + 1] + 0.0722 * data[o + 2]) / 255;

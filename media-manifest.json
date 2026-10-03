@@ -366,6 +366,50 @@
       "fetchedBy": "scripts/portrait-assets.sh"
     },
     {
+      "slot": "nate.cutoutSample",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-cutout-sample.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 326,
+        "height": 615
+      },
+      "alt": "Nate Best",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "scripts/portrait-assets.sh"
+    },
+    {
       "slot": "nate.duotone",
       "lane": "owner-supplied",
       "file": "public/media/nate-duotone.jpg",
@@ -381,6 +425,18 @@
           "format": "webp",
           "path": "public/media/nate-duotone-480.webp",
           "bytes": 56808
+        },
+        {
+          "width": 651,
+          "format": "avif",
+          "path": "public/media/nate-duotone-651.avif",
+          "bytes": 107869
+        },
+        {
+          "width": 651,
+          "format": "webp",
+          "path": "public/media/nate-duotone-651.webp",
+          "bytes": 89702
         }
       ],
       "intrinsic": {

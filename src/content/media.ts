@@ -1,10 +1,5 @@
 import type { MediaAsset } from "./types";
 
-/**
- * One entry per slot in `media-manifest.json`. `srcSet` is empty where the
- * manifest records no derivative, and `src/lib/image-loader.ts` then returns
- * the original unchanged.
- */
 export const media: Record<string, MediaAsset> = {
   "pages.image": {
     src: "/media/pagesimage-a-business-meeting-between-an-elderly-client-and.jpg",
@@ -189,6 +184,13 @@ export const media: Record<string, MediaAsset> = {
     alt: "Nate Best",
     srcSet: [],
   },
+  "nate.cutoutSample": {
+    src: "/media/nate-cutout-sample.webp",
+    width: 326,
+    height: 615,
+    alt: "Nate Best",
+    srcSet: [],
+  },
   "nate.duotone": {
     src: "/media/nate-duotone.jpg",
     width: 651,
@@ -206,6 +208,18 @@ export const media: Record<string, MediaAsset> = {
         format: "webp",
         src: "/media/nate-duotone-480.webp",
         bytes: 56808,
+      },
+      {
+        width: 651,
+        format: "avif",
+        src: "/media/nate-duotone-651.avif",
+        bytes: 107869,
+      },
+      {
+        width: 651,
+        format: "webp",
+        src: "/media/nate-duotone-651.webp",
+        bytes: 89702,
       },
     ],
   },

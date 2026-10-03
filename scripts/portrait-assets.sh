@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC="$ROOT/public/media/nate-best-authentic.jpg"
 CUTOUT="$ROOT/public/media/nate-cutout.png"
 DUOTONE="$ROOT/public/media/nate-duotone.jpg"
+SAMPLE="$ROOT/public/media/nate-cutout-sample.webp"
 
 if [[ ! -f "$SRC" ]]; then
   echo "portrait-assets: missing source $SRC" >&2
@@ -96,12 +97,14 @@ magick "$DUOTONE_RGB" "$ALPHA" -alpha off -compose CopyOpacity -composite "$DUOT
 magick "$DUOTONE_RGBA" -background "#081A3A" -alpha remove -alpha off "$DUOTONE_PNG"
 magick "$DUOTONE_PNG" -colorspace sRGB -quality 90 "$DUOTONE"
 
-SRC_WIDTH="$(magick identify -format "%w" "$SRC")"
+DUOTONE_WIDTH="$(magick identify -format "%w" "$DUOTONE")"
 
-for width in 480 900 1920; do
-  if (( width > SRC_WIDTH )); then
+for width in 480 "$DUOTONE_WIDTH"; do
+  if (( width > DUOTONE_WIDTH )); then
     continue
   fi
   magick "$DUOTONE" -resize "${width}x" -quality 82 "$ROOT/public/media/nate-duotone-${width}.avif"
   magick "$DUOTONE" -resize "${width}x" -quality 82 "$ROOT/public/media/nate-duotone-${width}.webp"
 done
+
+magick "$CUTOUT" -resize 50% -quality 80 -define webp:alpha-quality=100 "$SAMPLE"

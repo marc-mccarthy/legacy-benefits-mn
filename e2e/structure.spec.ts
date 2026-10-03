@@ -1,17 +1,40 @@
 import { expect, test } from "@playwright/test";
 import { testimonials as authoredTestimonials } from "../src/content/testimonials";
 
-/**
- * Page composition: the bands that were rebuilt, and what each renders from the
- * content modules.
- */
-
 const DESKTOP = { width: 1440, height: 900 };
 
 const SERVICE_BAND = 'section[aria-labelledby="services-heading"]';
 const TESTIMONIAL_BAND = 'section[aria-labelledby="testimonials-heading"]';
 
-// §9.2 item 23 — SC-10, FR-99.
+test("home: every band shows its heading after scrolling into view", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await page.goto("/");
+
+  const bands = page.locator("[data-band]");
+  const count = await bands.count();
+  expect(count, "no bands on the home route").toBeGreaterThan(1);
+
+  for (let i = 0; i < count; i += 1) {
+    const band = bands.nth(i);
+    const heading = band.locator("h1, h2, h3, dd").first();
+    await band.scrollIntoViewIfNeeded();
+    await heading.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+
+    await expect(heading, `band ${i} has no visible heading`).toBeVisible();
+    const opacity = await heading.evaluate((el) => {
+      let product = 1;
+      for (let node: Element | null = el; node; node = node.parentElement) {
+        product *= Number(getComputedStyle(node).opacity);
+      }
+      return product;
+    });
+    expect(opacity, `band ${i} heading opacity`).toBe(1);
+  }
+});
+
 test.describe("the service band", () => {
   test("item 23: renders alternating full-bleed rows and zero cards", async ({
     page,
@@ -22,11 +45,8 @@ test.describe("the service band", () => {
     const band = page.locator(SERVICE_BAND);
     await expect(band, "no service band on the home route").toHaveCount(1);
 
-    // Scoped to this band, not the page: the learning band also emits
-    // [data-card], so an unscoped count would never reach zero.
     await expect(band.locator("[data-card]")).toHaveCount(0);
 
-    // Counted here so the zero above cannot pass by the attribute going missing.
     await expect(
       page.locator("[data-card]"),
       "no cards anywhere on the page: the marker is missing rather than the band being card-free",
@@ -35,9 +55,6 @@ test.describe("the service band", () => {
     const rows = await band.locator("ul > li").count();
     expect(rows, "the service band rendered no rows").toBeGreaterThan(1);
 
-    // Alternation measured as geometry, not as class names. Which side the
-    // photograph is on is the visible property; the utility that produces it
-    // is an implementation detail that a refactor is free to change.
     const sides = await band.evaluate((el) =>
       [...el.querySelectorAll("ul > li")]
         .map((row) => {
@@ -52,10 +69,6 @@ test.describe("the service band", () => {
         .filter((side): side is "image-left" | "image-right" => side !== null),
     );
 
-    // Rows with no photograph fall back to type and space and have no side to
-    // alternate, which is correct rather than a gap — this site has no
-    // photography of its own yet and the honest answer is the typographic row.
-    // Alternation is asserted over the rows that do have one.
     for (let i = 1; i < sides.length; i += 1) {
       expect(
         sides[i],
@@ -65,7 +78,6 @@ test.describe("the service band", () => {
   });
 });
 
-// §9.2 item 24 — SC-10, FR-101, FR-102.
 test.describe("the testimonials band", () => {
   test("item 24: every quote is in the DOM, with no carousel and no auto-advance", async ({
     page,
@@ -76,11 +88,6 @@ test.describe("the testimonials band", () => {
     const band = page.locator(TESTIMONIAL_BAND);
     await expect(band, "no testimonials band on the home route").toHaveCount(1);
 
-    // The expected count comes from the authored module rather than from the
-    // page, so "every quote renders" is a comparison against the authored set
-    // and not a restatement of whatever happens to be on screen. A band that
-    // renders three of six quotes satisfies every assertion that counts what
-    // it can see.
     expect(
       authoredTestimonials.length,
       "no testimonials authored, so this proves nothing",
@@ -90,9 +97,6 @@ test.describe("the testimonials band", () => {
       authoredTestimonials.length,
     );
 
-    // All of them visible, not merely present: a carousel implemented with
-    // `display: none` would satisfy a DOM count and still hide content behind
-    // an interaction a keyboard user has to discover.
     const hidden = await band.evaluate(
       (el) =>
         [...el.querySelectorAll("blockquote")].filter((quote) => {
@@ -111,10 +115,6 @@ test.describe("the testimonials band", () => {
       band.locator('[role="tablist"], [aria-roledescription="carousel"]'),
     ).toHaveCount(0);
 
-    // No auto-advance. Sampled rather than argued from the absence of
-    // controls, because an auto-advancing band needs no controls at all — and
-    // an auto-advancing band is the worse of the two, since it moves text out
-    // from under somebody still reading it.
     const before = await band.locator("blockquote").allInnerTexts();
     await page.waitForTimeout(3000);
     expect(
@@ -124,10 +124,6 @@ test.describe("the testimonials band", () => {
   });
 });
 
-/**
- * The site is a static export: every route's copy is in the HTML before any
- * script runs, and no request touches a database.
- */
 test.describe("authored content", () => {
   const ROUTES = [
     "/",
@@ -151,9 +147,6 @@ test.describe("authored content", () => {
       const response = await page.goto(route);
       expect(response?.status(), `${route} did not return 200`).toBe(200);
 
-      // Any level: the three index routes lead with the band's `h2` rather
-      // than an `h1`, which predates this work and which axe does not flag at
-      // WCAG 2.2 AA. What this test is for is that the copy is there at all.
       const heading = page.locator("main h1, main h2").first();
       await expect(heading, `${route} has no heading`).toHaveCount(1);
       expect(
@@ -175,8 +168,6 @@ test.describe("authored content", () => {
     expect(response.status()).toBe(200);
     const html = await response.text();
 
-    // Copy authored in src/content/, checked in the raw bytes rather than in
-    // the rendered page, so nothing here can have been produced by a script.
     for (const copy of [
       "Medicare decisions.",
       "How we help",
@@ -189,8 +180,6 @@ test.describe("authored content", () => {
       expect(html, `"${copy}" is not in the served HTML`).toContain(copy);
     }
 
-    // The reveal attribute is present in the markup, so the CSS escape hatches
-    // have something to act on before hydration.
     expect(html).toContain("data-reveal");
   });
 
@@ -213,7 +202,6 @@ test.describe("authored content", () => {
       ).not.toContain(site.announcement.text!);
     }
 
-    // And the client agrees with the server after hydration.
     await page.goto("/");
     const bar = page.getByText(site.announcement.text!, { exact: false });
     await expect(bar).toHaveCount(liveAtBuild ? 1 : 0);

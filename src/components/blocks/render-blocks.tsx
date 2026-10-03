@@ -39,10 +39,6 @@ type BlockData = {
   phone?: string | null;
 };
 
-/**
- * Maps page blocks onto section components. Collection-backed blocks are handed
- * their data by the route rather than fetching their own.
- */
 export function RenderBlocks({
   blocks,
   data,
@@ -91,6 +87,7 @@ export function RenderBlocks({
             );
 
           case "eventCarousel":
+            if (data.events.length === 0) return null;
             return (
               <Section
                 key={key}
@@ -122,8 +119,6 @@ export function RenderBlocks({
             return (
               <Testimonials
                 key={key}
-                // Passed raw, not coerced: the band's own dark default has to
-                // survive an unset value, which `?? "light"` would overwrite.
                 scheme={block.scheme as Scheme | undefined}
                 heading={block.heading as string | null}
                 items={data.testimonials}

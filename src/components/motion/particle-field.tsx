@@ -1,10 +1,8 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useReducedMotion } from "motion/react";
-import { Button } from "@/components/ui/button";
-import { Container } from "@/components/ui/section";
+import { useEffectsPaused } from "@/lib/effects-pause";
 
 const MAX_POINTS = 80;
 const DENSITY_DIVISOR = 8000;
@@ -91,7 +89,6 @@ function draw(
 ): void {
   ctx.clearRect(0, 0, width, height);
 
-  // Links first so the points sit on top of them.
   ctx.strokeStyle = LINK_COLOR;
   ctx.lineWidth = LINK_WIDTH;
   for (let i = 0; i < points.length; i++) {
@@ -120,7 +117,7 @@ function draw(
 
 export function ParticleField() {
   const reduced = useReducedMotion();
-  const [paused, setPaused] = useState(false);
+  const paused = useEffectsPaused();
   const [onscreen, setOnscreen] = useState(true);
   const [pointCount, setPointCount] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -215,39 +212,16 @@ export function ParticleField() {
   if (!mounted || reduced || !canvasAvailable) return null;
 
   return (
-    <>
-      <div
-        ref={rootRef}
-        aria-hidden
-        data-particle-field
-        data-running={running}
-        data-paused={paused}
-        data-points={pointCount}
-        className="pointer-events-none absolute inset-0 -z-10"
-      >
-        <canvas ref={canvasRef} aria-hidden className="block h-full w-full" />
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0">
-        <Container className="flex justify-start pb-5">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            data-print-hide
-            aria-pressed={paused}
-            className="pointer-events-auto"
-            onClick={() => setPaused((p) => !p)}
-          >
-            {paused ? (
-              <Play aria-hidden className="size-4" />
-            ) : (
-              <Pause aria-hidden className="size-4" />
-            )}
-            {paused ? "Play background field" : "Pause background field"}
-          </Button>
-        </Container>
-      </div>
-    </>
+    <div
+      ref={rootRef}
+      aria-hidden
+      data-particle-field
+      data-running={running}
+      data-paused={paused}
+      data-points={pointCount}
+      className="pointer-events-none absolute inset-0 -z-10"
+    >
+      <canvas ref={canvasRef} aria-hidden className="block h-full w-full" />
+    </div>
   );
 }

@@ -132,6 +132,7 @@ const GROUPS = [
       ["lib/business.ts", "business", "artifact"],
       ["lib/announcement.ts", "announcement", "artifact"],
       ["lib/motion.ts", "motion", "artifact"],
+      ["lib/effects-pause.ts", "effectsPause", "ours"],
       ["lib/utils.ts", "utils", "ours"],
     ],
   },

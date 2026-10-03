@@ -12,6 +12,7 @@ import * as NavigationMenu from "@radix-ui/react-navigation-menu";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/section";
+import { EffectsPauseButton } from "@/components/motion/effects-pause-button";
 import {
   pauseSmoothScroll,
   resumeSmoothScroll,
@@ -92,14 +93,17 @@ export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
             ) : null}
             <span className="flex h-full items-center opacity-70">TTY 711</span>
           </div>
-          {clientPortal?.href ? (
-            <a
-              className="flex h-full items-center hover:underline"
-              href={clientPortal.href}
-            >
-              {clientPortal.label ?? "Client Portal"}
-            </a>
-          ) : null}
+          <div className="flex h-full items-center gap-6">
+            <EffectsPauseButton />
+            {clientPortal?.href ? (
+              <a
+                className="flex h-full items-center hover:underline"
+                href={clientPortal.href}
+              >
+                {clientPortal.label ?? "Client Portal"}
+              </a>
+            ) : null}
+          </div>
         </Container>
       </div>
 

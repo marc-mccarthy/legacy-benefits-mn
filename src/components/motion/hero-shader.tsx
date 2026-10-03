@@ -1,11 +1,9 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useReducedMotion } from "motion/react";
 import { Color, Mesh, Program, Renderer, Triangle, Vec2 } from "ogl";
-import { Button } from "@/components/ui/button";
-import { Container } from "@/components/ui/section";
+import { useEffectsPaused } from "@/lib/effects-pause";
 
 export const HERO_SHADER_VERTEX = `attribute vec2 uv;
 attribute vec2 position;
@@ -123,7 +121,7 @@ function probeWebGL(): boolean {
   try {
     const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
     if (!gl) return false;
-    // The probe context is released immediately; the renderer creates its own.
+
     gl.getExtension("WEBGL_lose_context")?.loseContext();
     return true;
   } catch {
@@ -141,7 +139,6 @@ function parseRgb(value: string): Rgb {
   ];
 }
 
-// A custom property's computed value keeps its author notation; reading it off an element's color canonicalises it.
 function readSchemeColors(probe: HTMLElement): SchemeColors {
   const style = getComputedStyle(probe);
   return {
@@ -171,7 +168,7 @@ function mixRgb(from: Rgb, to: Rgb, t: number): Rgb {
 
 export function HeroShader() {
   const reduced = useReducedMotion();
-  const [paused, setPaused] = useState(false);
+  const paused = useEffectsPaused();
   const [onscreen, setOnscreen] = useState(true);
   const [contextLost, setContextLost] = useState(false);
   const [generation, setGeneration] = useState(0);
@@ -281,7 +278,6 @@ export function HeroShader() {
     }
 
     const onLost = (event: Event) => {
-      // Without preventDefault the browser never fires webglcontextrestored.
       event.preventDefault();
       setContextLost(true);
     };
@@ -373,39 +369,16 @@ export function HeroShader() {
   if (!mounted || reduced || !contextAvailable || contextLost) return null;
 
   return (
-    <>
-      <div
-        ref={rootRef}
-        aria-hidden
-        data-hero-shader
-        data-running={running}
-        data-paused={paused}
-        className="pointer-events-none absolute inset-0 -z-20"
-      >
-        <canvas ref={canvasRef} aria-hidden className="block h-full w-full" />
-        <span ref={schemeProbeRef} aria-hidden className="hidden" />
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0">
-        <Container className="flex justify-start pb-5">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            data-print-hide
-            aria-pressed={paused}
-            className="pointer-events-auto"
-            onClick={() => setPaused((p) => !p)}
-          >
-            {paused ? (
-              <Play aria-hidden className="size-4" />
-            ) : (
-              <Pause aria-hidden className="size-4" />
-            )}
-            {paused ? "Play background gradient" : "Pause background gradient"}
-          </Button>
-        </Container>
-      </div>
-    </>
+    <div
+      ref={rootRef}
+      aria-hidden
+      data-hero-shader
+      data-running={running}
+      data-paused={paused}
+      className="pointer-events-none absolute inset-0 -z-20"
+    >
+      <canvas ref={canvasRef} aria-hidden className="block h-full w-full" />
+      <span ref={schemeProbeRef} aria-hidden className="hidden" />
+    </div>
   );
 }

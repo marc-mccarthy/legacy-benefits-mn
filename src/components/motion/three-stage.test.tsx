@@ -244,7 +244,10 @@ test("a scene key without a module keeps the fallback and frees the registry", a
 });
 
 test("a scene that fails to start keeps the fallback and frees the registry", async () => {
-  factory.mockRejectedValueOnce(new Error("Error creating WebGL context."));
+  const failure = new Error("Error creating WebGL context.");
+  const reportError = vi.fn();
+  vi.stubGlobal("reportError", reportError);
+  factory.mockRejectedValueOnce(failure);
   const { container } = render(
     <ThreeStage scene="signal-hero" fallback={fallback} />,
   );
@@ -255,4 +258,17 @@ test("a scene that fails to start keeps the fallback and frees the registry", as
   expect(container.querySelector("canvas")).toBeNull();
   expect(webglOwner()).toBeNull();
   expect(screen.getByText("Nate Best").isConnected).toBe(true);
+  expect(reportError).toHaveBeenCalledWith(failure);
+});
+
+test("unmount while the scene module loads never creates a context", async () => {
+  const { unmount } = render(
+    <ThreeStage scene="signal-hero" fallback={fallback} />,
+  );
+  setOnscreen(true);
+  unmount();
+
+  await act(async () => {});
+  expect(factory).not.toHaveBeenCalled();
+  expect(webglOwner()).toBeNull();
 });

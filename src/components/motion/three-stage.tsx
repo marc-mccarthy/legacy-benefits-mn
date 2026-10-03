@@ -88,6 +88,7 @@ export function ThreeStage({
     const mount = async () => {
       try {
         const { default: create } = await load();
+        if (disposed) return;
         const created = await create(canvas, { reducedQuality: !finePointer });
         if (disposed) {
           created.dispose();
@@ -101,7 +102,8 @@ export function ThreeStage({
         root.append(canvas);
         resize();
         stopResize = observeResize(root, resize);
-      } catch {
+      } catch (error) {
+        reportError(error);
         if (!disposed) setBroken(true);
       }
     };

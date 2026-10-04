@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CalendarPlus, MapPin } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,26 @@ export default async function EventDetailPage({ params }: Props) {
           isFree: doc.cost === "free",
         })}
       />
-      <Container className="space-y-8">
+      <nav
+        aria-label="Event actions"
+        className="bg-action fixed inset-x-0 bottom-0 z-40 flex pb-[env(safe-area-inset-bottom)] min-[700px]:hidden print:hidden"
+      >
+        <a
+          href={`/events/${doc.slug}/event.ics`}
+          className="text-on-action flex min-h-12 w-1/2 items-center justify-center gap-2 text-base font-semibold"
+        >
+          <CalendarPlus aria-hidden="true" className="size-5" />
+          Add to calendar
+        </a>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(doc.address ?? doc.venue)}`}
+          className="text-on-action border-on-action/40 flex min-h-12 w-1/2 items-center justify-center gap-2 border-l text-base font-semibold"
+        >
+          <MapPin aria-hidden="true" className="size-5" />
+          Get directions
+        </a>
+      </nav>
+      <Container className="space-y-8 pb-24 min-[700px]:pb-0">
         {photo ? (
           <Morph kind="event" slug={doc.slug}>
             <Image

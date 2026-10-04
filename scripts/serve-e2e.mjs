@@ -28,6 +28,7 @@ const TYPES = {
   ".ico": "image/x-icon",
   ".mp4": "video/mp4",
   ".woff2": "font/woff2",
+  ".ics": "text/calendar; charset=utf-8",
 };
 
 if (!existsSync(outDir)) {

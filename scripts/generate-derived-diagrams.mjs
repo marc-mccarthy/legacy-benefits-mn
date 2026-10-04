@@ -102,6 +102,7 @@ const GROUPS = [
       ["lib/email/index.ts", "email", "vendor"],
       ["lib/env.ts", "env", "artifact"],
       ["lib/site-url.ts", "siteUrl", "artifact"],
+      ["lib/ics.ts", "ics", "artifact"],
       ["lib/business.ts", "business", "artifact"],
       ["lib/announcement.ts", "announcement", "artifact"],
       ["lib/motion.ts", "motion", "artifact"],

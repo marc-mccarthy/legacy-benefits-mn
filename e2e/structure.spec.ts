@@ -4,6 +4,7 @@ import {
   contrast as contrastRatio,
   HIDE_CHROME,
 } from "./support/contrast";
+import { events as authoredEvents } from "../src/content/events";
 import { services as authoredServices } from "../src/content/services";
 import { testimonials as authoredTestimonials } from "../src/content/testimonials";
 
@@ -1040,5 +1041,55 @@ test.describe("the signal band", () => {
     const brightest = await brightestBackground(page, `${SIGNAL} h2`);
     expect(contrastRatio("#FFFFFF", brightest)).toBeGreaterThanOrEqual(4.5);
     await context.close();
+  });
+});
+
+test.describe("event detail actions", () => {
+  for (const event of authoredEvents) {
+    const icsPath = `/events/${event.slug}/event.ics`;
+    const directions = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address ?? event.venue)}`;
+
+    test(`${event.slug}: calendar file is served as text/calendar`, async ({
+      request,
+    }) => {
+      const response = await request.get(icsPath);
+      expect(response.status()).toBe(200);
+      expect(response.headers()["content-type"]).toContain("text/calendar");
+      expect(await response.text()).toMatch(/^BEGIN:VCALENDAR/);
+    });
+
+    test(`${event.slug}: mobile bar is tappable, in view and linked`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/events/${event.slug}`);
+      await page
+        .getByRole("dialog", { name: "Cookie choices" })
+        .getByRole("button", { name: "Reject" })
+        .click();
+      const bar = page.getByRole("navigation", { name: "Event actions" });
+      const calendar = bar.getByRole("link", { name: "Add to calendar" });
+      const route = bar.getByRole("link", { name: "Get directions" });
+      await expect(calendar).toHaveAttribute("href", icsPath);
+      await expect(route).toHaveAttribute("href", directions);
+      for (const link of [calendar, route]) {
+        const box = (await link.boundingBox())!;
+        expect(box.height).toBeGreaterThanOrEqual(44);
+        expect(box.y + box.height).toBeLessThanOrEqual(844);
+        expect(box.x + box.width).toBeLessThanOrEqual(390);
+      }
+    });
+  }
+
+  test("bar is hidden from 700 px and in print", async ({ page }) => {
+    const slug = authoredEvents[0]!.slug;
+    const bar = page.getByRole("navigation", { name: "Event actions" });
+    await page.setViewportSize({ width: 700, height: 900 });
+    await page.goto(`/events/${slug}`);
+    await expect(bar).toBeHidden();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(bar).toBeVisible();
+    await page.emulateMedia({ media: "print" });
+    await expect(bar).toBeHidden();
   });
 });

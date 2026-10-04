@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { ThreeStage } from "@/components/motion/three-stage";
 import { useVisualEffectLifecycle } from "@/components/motion/use-visual-effect-lifecycle";

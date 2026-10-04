@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import imageLoader, { indexBySource } from "./image-loader";
+import imageLoader, { indexBySource, srcSetFor } from "./image-loader";
 import { media } from "@/content/media";
 
 type ManifestVariant = { width: number; format: string; bytes: number };
@@ -152,5 +152,27 @@ describe("the variant chosen at each declared width", () => {
     ]);
 
     expect(index.get("/media/tied.jpg")?.[0]?.src).toBe("/media/tied-480.avif");
+  });
+});
+
+describe("the srcset a slot advertises", () => {
+  it("lists each real width once, by its true width", () => {
+    expect(srcSetFor(media["nate.duotone"].src)).toBe(
+      "/media/nate-duotone-480.webp 480w, /media/nate-duotone-651.webp 651w",
+    );
+  });
+
+  it("is absent for a source with no derivative", () => {
+    expect(srcSetFor(media["nate.chip"].src)).toBeUndefined();
+  });
+
+  it("never claims a width a file does not have", () => {
+    for (const [slot, asset] of Object.entries(media)) {
+      for (const entry of srcSetFor(asset.src)?.split(", ") ?? []) {
+        const [src, descriptor] = entry.split(" ");
+        const variant = asset.srcSet.find((v) => v.src === src);
+        expect(`${variant?.width}w`, `${slot}: ${entry}`).toBe(descriptor);
+      }
+    }
   });
 });

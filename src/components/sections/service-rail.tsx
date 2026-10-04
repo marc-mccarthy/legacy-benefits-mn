@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import Link from "next/link";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { LitWords } from "@/components/motion/lit-words";
 import { Container, Section } from "@/components/ui/section";
 import { media } from "@/content/media";

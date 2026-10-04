@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { ContactForm } from "@/components/forms/contact-form";
 import { CalendlyInline } from "@/components/integrations/calendly";
 import { Container, Prose, Section } from "@/components/ui/section";

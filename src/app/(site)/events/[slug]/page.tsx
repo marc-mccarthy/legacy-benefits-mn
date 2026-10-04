@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CalendarPlus, MapPin } from "lucide-react";
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Container, Prose, Section } from "@/components/ui/section";

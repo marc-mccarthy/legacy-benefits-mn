@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import Link from "next/link";
 import { Card, CardBody } from "@/components/ui/card";
 import { Container, Section, type Scheme } from "@/components/ui/section";

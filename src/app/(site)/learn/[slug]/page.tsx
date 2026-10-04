@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { notFound } from "next/navigation";
 import { PageBand } from "@/components/sections/page-band";
 import { Container, Prose, Section } from "@/components/ui/section";

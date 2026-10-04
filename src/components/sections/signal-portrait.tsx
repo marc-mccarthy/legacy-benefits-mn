@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { useVisualEffectLifecycle } from "@/components/motion/use-visual-effect-lifecycle";

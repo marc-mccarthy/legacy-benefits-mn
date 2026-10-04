@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/card";
 import { Morph } from "@/components/motion/morph";

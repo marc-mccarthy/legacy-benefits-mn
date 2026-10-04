@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { mediaProps } from "@/lib/media";
 

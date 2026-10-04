@@ -80,7 +80,7 @@ test.describe("the service band", () => {
     ).toHaveCount(authoredServices.length);
   });
 
-  for (const width of [1440, 1920]) {
+  for (const width of [390, 1440, 1920]) {
     test(`item 23a: arrows page the rail at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/");
@@ -170,7 +170,7 @@ test.describe("the service band", () => {
       .toBeGreaterThan(before);
   });
 
-  test("item 23d: below 700 px and in print the rail is a vertical stack", async ({
+  test("item 23d: the rail scrolls sideways at every width and stacks in print", async ({
     page,
   }) => {
     const lefts = () =>
@@ -182,24 +182,18 @@ test.describe("the service band", () => {
     const overflowX = () =>
       page.locator(RAIL).evaluate((el) => getComputedStyle(el).overflowX);
 
-    await page.setViewportSize({ width: 699, height: 900 });
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
-    expect(await overflowX()).not.toBe("auto");
-    expect(new Set(await lefts()).size).toBe(1);
+    expect(await overflowX()).toBe("auto");
+    expect(new Set(await lefts()).size).toBeGreaterThan(1);
 
-    await page.setViewportSize({ width: 700, height: 900 });
+    await page.setViewportSize({ width: 1440, height: 900 });
     expect(await overflowX()).toBe("auto");
     expect(new Set(await lefts()).size).toBeGreaterThan(1);
 
     await page.emulateMedia({ media: "print" });
     expect(await overflowX()).not.toBe("auto");
     expect(new Set(await lefts()).size).toBe(1);
-  });
-
-  test("item 23e: no arrows at 390", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/");
-    await expect(page.locator(CONTROLS)).toHaveCount(0);
   });
 
   for (const javaScriptEnabled of [true, false]) {

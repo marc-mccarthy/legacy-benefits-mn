@@ -60,7 +60,7 @@ export function Footer({
         />
       </Container>
 
-      <Container className="grid grid-cols-1 gap-10 py-(--spacing-large) md:grid-cols-3">
+      <Container className="grid grid-cols-2 gap-x-6 gap-y-10 py-(--spacing-medium) md:grid-cols-3 md:gap-x-10 md:py-(--spacing-large)">
         <div className="space-y-2">
           <BrandLockup name={brand} />
           {address ? (
@@ -99,7 +99,7 @@ export function Footer({
           </ul>
         </nav>
 
-        <div className="text-muted space-y-2">
+        <div className="text-muted col-span-2 space-y-2 md:col-span-1">
           {npn ? <p>National Producer Number: {npn}</p> : null}
           {stateLicenses?.length ? (
             <p>

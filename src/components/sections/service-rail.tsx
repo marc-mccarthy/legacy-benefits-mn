@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ThreeStage } from "@/components/motion/three-stage";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import type { ServiceItem } from "@/components/sections/service-grid";
+import { media } from "@/content/media";
 
 const PLAN_FIT = [
   {
@@ -28,10 +30,10 @@ const PLAN_FIT = [
 
 const RAIL_ID = "services-rail";
 
-const GLASS: Record<string, string> = {
-  "medicare-advantage": "knot",
-  "medicare-supplement": "shield",
-  "part-d": "prism",
+const GLASS: Record<string, { key: string; still: string }> = {
+  "medicare-advantage": { key: "knot", still: "glass.partC" },
+  "medicare-supplement": { key: "shield", still: "glass.medigap" },
+  "part-d": { key: "prism", still: "glass.partD" },
 };
 
 const arrowClass =
@@ -124,39 +126,52 @@ export function ServiceRail({
         className="mt-(--spacing-medium)"
         fallback={
           <ul ref={railRef} id={RAIL_ID} data-rail="">
-            {services.map((service) => (
-              <li
-                key={service.id}
-                id={service.slug}
-                data-rail-card=""
-                onFocus={(event) =>
-                  event.currentTarget.scrollIntoView({
-                    block: "nearest",
-                    inline: "nearest",
-                    behavior: reduced ? "auto" : "smooth",
-                  })
-                }
-              >
-                <div data-card-window={GLASS[service.slug] ?? ""}>
-                  <div data-card-orb="" />
-                </div>
-                <div className="space-y-3 p-6">
-                  <h3 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em]">
-                    {service.title}
-                  </h3>
-                  <p className="text-muted leading-relaxed text-pretty">
-                    {service.summary}
-                  </p>
-                  <Link
-                    href={`/services/${service.slug}`}
-                    className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
-                  >
-                    Learn more
-                    <span className="sr-only"> about {service.title}</span>
-                  </Link>
-                </div>
-              </li>
-            ))}
+            {services.map((service) => {
+              const glass = GLASS[service.slug];
+              const still = glass ? media[glass.still] : null;
+              return (
+                <li
+                  key={service.id}
+                  id={service.slug}
+                  data-rail-card=""
+                  onFocus={(event) =>
+                    event.currentTarget.scrollIntoView({
+                      block: "nearest",
+                      inline: "nearest",
+                      behavior: reduced ? "auto" : "smooth",
+                    })
+                  }
+                >
+                  <div data-card-window={glass?.key ?? ""}>
+                    {still ? (
+                      <Image
+                        data-card-still=""
+                        src={still.src}
+                        alt={still.alt}
+                        fill
+                        sizes="416px"
+                        className="object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="space-y-3 p-6">
+                    <h3 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em]">
+                      {service.title}
+                    </h3>
+                    <p className="text-muted leading-relaxed text-pretty">
+                      {service.summary}
+                    </p>
+                    <Link
+                      href={`/services/${service.slug}`}
+                      className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+                    >
+                      Learn more
+                      <span className="sr-only"> about {service.title}</span>
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         }
       />

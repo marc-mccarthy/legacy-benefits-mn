@@ -205,6 +205,27 @@ export const media: Record<string, MediaAsset> = {
     alt: "Studio lighting map",
     srcSet: [],
   },
+  "glass.partC": {
+    src: "/media/glass-part-c.webp",
+    width: 900,
+    height: 562,
+    alt: "A glass torus knot lit gold and cyan",
+    srcSet: [],
+  },
+  "glass.medigap": {
+    src: "/media/glass-medigap.webp",
+    width: 900,
+    height: 562,
+    alt: "A glass shield lit gold and cyan",
+    srcSet: [],
+  },
+  "glass.partD": {
+    src: "/media/glass-part-d.webp",
+    width: 900,
+    height: 562,
+    alt: "A faceted glass prism lit gold and cyan",
+    srcSet: [],
+  },
   "nate.duotone": {
     src: "/media/nate-duotone.jpg",
     width: 651,

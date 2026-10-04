@@ -1,13 +1,18 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PhoneLink } from "@/components/ui/phone-link";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { Reveal } from "@/components/motion/reveal";
 import { ThreeStage } from "@/components/motion/three-stage";
+import { media } from "@/content/media";
+import { mediaProps } from "@/lib/media";
 import { seededRandom } from "@/lib/random";
 import { cn } from "@/lib/utils";
 
 const STAR_COUNT = 40;
+
+const portrait = mediaProps(media["nate.duotone"]);
 
 const fallbackStars = (() => {
   const random = seededRandom(20261003);
@@ -80,6 +85,15 @@ export function CtaBand({
               "bg-ground-black shadow-[0_0_5rem_2.5rem_var(--color-ground-black)]",
           )}
         >
+          {isNightBand && portrait ? (
+            <Image
+              src={portrait.src}
+              alt="Nate Best"
+              width={160}
+              height={160}
+              className="ring-star-gold size-40 rounded-full object-cover object-top ring-[3px]"
+            />
+          ) : null}
           <h2 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em] text-balance">
             {heading}
           </h2>

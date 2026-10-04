@@ -38,13 +38,15 @@ export const homeBlocks: PageBlock[] = [
     body: "Turning 65, changing plans, or checking in every fall. Nate is here for each part of the year.",
   },
   {
-    blockType: "stats",
-    scheme: "dark",
-  },
-  {
     blockType: "eventCarousel",
     scheme: "light",
     heading: "Free workshops near you",
+  },
+  {
+    blockType: "learningGrid",
+    scheme: "light",
+    heading: "Learning Center",
+    intro: "Straight answers to the questions we get asked most.",
   },
   {
     blockType: "testimonials",
@@ -52,10 +54,8 @@ export const homeBlocks: PageBlock[] = [
     heading: "What clients say",
   },
   {
-    blockType: "learningGrid",
-    scheme: "light",
-    heading: "Learning Center",
-    intro: "Straight answers to the questions we get asked most.",
+    blockType: "stats",
+    scheme: "dark",
   },
   {
     blockType: "carrierStrip",

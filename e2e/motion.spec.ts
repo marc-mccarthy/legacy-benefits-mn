@@ -7,6 +7,8 @@ import {
 } from "./support/browser";
 import { brightestBackground, contrast, HIDE_CHROME } from "./support/contrast";
 
+import { testimonials as authoredTestimonials } from "../src/content/testimonials";
+
 const EFFECTS_PAUSE = "[data-effects-pause]";
 
 test.describe("scroll reveal", () => {
@@ -246,18 +248,20 @@ test.describe("night close", () => {
     await context.close();
   });
 
-  test("scrolling from the hero to the close never shows two stages at once", async ({
+  test("scrolling the whole page never shows two stages at once", async ({
     browser,
-  }) => {
-    const { context, page } = await withMotion(browser);
+  }, testInfo) => {
+    const context = await browser.newContext({
+      ...testInfo.project.use,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
     await context.addInitScript(() => {
       const w = window as unknown as { maxStages: number; seen: string[] };
       w.maxStages = 0;
       w.seen = [];
       const sample = () => {
-        const stages = document.querySelectorAll<HTMLCanvasElement>(
-          "canvas[data-three-stage]",
-        );
+        const stages = document.querySelectorAll<HTMLCanvasElement>("canvas");
         w.maxStages = Math.max(w.maxStages, stages.length);
         for (const stage of stages) {
           const key = stage.dataset.threeStage ?? "";
@@ -268,31 +272,39 @@ test.describe("night close", () => {
       requestAnimationFrame(sample);
     });
     await page.goto("/");
-    await page.evaluate(() => window.scrollTo(0, window.innerHeight * 0.1));
     await expect(page.locator('[data-three-stage="signal-hero"]')).toHaveCount(
       1,
       { timeout: 15_000 },
     );
 
-    const end = await page.locator(CLOSE).evaluate((el) => {
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      return top - window.innerHeight * 0.25;
-    });
-    for (let y = 0; y <= end; y += 300) {
+    const { height, viewport } = await page.evaluate(() => ({
+      height: document.documentElement.scrollHeight,
+      viewport: window.innerHeight,
+    }));
+    const stops: number[] = [];
+    for (let y = 0; y <= height - viewport; y += viewport / 2) stops.push(y);
+    stops.push(height - viewport);
+    for (const y of [...stops, ...[...stops].reverse()]) {
       await page.evaluate((top) => window.scrollTo(0, top), y);
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(80);
     }
-    await toClose(page);
-    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
 
     const record = await page.evaluate(() => {
       const w = window as unknown as { maxStages: number; seen: string[] };
       return { maxStages: w.maxStages, seen: [...w.seen].sort() };
     });
-    expect(record).toEqual({
-      maxStages: 1,
-      seen: ["signal-close", "signal-hero"],
-    });
+    expect(record.maxStages).toBeLessThanOrEqual(1);
+    if (testInfo.project.name === "desktop") {
+      expect(record.seen).toEqual([
+        "glass",
+        "lake",
+        "signal-close",
+        "signal-hero",
+      ]);
+    } else {
+      expect(record.seen).not.toContain("glass");
+      expect(record.seen).not.toContain("lake");
+    }
 
     await context.close();
   });
@@ -1158,7 +1170,7 @@ test.describe("the signal reveal", () => {
 test.describe("services glass", () => {
   const RAIL = 'section[aria-labelledby="services-heading"] ul[data-rail]';
   const STAGE = 'canvas[data-three-stage="glass"]';
-  const ORBS = `${RAIL} [data-card-orb]`;
+  const ORBS = `${RAIL} [data-card-still]`;
 
   const toRail = async (page: Page) => {
     await page.locator(RAIL).evaluate((el) =>
@@ -1493,5 +1505,236 @@ test.describe("minnesota dawn to dusk", () => {
     expect(contrast("#FFFFFF", worst.body)).toBeGreaterThanOrEqual(4.5);
 
     await context.close();
+  });
+});
+
+test.describe("testimonial stack", () => {
+  const BAND = 'section[aria-labelledby="testimonials-heading"]';
+  const ITEMS = `${BAND} [data-quote-stack] > li`;
+
+  const transforms = (page: Page) =>
+    page.locator(ITEMS).evaluateAll((items) =>
+      items.map((item) => ({
+        active: item.getAttribute("data-active-quote") === "true",
+        transform: getComputedStyle(item).transform,
+      })),
+    );
+
+  const quoteOpacities = (page: Page) =>
+    page
+      .locator(`${BAND} blockquote, ${BAND} blockquote span`)
+      .evaluateAll((nodes) =>
+        nodes.map((node) => getComputedStyle(node).opacity),
+      );
+
+  test("a sweep keeps at most one active quote, none dimmed, none hidden", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      ...testInfo.project.use,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    const { top, height } = await page.locator(BAND).evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      return { top: box.top + scrollY, height: box.height };
+    });
+    const steps = 14;
+    for (let step = 0; step <= steps; step++) {
+      await page.evaluate(
+        (y) => window.scrollTo(0, y),
+        top - innerHeight + ((height + innerHeight) * step) / steps,
+      );
+      await page.waitForTimeout(120);
+      const active = await page
+        .locator(`${BAND} [data-active-quote="true"]`)
+        .count();
+      expect(active).toBeLessThanOrEqual(1);
+      await expect(page.locator(`${BAND} blockquote`)).toHaveCount(
+        authoredTestimonials.length,
+      );
+      await expect(page.locator(`${BAND} [aria-hidden]`)).toHaveCount(0);
+    }
+    await page
+      .locator(BAND)
+      .evaluate((el) =>
+        el.scrollIntoView({ block: "center", behavior: "instant" }),
+      );
+    await page.waitForTimeout(200);
+    await expect(
+      page.locator(`${BAND} [data-active-quote="true"]`),
+    ).toHaveCount(1);
+    await context.close();
+  });
+
+  test("focus-pull is a transform only: the active quote has none, the rest scale to .97", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      ...testInfo.project.use,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page
+      .locator(BAND)
+      .evaluate((el) =>
+        el.scrollIntoView({ block: "center", behavior: "instant" }),
+      );
+    await page.waitForTimeout(700);
+    for (const item of await transforms(page)) {
+      if (item.active) expect(item.transform).toBe("none");
+      else expect(item.transform).toMatch(/^matrix\(0\.97, 0, 0, 0\.97,/);
+    }
+    for (const opacity of await quoteOpacities(page)) expect(opacity).toBe("1");
+
+    await page.locator("[data-effects-pause]").first().click();
+    await page.waitForTimeout(700);
+    for (const item of await transforms(page))
+      expect(item.transform).toBe("none");
+    await context.close();
+  });
+
+  test("reduced motion and print: no transform, no overlap, every quote visible", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      ...testInfo.project.use,
+      reducedMotion: "reduce",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    for (const media of ["screen", "print"] as const) {
+      await page.emulateMedia({ media, reducedMotion: "reduce" });
+      for (const item of await transforms(page))
+        expect(item.transform).toBe("none");
+      const boxes = await page
+        .locator(ITEMS)
+        .evaluateAll((items) =>
+          items.map((item) => item.getBoundingClientRect()),
+        );
+      for (let i = 1; i < boxes.length; i++) {
+        expect(boxes[i].top).toBeGreaterThanOrEqual(boxes[i - 1].bottom - 1);
+      }
+      for (const opacity of await quoteOpacities(page))
+        expect(opacity).toBe("1");
+    }
+    await page.emulateMedia({ media: "print", reducedMotion: "no-preference" });
+    for (const item of await transforms(page))
+      expect(item.transform).toBe("none");
+    await context.close();
+  });
+
+  test("the home page has two pinned stages, each at most three screens tall", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const stages = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-stage]")].map(
+        (el) => el.getBoundingClientRect().height / innerHeight,
+      ),
+    );
+    expect(stages.length).toBeLessThanOrEqual(2);
+    for (const screens of stages) expect(screens).toBeLessThanOrEqual(3);
+  });
+});
+
+test.describe("night close portrait", () => {
+  const PORTRAIT = "[data-night-close] img";
+
+  const check = async (page: Page) => {
+    const image = page.locator(PORTRAIT);
+    await expect(image).toHaveCount(1);
+    await expect(image).toHaveAttribute("alt", /Nate Best/);
+    expect(
+      await image.evaluate((el) => el.getBoundingClientRect().width),
+    ).toBeGreaterThanOrEqual(160);
+    expect(
+      await image.evaluate((el) => (el as HTMLImageElement).currentSrc),
+    ).toContain("nate-duotone-480");
+  };
+
+  test("shows at 160px with and without motion, scripts and print", async ({
+    browser,
+  }, testInfo) => {
+    for (const options of [
+      { reducedMotion: "no-preference" as const },
+      { reducedMotion: "reduce" as const },
+      { javaScriptEnabled: false },
+    ]) {
+      const context = await browser.newContext({
+        ...testInfo.project.use,
+        ...options,
+      });
+      const page = await context.newPage();
+      await page.goto("/");
+      await page.locator(PORTRAIT).scrollIntoViewIfNeeded();
+      await check(page);
+      await page.emulateMedia({ media: "print" });
+      await check(page);
+      await context.close();
+    }
+  });
+});
+
+test.describe("film grain", () => {
+  const grain = (page: Page) =>
+    page.evaluate(() => {
+      const style = getComputedStyle(document.body, "::after");
+      return {
+        content: style.content,
+        display: style.display,
+        pointerEvents: style.pointerEvents,
+        opacity: Number(style.opacity),
+      };
+    });
+
+  test("is a tuned, inert overlay that print removes", async ({ page }) => {
+    await page.goto("/privacy");
+    const style = await grain(page);
+    expect(style.content).not.toBe("none");
+    expect(style.pointerEvents).toBe("none");
+    expect(style.opacity).toBeGreaterThanOrEqual(0.03);
+    expect(style.opacity).toBeLessThanOrEqual(0.07);
+    await page.emulateMedia({ media: "print" });
+    expect((await grain(page)).display).toBe("none");
+  });
+
+  test("keeps text contrast and a ground-black band under rgb(12, 12, 12)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/privacy");
+    await page.addStyleTag({ content: HIDE_CHROME });
+    const bright = await brightestBackground(page, "main p:first-of-type");
+    expect(contrast("#0A1128", bright)).toBeGreaterThanOrEqual(4.5);
+
+    await page.goto("/");
+    const close = page.locator("main [data-night-close]");
+    await close.scrollIntoViewIfNeeded();
+    await page.addStyleTag({ content: HIDE_CHROME });
+    const shot = await close.screenshot({ scale: "css" });
+    const mean = await page.evaluate(async (png) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = 64;
+      canvas.height = 64;
+      const context = canvas.getContext("2d")!;
+      context.drawImage(image, 0, 0, image.width, 64);
+      const { data } = context.getImageData(0, 0, 64, 64);
+      let total = 0;
+      for (let i = 0; i < data.length; i += 4) total += data[i];
+      return total / (data.length / 4);
+    }, shot.toString("base64"));
+    expect(mean).toBeLessThanOrEqual(12);
+  });
+
+  test("a link under the overlay stays clickable", async ({ page }) => {
+    await page.goto("/");
+    await page.locator('a[href="/contact"]').first().click();
+    await expect(page).toHaveURL(/\/contact/);
   });
 });

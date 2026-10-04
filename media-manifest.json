@@ -1067,6 +1067,138 @@
       "usage": "commercial",
       "query": null,
       "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "glass.partC",
+      "lane": "generated-three",
+      "file": "public/media/glass-part-c.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 900,
+        "height": 562
+      },
+      "alt": "A glass torus knot lit gold and cyan",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Claude Code",
+        "provider": "generated-three",
+        "id": "glass-part-c",
+        "pageUrl": null,
+        "downloadUrl": "public/media/glass-part-c.webp"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rendered from the site's three.js glass scene (owner-commissioned); no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "three.js render of the glass scene"
+    },
+    {
+      "slot": "glass.medigap",
+      "lane": "generated-three",
+      "file": "public/media/glass-medigap.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 900,
+        "height": 562
+      },
+      "alt": "A glass shield lit gold and cyan",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Claude Code",
+        "provider": "generated-three",
+        "id": "glass-medigap",
+        "pageUrl": null,
+        "downloadUrl": "public/media/glass-medigap.webp"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rendered from the site's three.js glass scene (owner-commissioned); no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "three.js render of the glass scene"
+    },
+    {
+      "slot": "glass.partD",
+      "lane": "generated-three",
+      "file": "public/media/glass-part-d.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 900,
+        "height": 562
+      },
+      "alt": "A faceted glass prism lit gold and cyan",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Claude Code",
+        "provider": "generated-three",
+        "id": "glass-part-d",
+        "pageUrl": null,
+        "downloadUrl": "public/media/glass-part-d.webp"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rendered from the site's three.js glass scene (owner-commissioned); no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "three.js render of the glass scene"
     }
   ]
 }

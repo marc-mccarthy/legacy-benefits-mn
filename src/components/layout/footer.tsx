@@ -41,7 +41,7 @@ export function Footer({
       data-scheme="dark"
       className="bg-surface text-on-surface border-border-subtle mt-auto border-t"
     >
-      <Container className="space-y-4 py-(--spacing-medium)">
+      <Container className="space-y-4 py-6 md:py-(--spacing-medium)">
         {phone ? (
           <p className="flex items-center gap-(--spacing-micro)">
             <a
@@ -60,7 +60,7 @@ export function Footer({
         />
       </Container>
 
-      <Container className="grid grid-cols-2 gap-x-6 gap-y-10 py-(--spacing-medium) md:grid-cols-3 md:gap-x-10 md:py-(--spacing-large)">
+      <Container className="grid grid-cols-2 gap-x-6 gap-y-6 py-6 md:grid-cols-3 md:gap-x-10 md:gap-y-10 md:py-(--spacing-large)">
         <div className="space-y-2">
           <BrandLockup name={brand} />
           {address ? (
@@ -114,7 +114,7 @@ export function Footer({
       </Container>
 
       <div className="border-border-subtle border-t">
-        <Container className="py-(--spacing-medium)">
+        <Container className="py-6 md:py-(--spacing-medium)">
           <p className="text-muted">
             © {year} {brand}. All rights reserved.
           </p>

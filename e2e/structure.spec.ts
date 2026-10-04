@@ -1117,7 +1117,7 @@ test.describe("the signal band", () => {
     await page.mouse.move(box.x + 20, box.y + 20);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.addStyleTag({
-      content: `${SIGNAL} h2 { visibility: hidden !important; }`,
+      content: `${SIGNAL} h2 { visibility: hidden !important; } ${HIDE_CHROME}`,
     });
     const brightest = await brightestBackground(page, `${SIGNAL} h2`);
     expect(contrastRatio("#FFFFFF", brightest)).toBeGreaterThanOrEqual(4.5);

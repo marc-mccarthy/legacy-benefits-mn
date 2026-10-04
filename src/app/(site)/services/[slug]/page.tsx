@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CtaBand } from "@/components/sections/cta-band";
+import { PageBand } from "@/components/sections/page-band";
 import { RichTextBody } from "@/components/sections/rich-text";
 import { TpmoDisclaimer } from "@/components/compliance/disclosures";
 import { Container, Prose, Section } from "@/components/ui/section";
@@ -34,12 +35,10 @@ export default async function ServiceDetailPage({ params }: Props) {
 
   return (
     <>
+      <PageBand title={doc.title} />
       <Section>
         <Container>
           <Prose className="space-y-6">
-            <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
-              {doc.title}
-            </h1>
             <p className="lead text-muted text-lg leading-relaxed">
               {doc.summary}
             </p>

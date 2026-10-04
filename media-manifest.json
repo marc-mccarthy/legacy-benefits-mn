@@ -1069,6 +1069,50 @@
       "fetchedBy": "antigravity"
     },
     {
+      "slot": "band.loop",
+      "lane": "generated-antigravity",
+      "file": "public/video/mn-blue-hour-loop.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A Minnesota lake in the blue hour after sunset",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "mn-blue-hour-loop",
+        "pageUrl": null,
+        "downloadUrl": "public/video/mn-blue-hour-loop.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Muted H.264 seamless crossfade loop of a graded CC0 blue-hour plate, played behind the inform page header bands; no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
       "slot": "glass.partC",
       "lane": "generated-three",
       "file": "public/media/glass-part-c.webp",

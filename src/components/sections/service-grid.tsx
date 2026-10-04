@@ -19,17 +19,13 @@ export function ServiceGrid({
   intro,
   services,
   scheme = "light",
-  headingLevel = "h2",
 }: {
   heading?: string | null;
   intro?: string | null;
   services: ServiceItem[];
   scheme?: Scheme;
-  headingLevel?: "h1" | "h2";
 }) {
   if (services.length === 0) return null;
-
-  const Heading = headingLevel;
 
   return (
     <Section
@@ -38,16 +34,12 @@ export function ServiceGrid({
       className="py-0"
     >
       <Container className="bg-surface sticky top-0 z-10 max-w-2xl space-y-4 pt-(--spacing-large) pb-(--spacing-medium) md:pt-(--spacing-big)">
-        <Heading
+        <h2
           id="services-heading"
-          className={
-            headingLevel === "h1"
-              ? "font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]"
-              : "font-display text-(length:--text-display-lg)"
-          }
+          className="font-display text-(length:--text-display-lg)"
         >
           {heading ?? "How we help"}
-        </Heading>
+        </h2>
         {intro ? <LitWords className="lead text-lg">{intro}</LitWords> : null}
       </Container>
 

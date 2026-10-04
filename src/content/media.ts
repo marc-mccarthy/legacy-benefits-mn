@@ -390,4 +390,11 @@ export const media: Record<string, MediaAsset> = {
     alt: "A Minnesota lake moving from dawn to dusk",
     srcSet: [],
   },
+  "band.loop": {
+    src: "/video/mn-blue-hour-loop.mp4",
+    width: 1920,
+    height: 1080,
+    alt: "A Minnesota lake in the blue hour after sunset",
+    srcSet: [],
+  },
 };

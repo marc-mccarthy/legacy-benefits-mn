@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { PageBand } from "@/components/sections/page-band";
 import { Container, Prose, Section } from "@/components/ui/section";
 import { RichTextBody } from "@/components/sections/rich-text";
 import { JsonLd, articleSchema } from "@/components/seo/json-ld";
@@ -35,54 +36,54 @@ export default async function ArticlePage({ params }: Props) {
   const Body = doc.Body;
 
   return (
-    <Section>
-      <JsonLd
-        data={articleSchema({
-          title: doc.title,
-          description: doc.excerpt,
-          slug: doc.slug,
-          publishedAt: doc.publishedAt,
-        })}
-      />
-      <Container>
-        <Prose className="space-y-6">
-          <p className="text-muted tabular text-base">
-            <time dateTime={doc.publishedAt}>
-              {formatDate(doc.publishedAt)}
-            </time>
-          </p>
-          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
-            {doc.title}
-          </h1>
-          <p className="lead text-muted text-lg leading-relaxed">
-            {doc.excerpt}
-          </p>
+    <>
+      <PageBand title={doc.title} />
+      <Section>
+        <JsonLd
+          data={articleSchema({
+            title: doc.title,
+            description: doc.excerpt,
+            slug: doc.slug,
+            publishedAt: doc.publishedAt,
+          })}
+        />
+        <Container>
+          <Prose className="space-y-6">
+            <p className="text-muted tabular text-base">
+              <time dateTime={doc.publishedAt}>
+                {formatDate(doc.publishedAt)}
+              </time>
+            </p>
+            <p className="lead text-muted text-lg leading-relaxed">
+              {doc.excerpt}
+            </p>
 
-          {cover ? (
-            <Morph kind="learn" slug={doc.slug}>
-              <Image
-                src={cover.src}
-                alt={cover.alt}
-                width={cover.width}
-                height={cover.height}
-                sizes="(min-width: 1024px) 52rem, 100vw"
-                className="w-full rounded-(--radius-card)"
-                priority
-              />
-            </Morph>
-          ) : null}
+            {cover ? (
+              <Morph kind="learn" slug={doc.slug}>
+                <Image
+                  src={cover.src}
+                  alt={cover.alt}
+                  width={cover.width}
+                  height={cover.height}
+                  sizes="(min-width: 1024px) 52rem, 100vw"
+                  className="w-full rounded-(--radius-card)"
+                  priority
+                />
+              </Morph>
+            ) : null}
 
-          <RichTextBody>
-            <Body />
-          </RichTextBody>
+            <RichTextBody>
+              <Body />
+            </RichTextBody>
 
-          <TpmoDisclaimer
-            className="text-muted border-border-subtle border-t pt-6 leading-relaxed"
-            orgCount={site.compliance.orgCount ?? undefined}
-            planCount={site.compliance.planCount ?? undefined}
-          />
-        </Prose>
-      </Container>
-    </Section>
+            <TpmoDisclaimer
+              className="text-muted border-border-subtle border-t pt-6 leading-relaxed"
+              orgCount={site.compliance.orgCount ?? undefined}
+              planCount={site.compliance.planCount ?? undefined}
+            />
+          </Prose>
+        </Container>
+      </Section>
+    </>
   );
 }

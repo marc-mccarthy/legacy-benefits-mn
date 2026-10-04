@@ -76,7 +76,6 @@ export function LearningGrid({
   scheme = "muted",
   showFilters = false,
   activeType,
-  headingLevel = "h2",
 }: {
   heading?: string | null;
   intro?: string | null;
@@ -84,24 +83,17 @@ export function LearningGrid({
   scheme?: Scheme;
   showFilters?: boolean;
   activeType?: string;
-  headingLevel?: "h1" | "h2";
 }) {
-  const Heading = headingLevel;
-
   return (
     <Section scheme={scheme} aria-labelledby="learn-heading">
       <Container className="space-y-8">
         <Reveal className="max-w-2xl space-y-4">
-          <Heading
+          <h2
             id="learn-heading"
-            className={
-              headingLevel === "h1"
-                ? "font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]"
-                : "font-display text-(length:--text-display-lg)"
-            }
+            className="font-display text-(length:--text-display-lg)"
           >
             {heading ?? "Learning center"}
-          </Heading>
+          </h2>
           {intro ? <p className="lead text-muted text-lg">{intro}</p> : null}
         </Reveal>
 

@@ -1,3 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <path fill-rule="evenodd" d="M15,45 L50,15 L85,45 L85,85 L15,85 Z M15,43 L50,51 L85,43 L85,47 L76,55 L67,49 L58,58 L50,62 L42,58 L33,49 L24,55 L15,47 Z" fill="#FFFFFF" transform="rotate(4 50 50)"/>
+  <rect x="22" y="8" width="56" height="56" rx="1" fill="#F7F9FA"/>
+  <path d="M29,17 H58 M29,24 H71 M29,30 H68 M29,36 H71 M29,42 H52" stroke="#8C98A8" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M10,46 L17,41 L23,47 L30,42 L37,48 L44,43 L51,48 L58,42 L65,47 L72,41 L79,46 L85,42 L90,45 L90,90 L10,90 Z" fill="#E9EDF1" stroke="#AEB8C4" stroke-width="0.8" stroke-linejoin="round"/>
+  <path d="M10,90 L50,64 L90,90" fill="none" stroke="#AEB8C4" stroke-width="0.8" stroke-linejoin="round"/>
 </svg>

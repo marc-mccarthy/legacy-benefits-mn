@@ -1,4 +1,4 @@
-export type SceneKey = "signal-hero" | "signal-close" | "glass" | "lake";
+export type SceneKey = "signal-hero" | "signal-close" | "glass";
 
 export type SceneHandle = {
   setRunning(on: boolean): void;
@@ -8,5 +8,5 @@ export type SceneHandle = {
 
 export type SceneFactory = (
   canvas: HTMLCanvasElement,
-  opts: { reducedQuality: boolean },
+  opts: { reducedQuality: boolean; settled?: boolean },
 ) => Promise<SceneHandle>;

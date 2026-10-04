@@ -11,7 +11,6 @@ const sceneLoaders: Record<SceneKey, () => Promise<{ default: SceneFactory }>> =
     "signal-hero": () => import("./scenes/signal-hero"),
     "signal-close": () => import("./scenes/signal-close"),
     glass: () => import("./scenes/glass"),
-    lake: () => import("./scenes/lake"),
   };
 
 const CANVAS_CLASS =
@@ -21,6 +20,7 @@ type ThreeStageProps = {
   scene: SceneKey;
   fallback: ReactNode;
   active?: boolean;
+  settled?: boolean;
   fineOnly?: boolean;
   className?: string;
 };
@@ -29,27 +29,35 @@ export function ThreeStage({
   scene,
   fallback,
   active = true,
+  settled = false,
   fineOnly = false,
   className,
 }: ThreeStageProps) {
   const id = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<SceneHandle | null>(null);
+  const settledRef = useRef(settled);
   const [broken, setBroken] = useState(false);
+  const [ready, setReady] = useState(false);
   const { mounted, reduced, paused, onscreen, tabVisible, finePointer } =
     useVisualEffectLifecycle(rootRef);
-  const live =
+  const eligible =
     active &&
     !broken &&
     mounted &&
     !reduced &&
     !paused &&
-    onscreen &&
     (!fineOnly || finePointer);
+  const live = eligible && onscreen;
+  const pending = !mounted || (eligible && !ready);
 
   useEffect(() => {
     handleRef.current?.setRunning(tabVisible);
   }, [tabVisible]);
+
+  useEffect(() => {
+    settledRef.current = settled;
+  }, [settled]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -80,7 +88,10 @@ export function ThreeStage({
       try {
         const { default: create } = await sceneLoaders[scene]();
         if (disposed) return;
-        const created = await create(canvas, { reducedQuality: !finePointer });
+        const created = await create(canvas, {
+          reducedQuality: !finePointer,
+          settled: settledRef.current,
+        });
         if (disposed) {
           created.dispose();
           return;
@@ -88,6 +99,7 @@ export function ThreeStage({
         handle = created;
         handleRef.current = created;
         root.append(canvas);
+        setReady(true);
         resize();
         created.setRunning(!document.hidden);
         observer = new ResizeObserver(resize);
@@ -116,12 +128,17 @@ export function ThreeStage({
       canvas.remove();
       handle?.dispose();
       handleRef.current = null;
+      setReady(false);
       if (acquired) releaseWebGL(id);
     };
   }, [live, scene, finePointer, id]);
 
   return (
-    <div ref={rootRef} className={cn("relative", className)}>
+    <div
+      ref={rootRef}
+      data-stage-pending={pending || undefined}
+      className={cn("relative", className)}
+    >
       {fallback}
     </div>
   );

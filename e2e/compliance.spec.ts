@@ -21,7 +21,9 @@ test.describe("Medicare-required disclosures", () => {
           .getByText("We do not offer every plan available in your area")
           .first(),
       ).toBeVisible();
-      await expect(page.getByText("1-800-MEDICARE").first()).toBeVisible();
+      await expect(
+        page.getByText("1-800-MEDICARE").filter({ visible: true }).first(),
+      ).toBeVisible();
       await expect(
         page.getByText("not associated, endorsed, or authorized").first(),
       ).toBeVisible();

@@ -822,7 +822,7 @@ test.describe("the lake band", () => {
   const TRACK = "[data-lake-track]";
 
   for (const [name, viewport, screens] of [
-    ["desktop", { width: 1440, height: 900 }, 2],
+    ["desktop", { width: 1440, height: 900 }, 3],
     ["mobile", { width: 390, height: 844 }, 1.5],
   ] as const) {
     test(`follows the services band as a ${screens}-screen pinned track at ${name}`, async ({
@@ -857,7 +857,8 @@ test.describe("the lake band", () => {
 test.describe("the noise band", () => {
   const NOISE = "[data-noise]";
   const SHAPES = "img[data-noise-shape]";
-  const NOISE_OPACITY_CAP = 0.26;
+  const NOISE_OPACITY_FLOOR = 0.6;
+  const PIECES = 12;
 
   const withMotion = async (browser: import("@playwright/test").Browser) => {
     const context = await browser.newContext({
@@ -866,7 +867,7 @@ test.describe("the noise band", () => {
     return { context, page: await context.newPage() };
   };
 
-  test("under reduced motion: text visible, five hidden shapes, zero canvas", async ({
+  test("under reduced motion: text visible, twelve hidden paper pieces, zero canvas", async ({
     browser,
   }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
@@ -876,7 +877,7 @@ test.describe("the noise band", () => {
     await expect(page.locator(`${NOISE} h2`)).toBeVisible();
     await expect(page.locator(`${NOISE} p`)).toBeVisible();
     await expect(page.locator(`${NOISE} canvas`)).toHaveCount(0);
-    await expect(page.locator(SHAPES)).toHaveCount(5);
+    await expect(page.locator(SHAPES)).toHaveCount(PIECES);
     for (const shape of await page.locator(SHAPES).all()) {
       await expect(shape).toHaveAttribute("aria-hidden", "true");
       await expect(shape).toBeHidden();
@@ -899,7 +900,7 @@ test.describe("the noise band", () => {
     await context.close();
   });
 
-  test("with motion: shapes show at or below the opacity cap, and Pause hides them", async ({
+  test("with motion: shapes show clearly, at or above the opacity floor, and Pause hides them", async ({
     browser,
   }) => {
     const { context, page } = await withMotion(browser);
@@ -907,14 +908,13 @@ test.describe("the noise band", () => {
     await page.locator(NOISE).scrollIntoViewIfNeeded();
 
     const shapes = await page.locator(SHAPES).all();
-    expect(shapes).toHaveLength(5);
+    expect(shapes).toHaveLength(PIECES);
     for (const shape of shapes) {
       await expect(shape).toBeVisible();
       const opacity = await shape.evaluate((el) =>
         Number(getComputedStyle(el).opacity),
       );
-      expect(opacity).toBeLessThanOrEqual(NOISE_OPACITY_CAP);
-      expect(opacity).toBeGreaterThan(0);
+      expect(opacity).toBeGreaterThanOrEqual(NOISE_OPACITY_FLOOR);
     }
 
     await page.locator("[data-effects-pause]").first().click();
@@ -975,9 +975,9 @@ test.describe("the noise band", () => {
 
 test.describe("the signal band", () => {
   const SIGNAL = "[data-signal]";
-  const LAYERS = "[data-signal-duotone], [data-signal-colour]";
+  const PHOTO = "[data-signal-photo] img";
 
-  test("lays out the portrait at or below natural width and aspect", async ({
+  test("frames the photo of Nate and his daughter at or below natural width and aspect, ringed in gold", async ({
     browser,
   }) => {
     for (const width of [1440, 1920]) {
@@ -989,33 +989,27 @@ test.describe("the signal band", () => {
       await page.goto("/");
       await page.locator(SIGNAL).scrollIntoViewIfNeeded();
 
-      for (const [selector, natural] of [
-        ["[data-signal-duotone]", 651],
-        ["[data-signal-colour]", 600],
-      ] as const) {
-        const box = await page
-          .locator(selector)
-          .evaluate((el) => el.getBoundingClientRect().toJSON());
-        expect(box.width, `${selector} at ${width}`).toBeLessThanOrEqual(
-          natural,
-        );
-        expect(
-          Math.abs(box.width / box.height / (651 / 1229) - 1),
-        ).toBeLessThan(0.01);
-      }
+      const photo = page.locator(PHOTO);
+      await expect(photo).toHaveAttribute("alt", "Nate Best with his daughter");
+      const box = await photo.evaluate((el: HTMLElement) => ({
+        width: el.offsetWidth,
+        height: el.offsetHeight,
+      }));
+      expect(box.width, `photo at ${width}`).toBeLessThanOrEqual(920);
+      expect(Math.abs(box.width / box.height / (920 / 1150) - 1)).toBeLessThan(
+        0.01,
+      );
       await expect(page.locator(`${SIGNAL} h2`)).toHaveText(
         "You talk to Nate. Every time.",
       );
-
-      const masks = await page
-        .locator(LAYERS)
-        .evaluateAll((els) =>
-          els.map((el) => [
-            getComputedStyle(el).maskImage,
-            getComputedStyle(el).opacity,
-          ]),
-        );
-      for (const [mask] of masks) expect(mask).toContain("linear-gradient");
+      expect(
+        await page
+          .locator("[data-signal-photo]")
+          .evaluate((el) => getComputedStyle(el.parentElement!).boxShadow),
+      ).toContain("rgb(255, 192, 0)");
+      await expect(page.locator(`${SIGNAL} [data-signal-duotone]`)).toHaveCount(
+        0,
+      );
       await context.close();
     }
   });

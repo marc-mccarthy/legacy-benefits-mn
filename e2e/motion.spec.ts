@@ -300,15 +300,9 @@ test.describe("night close", () => {
     });
     expect(record.maxStages).toBeLessThanOrEqual(1);
     if (!testInfo.project.use.isMobile) {
-      expect(record.seen).toEqual([
-        "glass",
-        "lake",
-        "signal-close",
-        "signal-hero",
-      ]);
+      expect(record.seen).toEqual(["glass", "signal-close", "signal-hero"]);
     } else {
       expect(record.seen).not.toContain("glass");
-      expect(record.seen).not.toContain("lake");
     }
 
     await context.close();
@@ -539,7 +533,7 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("on load, without scrolling, the field converges and resolves into Nate's photo", async ({
+  test("on load, without scrolling, the field converges into Nate's photo and stays alive as gold dust", async ({
     browser,
   }) => {
     const { context, page } = await withMotion(browser);
@@ -554,15 +548,29 @@ test.describe("hero signal field", () => {
     await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true", {
       timeout: 6000,
     });
-    await expect(canvas).toHaveCount(0);
+    await expect(canvas).toHaveCount(1);
+    await expect(canvas).toHaveCSS("opacity", "1");
     await portraitShown(page);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
+    const before = await canvas.screenshot();
+    await page.waitForTimeout(600);
+    expect(
+      before.equals(await canvas.screenshot()),
+      "the dust halo keeps moving after the reveal",
+    ).toBe(false);
+
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(300);
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(1000);
     await expect(canvas).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(canvas).toHaveCount(1, { timeout: 15_000 });
+    expect(
+      await page
+        .locator(PORTRAIT)
+        .evaluate((img) => getComputedStyle(img).opacity),
+      "returning to the hero never hides Nate's photo again",
+    ).toBe("1");
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true");
     await portraitShown(page);
 
     await context.close();
@@ -626,7 +634,7 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("the largest contentful paint is the headline or Nate's portrait", async ({
+  test("the largest contentful paint is hero copy or Nate's portrait", async ({
     page,
   }) => {
     await page.goto("/");
@@ -649,7 +657,7 @@ test.describe("hero signal field", () => {
         }),
     );
 
-    expect(["H1|hero", "IMG|hero"]).toContain(lcp);
+    expect(["H1|hero", "P|hero", "IMG|hero"]).toContain(lcp);
   });
 
   test("on a phone, the call to action sits above the fold under the announcement bar", async ({
@@ -1257,24 +1265,37 @@ test.describe("lenis smooth scroll", () => {
 });
 
 test.describe("the signal reveal", () => {
-  const COLOUR = "[data-signal-colour]";
+  const PHOTO = "[data-signal-photo]";
 
-  const colourState = (page: Page) =>
-    page.locator(COLOUR).evaluate((el) => ({
-      opacity: getComputedStyle(el).opacity,
-      animationName: getComputedStyle(el).animationName,
-    }));
+  const photoState = (page: Page) =>
+    page.locator(PHOTO).evaluate((el) => {
+      const style = getComputedStyle(el);
+      return {
+        clipPath: style.clipPath,
+        filter: style.filter,
+        transform: style.transform,
+        opacity: style.opacity,
+      };
+    });
 
-  test("reduced motion, JS off and print show the colour photo with no animation", async ({
+  const STILL = {
+    clipPath: "none",
+    filter: "none",
+    transform: "none",
+    opacity: "1",
+  };
+
+  const irisRadius = (clipPath: string) =>
+    Number(/circle\(([\d.]+)%/.exec(clipPath)?.[1] ?? NaN);
+
+  test("reduced motion, JS off and print show the whole colour photo, unclipped", async ({
     browser,
   }) => {
     const reduced = await browser.newContext({ reducedMotion: "reduce" });
     const reducedPage = await reduced.newPage();
     await reducedPage.goto("/");
-    expect(await colourState(reducedPage)).toEqual({
-      opacity: "1",
-      animationName: "none",
-    });
+    await reducedPage.locator(PHOTO).scrollIntoViewIfNeeded();
+    expect(await photoState(reducedPage)).toEqual(STILL);
     await expect(reducedPage.locator("[data-signal] canvas")).toHaveCount(0);
     await reduced.close();
 
@@ -1284,16 +1305,24 @@ test.describe("the signal reveal", () => {
     });
     const noJsPage = await noJs.newPage();
     await noJsPage.goto("/");
+    expect(await photoState(noJsPage)).toEqual(STILL);
     await noJsPage.emulateMedia({ media: "print" });
-    expect(await colourState(noJsPage)).toEqual({
-      opacity: "1",
-      animationName: "none",
-    });
+    expect(await photoState(noJsPage)).toEqual(STILL);
     await expect(noJsPage.locator("[data-signal] canvas")).toHaveCount(0);
     await noJs.close();
+
+    const printed = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const printedPage = await printed.newPage();
+    await printedPage.goto("/");
+    await printedPage.locator(PHOTO).scrollIntoViewIfNeeded();
+    await printedPage.emulateMedia({ media: "print" });
+    expect(await photoState(printedPage)).toEqual(STILL);
+    await printed.close();
   });
 
-  test("Pause removes the reveal and leaves the colour photo visible", async ({
+  test("Pause removes the reveal and leaves the whole colour photo visible", async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -1306,14 +1335,12 @@ test.describe("the signal reveal", () => {
       "data-effects-paused",
       "",
     );
-    expect(await colourState(page)).toEqual({
-      opacity: "1",
-      animationName: "none",
-    });
+    await page.locator(PHOTO).scrollIntoViewIfNeeded();
+    expect(await photoState(page)).toEqual(STILL);
     await context.close();
   });
 
-  test("with motion the colour layer develops as the band scrolls to centre", async ({
+  test("with motion an iris opens on the photo as the band scrolls in, ending in full colour", async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -1322,21 +1349,30 @@ test.describe("the signal reveal", () => {
     });
     const page = await context.newPage();
     await page.goto("/");
-    const { top, height } = await page
-      .locator("[data-signal]")
+    const { top, bottom } = await page
+      .locator("[data-signal-frame]")
       .evaluate((el) => {
         const box = el.getBoundingClientRect();
-        return { top: box.top + window.scrollY, height: box.height };
+        return {
+          top: box.top + window.scrollY,
+          bottom: box.bottom + window.scrollY,
+        };
       });
-    await page.evaluate((y) => window.scrollTo(0, y), top - 890);
-    await page.waitForTimeout(300);
-    const entering = await colourState(page);
-    expect(entering.animationName).not.toBe("none");
-    expect(Number(entering.opacity)).toBeLessThan(1);
 
-    await page.evaluate((y) => window.scrollTo(0, y), top + height / 2 - 450);
-    await page.waitForTimeout(300);
-    expect(Number((await colourState(page)).opacity)).toBe(1);
+    await page.evaluate((y) => window.scrollTo(0, y), top - 900 * 0.6);
+    await expect
+      .poll(async () => irisRadius((await photoState(page)).clipPath))
+      .toBeGreaterThan(14);
+    const entering = await photoState(page);
+    expect(irisRadius(entering.clipPath)).toBeLessThan(60);
+    expect(entering.transform).not.toBe("none");
+    expect(entering.filter).toContain("saturate");
+
+    await page.evaluate((y) => window.scrollTo(0, y), bottom - 900 * 0.85);
+    await expect
+      .poll(async () => (await photoState(page)).clipPath)
+      .toBe("circle(100% at 48% 35%)");
+    expect((await photoState(page)).filter).toBe("saturate(1) brightness(1)");
     await context.close();
   });
 });
@@ -1476,7 +1512,7 @@ test.describe("services glass", () => {
 
 test.describe("minnesota dawn to dusk", () => {
   const TRACK = "[data-lake-track]";
-  const STAGE = 'canvas[data-three-stage="lake"]';
+  const SCRUB = `${TRACK} video[data-lake-scrub]`;
   const STILL = `${TRACK} img[data-lake-still]`;
   const VIDEO = `${TRACK} video`;
   const DESKTOP = { width: 1440, height: 900 };
@@ -1505,19 +1541,22 @@ test.describe("minnesota dawn to dusk", () => {
       window.scrollTo({ top: top + travel * p, behavior: "instant" });
     }, progress);
 
+  const scrubFraction = (page: Page) =>
+    page
+      .locator(SCRUB)
+      .evaluate(
+        (el) =>
+          (el as HTMLVideoElement).currentTime /
+          (el as HTMLVideoElement).duration,
+      );
+
   const settleAt = async (page: Page, progress: number) => {
     await toProgress(page, progress);
     await expect
-      .poll(
-        async () =>
-          Math.abs(
-            Number(
-              await page.locator(STAGE).getAttribute("data-lake-progress"),
-            ) - progress,
-          ),
-        { timeout: 10_000 },
-      )
-      .toBeLessThanOrEqual(0.02);
+      .poll(async () => Math.abs((await scrubFraction(page)) - progress), {
+        timeout: 10_000,
+      })
+      .toBeLessThanOrEqual(0.03);
   };
 
   const hideCopy = (page: Page) =>
@@ -1525,7 +1564,7 @@ test.describe("minnesota dawn to dusk", () => {
       content: `${HIDE_CHROME} ${TRACK} h2, ${TRACK} p { visibility: hidden !important; }`,
     });
 
-  test("reduced motion and JavaScript off show the dusk still and zero canvas", async ({
+  test("reduced motion and JavaScript off show the poster still and zero canvas", async ({
     browser,
   }) => {
     for (const options of [
@@ -1544,29 +1583,26 @@ test.describe("minnesota dawn to dusk", () => {
     }
   });
 
-  test("on a desktop the lake canvas mounts and its progress rises with scroll", async ({
+  test("on a desktop scroll scrubs the lake video from night to dusk", async ({
     browser,
   }) => {
     const { context, page } = await open(browser, DESKTOP);
     await toProgress(page, 0.1);
-    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
-    await expect(page.locator(STAGE)).toHaveAttribute("aria-hidden", "true");
-    await expect(page.locator("canvas[data-three-stage]")).toHaveCount(1);
+    await expect(page.locator(SCRUB)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator(SCRUB)).toHaveAttribute("aria-hidden", "true");
+    await expect(page.locator(SCRUB)).toHaveAttribute("preload", "metadata");
+    await expect(page.locator(`${TRACK} canvas`)).toHaveCount(0);
 
     await settleAt(page, 0.1);
-    const early = Number(
-      await page.locator(STAGE).getAttribute("data-lake-progress"),
-    );
+    const early = await scrubFraction(page);
     await settleAt(page, 0.9);
-    const late = Number(
-      await page.locator(STAGE).getAttribute("data-lake-progress"),
-    );
+    const late = await scrubFraction(page);
     expect(late).toBeGreaterThan(early);
 
     await context.close();
   });
 
-  test("at 390 the loop plays instead of a canvas", async ({ browser }) => {
+  test("at 390 the loop plays instead of the scrub", async ({ browser }) => {
     const { context, page } = await open(browser, PHONE);
     await toProgress(page, 0.2);
     await page.waitForTimeout(1500);
@@ -1620,16 +1656,16 @@ test.describe("minnesota dawn to dusk", () => {
     await context.close();
   });
 
-  test("white copy keeps AA over the brightest frame of the live grade", async ({
+  test("white copy keeps AA over the brightest frame of the desktop scrub", async ({
     browser,
   }) => {
     const { context, page } = await open(browser, DESKTOP);
     await toProgress(page, 0);
-    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator(SCRUB)).toHaveCount(1, { timeout: 15_000 });
     await hideCopy(page);
 
     const worst = { heading: 0, body: 0 };
-    for (const progress of [0, 0.35, 0.7, 1]) {
+    for (const progress of [0, 0.2, 0.35, 0.45, 0.5, 0.55, 0.65, 0.8, 1]) {
       await settleAt(page, progress);
       await page.waitForTimeout(200);
       worst.heading = Math.max(
@@ -1706,7 +1742,9 @@ test.describe("testimonial stack", () => {
 
   const quoteOpacities = (page: Page) =>
     page
-      .locator(`${BAND} blockquote, ${BAND} blockquote span`)
+      .locator(
+        `${BAND} blockquote, ${BAND} blockquote span:not([data-lit-word])`,
+      )
       .evaluateAll((nodes) =>
         nodes.map((node) => getComputedStyle(node).opacity),
       );
@@ -1746,7 +1784,7 @@ test.describe("testimonial stack", () => {
       );
       await expect(
         page.locator(
-          `${BAND} :is(ol, li, blockquote, blockquote *)[aria-hidden]`,
+          `${BAND} :is(ol, li, blockquote, blockquote *)[aria-hidden]:not([data-lit-word])`,
         ),
       ).toHaveCount(0);
     }
@@ -1834,22 +1872,10 @@ test.describe("testimonial stack", () => {
   });
 });
 
-test.describe("night close portrait", () => {
-  const PORTRAIT = "[data-night-close] img";
+test.describe("night close", () => {
+  const CLOSE = "main [data-night-close]";
 
-  const check = async (page: Page) => {
-    const image = page.locator(PORTRAIT);
-    await expect(image).toHaveCount(1);
-    await expect(image).toHaveAttribute("alt", /Nate Best/);
-    expect(
-      await image.evaluate((el) => el.getBoundingClientRect().width),
-    ).toBeGreaterThanOrEqual(160);
-    await expect
-      .poll(() => image.evaluate((el) => (el as HTMLImageElement).currentSrc))
-      .toContain("nate-duotone-480");
-  };
-
-  test("shows at 160px with and without motion, scripts and print", async ({
+  test("has no portrait, so Nate's face never repeats; stars and the big number stay", async ({
     browser,
   }, testInfo) => {
     for (const options of [
@@ -1863,10 +1889,21 @@ test.describe("night close portrait", () => {
       });
       const page = await context.newPage();
       await page.goto("/");
-      await page.locator(PORTRAIT).scrollIntoViewIfNeeded();
-      await check(page);
-      await page.emulateMedia({ media: "print" });
-      await check(page);
+      const close = page.locator(CLOSE);
+      await close.scrollIntoViewIfNeeded();
+      for (const media of ["screen", "print"] as const) {
+        await page.emulateMedia({ media });
+        await expect(close.locator("img")).toHaveCount(0);
+        await expect(close.locator('a[href^="tel:"]')).toBeVisible();
+        await expect(
+          page.locator('main img[src*="nate-duotone"]'),
+          "Nate's duotone portrait appears once on the home page",
+        ).toHaveCount(1);
+      }
+      if (options.reducedMotion !== "no-preference") {
+        await page.emulateMedia({ media: "screen" });
+        await expect(close.locator("[data-close-stars]")).toBeVisible();
+      }
       await context.close();
     }
   });
@@ -1880,6 +1917,7 @@ test.describe("film grain", () => {
         content: style.content,
         display: style.display,
         pointerEvents: style.pointerEvents,
+        blend: style.mixBlendMode,
         opacity: Number(style.opacity),
       };
     });
@@ -1889,8 +1927,9 @@ test.describe("film grain", () => {
     const style = await grain(page);
     expect(style.content).not.toBe("none");
     expect(style.pointerEvents).toBe("none");
-    expect(style.opacity).toBeGreaterThanOrEqual(0.03);
-    expect(style.opacity).toBeLessThanOrEqual(0.07);
+    expect(style.blend).toBe("overlay");
+    expect(style.opacity).toBeGreaterThanOrEqual(0.08);
+    expect(style.opacity).toBeLessThanOrEqual(0.12);
     await page.emulateMedia({ media: "print" });
     expect((await grain(page)).display).toBe("none");
   });

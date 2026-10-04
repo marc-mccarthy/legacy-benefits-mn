@@ -1,3 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <path d="M25,10 L59,10 L59,26 L75,26 L75,90 L25,90 Z M57,12 L71,26 L57,26 Z" fill="#FFFFFF"/>
+  <path d="M18,6 H68 L82,20 V94 H18 Z" fill="#F7F9FA"/>
+  <path d="M68,6 V20 H82 Z" fill="#D5DBE2"/>
+  <rect x="25" y="13" width="30" height="5" fill="#7D8A9C"/>
+  <path d="M25,27 H75 M25,33 H68 M25,39 H72" stroke="#9AA6B4" stroke-width="1.4" stroke-linecap="round"/>
+  <g fill="none" stroke="#7D8A9C" stroke-width="1.2">
+    <rect x="25" y="48" width="5" height="5"/>
+    <rect x="25" y="57" width="5" height="5"/>
+    <rect x="25" y="66" width="5" height="5"/>
+  </g>
+  <path d="M26,50 L27.8,52 L31,47.5" fill="none" stroke="#5B6675" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M35,50.5 H66 M35,59.5 H60 M35,68.5 H70" stroke="#9AA6B4" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M25,86 H62" stroke="#7D8A9C" stroke-width="1"/>
+  <path d="M26,82 C30,76 33,85 37,80 C40,76 42,83 46,79" fill="none" stroke="#5B6675" stroke-width="1.2" stroke-linecap="round"/>
 </svg>

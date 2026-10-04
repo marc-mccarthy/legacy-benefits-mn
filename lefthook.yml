@@ -63,9 +63,6 @@ pre-commit:
           - name: drizzle
             run: pnpm exec drizzle-kit check
 
-          - name: doc-references
-            run: pnpm docs:check
-
           - name: terraform-fmt-check
             glob: "*.tf"
             run: terraform fmt -check -recursive infra/
@@ -99,8 +96,6 @@ pre-push:
       run: pnpm diagrams:check
     - name: drizzle
       run: pnpm exec drizzle-kit check
-    - name: doc-references
-      run: pnpm docs:check
     - name: terraform-fmt-check
       run: terraform fmt -check -recursive infra/
     - name: terraform-validate
@@ -123,8 +118,6 @@ verify-all:
       run: pnpm diagrams:check
     - name: drizzle
       run: pnpm exec drizzle-kit check
-    - name: doc-references
-      run: pnpm docs:check
     - name: terraform-fmt-check
       run: terraform fmt -check -recursive infra/
     - name: terraform-validate

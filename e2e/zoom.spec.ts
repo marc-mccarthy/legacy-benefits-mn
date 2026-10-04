@@ -61,6 +61,32 @@ test("the header lockup wraps without overflow or shrinking the mark at 360px", 
   }
 });
 
+for (const width of [360, 390]) {
+  test(`the stuck header keeps the full lockup visible at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/");
+    await page.evaluate(() => window.scrollTo(0, 1500));
+    await expect(page.locator("header[data-site-header]")).toHaveAttribute(
+      "data-stuck",
+      "",
+    );
+
+    const box = await page
+      .locator("header [data-brand-lockup] > span")
+      .boundingBox();
+    expect(box?.width).toBeGreaterThan(80);
+    expect(box?.height).toBeGreaterThan(12);
+
+    const { scrollW, clientW } = await page.evaluate(() => ({
+      scrollW: document.documentElement.scrollWidth,
+      clientW: document.documentElement.clientWidth,
+    }));
+    expect(scrollW).toBeLessThanOrEqual(clientW);
+  });
+}
+
 test("long footer address and email wrap instead of widening the page at 390px", async ({
   page,
 }) => {

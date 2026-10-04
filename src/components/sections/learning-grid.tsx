@@ -2,6 +2,7 @@ import { Image } from "@/components/ui/image";
 import Link from "next/link";
 import { Badge, Card, CardBody } from "@/components/ui/card";
 import { Container, Section, type Scheme } from "@/components/ui/section";
+import { CoverMotion } from "@/components/motion/cover-motion";
 import { Morph } from "@/components/motion/morph";
 import { Reveal } from "@/components/motion/reveal";
 import { mediaProps } from "@/lib/media";
@@ -25,7 +26,7 @@ const TYPE_LABEL: Record<ArticleItem["type"], string> = {
 
 const TYPE_PANEL: Record<ArticleItem["type"], string> = {
   article: "bg-ground-black text-ink-dark",
-  tool: "bg-signal-cyan text-ground-dark",
+  tool: "bg-ground-dark text-ink-dark",
   video: "bg-ground-dark text-ink-dark",
 };
 
@@ -115,16 +116,18 @@ export function LearningGrid({
                     <Card className="w-full">
                       {cover ? (
                         <div className="aspect-[16/10] w-full overflow-hidden">
-                          <Morph kind="learn" slug={article.slug}>
-                            <Image
-                              src={cover.src}
-                              alt={cover.alt}
-                              width={cover.width}
-                              height={cover.height}
-                              className="size-full object-cover"
-                              sizes="(min-width: 768px) 33vw, 100vw"
-                            />
-                          </Morph>
+                          <CoverMotion>
+                            <Morph kind="learn" slug={article.slug}>
+                              <Image
+                                src={cover.src}
+                                alt={cover.alt}
+                                width={cover.width}
+                                height={cover.height}
+                                className="size-full object-cover"
+                                sizes="(min-width: 768px) 33vw, 100vw"
+                              />
+                            </Morph>
+                          </CoverMotion>
                         </div>
                       ) : (
                         <div

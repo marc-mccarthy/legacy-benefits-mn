@@ -59,12 +59,36 @@ function resolveFile(pathname) {
   return null;
 }
 
-function sendFile(res, path, status = 200) {
-  res.writeHead(status, {
-    "content-type": TYPES[extname(path)] ?? "application/octet-stream",
-    "content-length": statSync(path).size,
+function sendFile(res, path, status = 200, range) {
+  const size = statSync(path).size;
+  const type = TYPES[extname(path)] ?? "application/octet-stream";
+  const match = status === 200 && /^bytes=(\d*)-(\d*)$/.exec(range ?? "");
+  if (!match || (!match[1] && !match[2])) {
+    res.writeHead(status, {
+      "content-type": type,
+      "content-length": size,
+      "accept-ranges": "bytes",
+    });
+    createReadStream(path).pipe(res);
+    return;
+  }
+  const start = match[1]
+    ? Number(match[1])
+    : Math.max(0, size - Number(match[2]));
+  const end =
+    match[1] && match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+  if (start > end || start >= size) {
+    res.writeHead(416, { "content-range": `bytes */${size}` });
+    res.end();
+    return;
+  }
+  res.writeHead(206, {
+    "content-type": type,
+    "content-length": end - start + 1,
+    "content-range": `bytes ${start}-${end}/${size}`,
+    "accept-ranges": "bytes",
   });
-  createReadStream(path).pipe(res);
+  createReadStream(path, { start, end }).pipe(res);
 }
 
 async function readBody(req) {
@@ -114,7 +138,7 @@ const server = createServer(async (req, res) => {
 
   const file = resolveFile(url.pathname);
   if (file) {
-    sendFile(res, file);
+    sendFile(res, file, 200, req.headers.range);
     return;
   }
 

@@ -3,9 +3,13 @@ import { preload } from "react-dom";
 import { srcSetFor } from "@/lib/image-loader";
 
 export function Image(props: ImageProps & { src: string }) {
-  const { props: img } = getImageProps(props);
+  const derived = srcSetFor(props.src);
+  const { props: img } = getImageProps({
+    ...props,
+    unoptimized: props.unoptimized ?? !derived,
+  });
   const urgent = props.priority || props.preload;
-  const srcSet = props.sizes ? srcSetFor(props.src) : img.srcSet;
+  const srcSet = props.sizes ? derived : img.srcSet;
   const fetchPriority = urgent ? "high" : img.fetchPriority;
   if (urgent) {
     preload(img.src, {

@@ -12,6 +12,7 @@ const atkinson = AtkinsonHyperlegibleNext({
   variable: "--font-atkinson",
   subsets: ["latin"],
   display: "swap",
+  fallback: ["Arial", "sans-serif"],
 });
 
 const archivo = Archivo({

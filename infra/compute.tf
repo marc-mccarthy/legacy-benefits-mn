@@ -2,7 +2,7 @@
 # only has to be a valid zip that Terraform can create the function from.
 data "archive_file" "bootstrap" {
   type        = "zip"
-  output_path = "${path.module}/.bootstrap.zip"
+  output_path = "${path.root}/.terraform/bootstrap.zip"
 
   source {
     filename = "index.mjs"
@@ -41,6 +41,7 @@ resource "aws_lambda_function" "app" {
       BUSINESS_NAME                  = var.business_name
       BUSINESS_PHONE                 = var.business_phone
       BUSINESS_EMAIL                 = var.business_email
+      BUSINESS_ADDRESS               = var.business_address
       CRM_TRANSPORT                  = "mock"
       NEXT_PUBLIC_TURNSTILE_SITE_KEY = var.turnstile_site_key
       NEXT_PUBLIC_GTM_ID             = var.gtm_id
@@ -247,7 +248,7 @@ resource "aws_cloudfront_distribution" "this" {
 
   viewer_certificate {
     cloudfront_default_certificate = local.use_domain ? null : true
-    acm_certificate_arn            = local.use_domain ? var.acm_certificate_arn : null
+    acm_certificate_arn            = one(aws_acm_certificate_validation.this[*].certificate_arn)
     ssl_support_method             = local.use_domain ? "sni-only" : null
     minimum_protocol_version       = local.use_domain ? "TLSv1.2_2021" : null
   }

@@ -1,41 +1,50 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useInView, useReducedMotion } from "motion/react";
+import { useEffect, useRef } from "react";
+import { animate, useInView, useReducedMotion } from "motion/react";
 import { Container, Section, type Scheme } from "@/components/ui/section";
+import { useEffectsPaused } from "@/lib/effects-pause";
+import { DURATION_CONVERGE, EASE_MOVE } from "@/lib/motion";
 
 export type Stat = { value: number; suffix?: string | null; label: string };
 
+const formatStat = (value: number, suffix?: string | null) =>
+  `${Math.round(value).toLocaleString("en-US")}${suffix ?? ""}`;
+
 function CountUp({ value, suffix }: { value: number; suffix?: string | null }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-15% 0px" });
+  const done = useRef(false);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
   const reduced = useReducedMotion();
-  // Starts at the real figure so the served HTML carries it; the count-up
-  // rewinds to 0 in the effect, which only runs where it will animate.
-  const [display, setDisplay] = useState(value);
+  const paused = useEffectsPaused();
 
   useEffect(() => {
-    if (reduced || !inView) return;
-
-    const duration = 1200;
-    const start = performance.now();
-    let frame = 0;
-
-    const tick = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(value * eased));
-      if (progress < 1) frame = requestAnimationFrame(tick);
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [inView, reduced, value]);
+    const node = ref.current;
+    if (!node || done.current) return;
+    if (reduced || paused) {
+      node.textContent = formatStat(value, suffix);
+      return;
+    }
+    if (!inView) {
+      node.textContent = formatStat(0, suffix);
+      return;
+    }
+    const controls = animate(0, value, {
+      duration: DURATION_CONVERGE / 1000,
+      ease: EASE_MOVE,
+      onUpdate: (latest) => {
+        node.textContent = formatStat(latest, suffix);
+      },
+      onComplete: () => {
+        done.current = true;
+      },
+    });
+    return () => controls.stop();
+  }, [inView, reduced, paused, value, suffix]);
 
   return (
-    <span ref={ref}>
-      {display.toLocaleString("en-US")}
-      {suffix ?? ""}
+    <span ref={ref} aria-hidden data-count-up="">
+      {formatStat(value, suffix)}
     </span>
   );
 }
@@ -62,6 +71,9 @@ export function StatsBand({
               <dd>
                 <span className="font-display tabular block text-4xl md:text-5xl">
                   <CountUp value={stat.value} suffix={stat.suffix} />
+                  <span className="sr-only">
+                    {formatStat(stat.value, stat.suffix)}
+                  </span>
                 </span>
                 <span aria-hidden className="text-muted mt-2 block">
                   {stat.label}

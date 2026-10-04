@@ -45,7 +45,7 @@ export const events: EventItem[] = [
       "Bring your medication list and current plan. We will run the comparison with you, one on one.",
     startsAt: "2026-10-20T23:00:00.000Z",
     endsAt: "2026-10-21T00:30:00.000Z",
-    venue: "Legacy Benefits Group LLC Office",
+    venue: "Legacy Benefits Group Office",
     address: "1200 Nicollet Mall, Suite 400, Minneapolis, MN 55403",
     cost: "free",
     registrationUrl: null,

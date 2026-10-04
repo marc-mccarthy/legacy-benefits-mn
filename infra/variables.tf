@@ -61,13 +61,21 @@ variable "domain_name" {
   default = ""
 }
 
-variable "acm_certificate_arn" {
-  type    = string
-  default = ""
+variable "dns_extra_records" {
+  description = "Records carried over from the previous DNS host, keyed by any unique label. name is relative to domain_name, \"\" for the apex."
+  type = map(object({
+    name    = string
+    type    = string
+    ttl     = number
+    records = list(string)
+  }))
+  default = {}
 
   validation {
-    condition     = var.domain_name == "" || var.acm_certificate_arn != ""
-    error_message = "domain_name requires acm_certificate_arn issued in us-east-1, covering the apex and www."
+    condition = alltrue([
+      for r in values(var.dns_extra_records) : !(contains(["A", "AAAA", "CNAME"], r.type) && contains(["", "www"], r.name))
+    ])
+    error_message = "Apex and www A, AAAA and CNAME records point at CloudFront and cannot be carried over."
   }
 }
 

@@ -15,6 +15,7 @@ import { BrandLockup } from "@/components/ui/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/section";
 import { EffectsPauseButton } from "@/components/motion/effects-pause-button";
+import { Magnetic } from "@/components/motion/magnetic";
 import {
   pauseSmoothScroll,
   resumeSmoothScroll,
@@ -43,24 +44,29 @@ const chip = media["nate.chip"];
 
 function HeaderPhone({ phone }: { phone: string }) {
   return (
-    <Button
-      asChild
-      size="md"
-      className="shrink-0 px-3 whitespace-nowrap sm:px-6"
-    >
-      <a href={`tel:${phone.replace(/\D/g, "")}`} aria-label={`Call ${phone}`}>
-        <Image
-          data-portrait-chip
-          src={chip.src}
-          alt=""
-          width={32}
-          height={32}
-          className="size-8 shrink-0 rounded-full object-cover"
-        />
-        <span className="sm:hidden">Call</span>
-        <span className="hidden sm:inline">{phone}</span>
-      </a>
-    </Button>
+    <Magnetic className="shrink-0">
+      <Button
+        asChild
+        size="md"
+        className="shrink-0 px-3 whitespace-nowrap sm:px-6"
+      >
+        <a
+          href={`tel:${phone.replace(/\D/g, "")}`}
+          aria-label={`Call ${phone}`}
+        >
+          <Image
+            data-portrait-chip
+            src={chip.src}
+            alt=""
+            width={32}
+            height={32}
+            className="size-8 shrink-0 rounded-full object-cover"
+          />
+          <span className="sm:hidden">Call</span>
+          <span className="hidden sm:inline">{phone}</span>
+        </a>
+      </Button>
+    </Magnetic>
   );
 }
 

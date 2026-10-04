@@ -1,6 +1,7 @@
 "use client";
 
 import { Image } from "@/components/ui/image";
+import { LitWords } from "@/components/motion/lit-words";
 import { useEffect, useRef, useState } from "react";
 import { Monogram } from "@/components/ui/monogram";
 
@@ -43,9 +44,9 @@ export function QuoteStack({ items }: { items: StackQuote[] }) {
         >
           <figure className="flex flex-col gap-6">
             <blockquote>
-              <p className="max-w-[28ch] text-(length:--text-display-md) leading-snug text-pretty text-white">
+              <LitWords className="max-w-[28ch] text-(length:--text-display-md) leading-snug text-pretty">
                 {`“${item.quote}”`}
-              </p>
+              </LitWords>
             </blockquote>
             <figcaption className="flex items-center gap-3 text-base">
               {item.photoSrc ? (

@@ -1,8 +1,8 @@
 "use client";
 
 import { Image } from "@/components/ui/image";
-import { useEffect, useRef, useSyncExternalStore } from "react";
-import { ThreeStage } from "@/components/motion/three-stage";
+import { type MotionValue, useInView, useScroll } from "motion/react";
+import { type RefObject, useEffect, useRef, useSyncExternalStore } from "react";
 import { useVisualEffectLifecycle } from "@/components/motion/use-visual-effect-lifecycle";
 import { Container, Section } from "@/components/ui/section";
 import { media } from "@/content/media";
@@ -12,7 +12,9 @@ const PHONE_QUERY = "(max-width: 699px)";
 
 const dusk = media["lake.dusk"];
 const loop = media["lake.loop"];
-const poster =
+const scrub = media["lake.scrub"];
+const scrubPoster = media["lake.scrubPoster"];
+const phonePoster =
   dusk.srcSet.find(({ width, format }) => width === 900 && format === "webp")
     ?.src ?? dusk.src;
 
@@ -29,6 +31,47 @@ const reportUnlessAborted = (error: unknown) => {
   reportError(error);
 };
 
+function useScrubbedVideo(
+  videoRef: RefObject<HTMLVideoElement | null>,
+  progress: MotionValue<number>,
+  active: boolean,
+) {
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !active) return;
+    let frame = 0;
+
+    const seek = () => {
+      frame = 0;
+      if (!video.duration) return;
+      if (video.seeking) {
+        frame = requestAnimationFrame(seek);
+        return;
+      }
+      const target = Math.min(
+        video.duration - 0.05,
+        Math.max(0, progress.get() * video.duration),
+      );
+      if (Math.abs(video.currentTime - target) > 1 / 60) {
+        video.currentTime = target;
+      }
+    };
+
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(seek);
+    };
+
+    const stop = progress.on("change", schedule);
+    video.addEventListener("loadedmetadata", schedule);
+    schedule();
+    return () => {
+      stop();
+      video.removeEventListener("loadedmetadata", schedule);
+      cancelAnimationFrame(frame);
+    };
+  }, [videoRef, progress, active]);
+}
+
 export function LakeSequence({
   heading,
   body,
@@ -36,52 +79,76 @@ export function LakeSequence({
   heading: string;
   body: string;
 }) {
+  const trackRef = useRef<HTMLElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const loopRef = useRef<HTMLVideoElement>(null);
+  const scrubRef = useRef<HTMLVideoElement>(null);
   const { mounted, reduced, paused, onscreen, tabVisible } =
     useVisualEffectLifecycle(frameRef);
+  const near = useInView(trackRef, { once: true, margin: "100% 0px" });
   const phone = useSyncExternalStore(subscribePhone, getPhone, () => false);
-  const showVideo = phone && mounted && !reduced;
+  const moving = mounted && !reduced;
+  const showLoop = moving && phone;
+  const showScrub = moving && !phone && near;
   const running = !paused && onscreen && tabVisible;
+  const { scrollYProgress } = useScroll({
+    target: trackRef,
+    offset: ["start start", "end end"],
+  });
+
+  useScrubbedVideo(scrubRef, scrollYProgress, showScrub && !paused);
 
   useEffect(() => {
-    const video = videoRef.current;
+    const video = loopRef.current;
     if (!video) return;
     if (running) video.play().catch(reportUnlessAborted);
     else video.pause();
-  }, [showVideo, running]);
+  }, [showLoop, running]);
 
   return (
     <Section
+      ref={trackRef}
       scheme="black"
       data-lake-track=""
       data-stage=""
       aria-labelledby="lake-heading"
-      className="relative h-[150svh] py-0 md:h-[200svh] md:py-0 print:h-auto"
+      className="relative h-[150svh] py-0 md:h-[300svh] md:py-0 print:h-auto"
     >
       <div ref={frameRef} className="sticky top-0 h-svh overflow-clip">
-        <ThreeStage
-          scene="lake"
-          active={!phone}
-          className="absolute inset-0"
-          fallback={
-            <Image
-              data-lake-still=""
-              src={dusk.src}
-              alt=""
-              aria-hidden
-              fill
-              sizes="100vw"
-              className="object-cover"
-            />
-          }
-        />
-        {showVideo ? (
+        <picture>
+          <source media="(min-width: 700px)" srcSet={scrubPoster.src} />
+          <Image
+            data-lake-still=""
+            src={dusk.src}
+            alt=""
+            aria-hidden
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+        </picture>
+        {showScrub ? (
           <video
-            ref={videoRef}
+            ref={scrubRef}
+            data-lake-scrub=""
+            src={scrub.src}
+            poster={scrubPoster.src}
+            muted
+            playsInline
+            preload="metadata"
+            aria-hidden
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover print:hidden",
+              paused && "hidden",
+            )}
+          />
+        ) : null}
+        {showLoop ? (
+          <video
+            ref={loopRef}
             data-lake-video=""
             src={loop.src}
-            poster={poster}
+            poster={phonePoster}
             muted
             loop
             playsInline

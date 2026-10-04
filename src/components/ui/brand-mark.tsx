@@ -23,16 +23,30 @@ export function BrandMark() {
   );
 }
 
+const wordmark =
+  "min-w-0 font-(family-name:--font-display) font-extrabold tracking-[-0.02em] [overflow-wrap:anywhere]";
+
 export function BrandLockup({ name }: { name: string }) {
+  if (/^l/i.test(name)) {
+    return (
+      <span
+        data-brand-lockup
+        role="img"
+        aria-label={name}
+        className="inline-flex min-w-0 items-baseline text-xl leading-tight sm:text-2xl"
+      >
+        <BrandMark />
+        <span className={`${wordmark} ml-[-0.06em]`}>{name.slice(1)}</span>
+      </span>
+    );
+  }
   return (
     <span
       data-brand-lockup
       className="inline-flex min-w-0 items-baseline gap-1.5 text-xl leading-tight sm:text-2xl"
     >
       <BrandMark />
-      <span className="min-w-0 font-(family-name:--font-display) font-extrabold tracking-[-0.02em] [overflow-wrap:anywhere]">
-        {name}
-      </span>
+      <span className={wordmark}>{name}</span>
     </span>
   );
 }

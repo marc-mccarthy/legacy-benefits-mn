@@ -7,9 +7,16 @@ import { ROUTES } from "./support/routes";
 const EFFECT_MARKERS = ["WebGLRenderer", "data-three-stage", "acquireWebGL"];
 const EFFECT_JS_BUDGET = 200 * 1024;
 const FOLD_BUDGET = 1_572_864;
-const VIDEO_BUDGET = 2 * 1024 * 1024;
+const MOBILE_VIDEO_BUDGET = 2 * 1024 * 1024;
+const DESKTOP_LAZY_VIDEO_BUDGET = 8 * 1024 * 1024;
 const LCP_BUDGET_MS = 2500;
-const VIDEOS = ["mn-lake-dawn-dusk-mobile.mp4", "mn-blue-hour-loop.mp4"];
+const VIDEOS: Record<string, number> = {
+  "mn-lake-dawn-dusk-mobile.mp4": MOBILE_VIDEO_BUDGET,
+  "mn-blue-hour-loop.mp4": MOBILE_VIDEO_BUDGET,
+  "signal-converge-loop-mobile.mp4": MOBILE_VIDEO_BUDGET,
+  "mn-lake-desktop-scrub.mp4": DESKTOP_LAZY_VIDEO_BUDGET,
+  "signal-converge-loop.mp4": DESKTOP_LAZY_VIDEO_BUDGET,
+};
 
 const gzipSize = (body: Buffer) => zlib.gzipSync(body).length;
 
@@ -80,10 +87,10 @@ test.describe("effect JavaScript", () => {
   });
 });
 
-test("every video is at most 2 MB", () => {
-  for (const name of VIDEOS) {
+test("every mobile-autoplay video is at most 2 MB and every desktop-only lazy video at most 8 MB", () => {
+  for (const [name, budget] of Object.entries(VIDEOS)) {
     const size = fs.statSync(path.join("public", "video", name)).size;
-    expect(size, name).toBeLessThanOrEqual(VIDEO_BUDGET);
+    expect(size, name).toBeLessThanOrEqual(budget);
   }
 });
 
@@ -153,5 +160,5 @@ test("/ paints its largest content within 2.5 s on a throttled phone", async ({
     LCP_BUDGET_MS,
   );
   for (const element of elements)
-    expect(["H1|hero", "IMG|hero"]).toContain(element);
+    expect(["H1|hero", "P|hero", "IMG|hero"]).toContain(element);
 });

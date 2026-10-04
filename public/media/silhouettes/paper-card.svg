@@ -1,3 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <path fill-rule="evenodd" d="M20,30 L80,30 A5,5 0 0,1 85,35 L85,65 A5,5 0 0,1 80,70 L20,70 A5,5 0 0,1 15,65 L15,35 A5,5 0 0,1 20,30 Z M25,42 L40,42 A2,2 0 0,1 42,44 L42,56 A2,2 0 0,1 40,58 L25,58 A2,2 0 0,1 23,56 L23,44 A2,2 0 0,1 25,42 Z" fill="#FFFFFF"/>
+  <rect x="8" y="24" width="84" height="54" rx="4" fill="#F7F9FA"/>
+  <path d="M12,24 H88 A4,4 0 0 1 92,28 V36 H8 V28 A4,4 0 0 1 12,24 Z" fill="#7D8A9C"/>
+  <path d="M14,30 H44" stroke="#F7F9FA" stroke-width="2" stroke-linecap="round"/>
+  <path d="M14,45 H58 M14,53 H48" stroke="#7D8A9C" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M14,64 H36 M44,64 H66 M14,70 H30 M44,70 H60" stroke="#AEB8C4" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="78" cy="58" r="8" fill="none" stroke="#AEB8C4" stroke-width="1.2"/>
 </svg>

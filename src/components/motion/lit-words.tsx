@@ -68,7 +68,7 @@ function Word({
 
   return (
     <span className="relative inline-block">
-      <span className="text-muted">{word}</span>
+      <span className="text-unlit">{word}</span>
       <motion.span
         aria-hidden
         data-lit-word

@@ -19,6 +19,7 @@ const archivo = Archivo({
   subsets: ["latin"],
   display: "swap",
   axes: ["wdth"],
+  preload: false,
 });
 
 export const viewport: Viewport = {

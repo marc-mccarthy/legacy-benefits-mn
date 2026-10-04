@@ -42,10 +42,7 @@ if (existsSync(bundle)) {
   ({ handler: apiHandler } = await import(bundle));
 }
 
-/** Resolves a request path to a file in `out/`, or null. */
 function resolveFile(pathname) {
-  // `normalize` collapses `..` before the prefix check, so a traversal cannot
-  // address a file outside out/.
   const candidate = resolve(
     join(outDir, normalize(decodeURIComponent(pathname))),
   );
@@ -85,25 +82,32 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    const body = await readBody(req);
-    const result = await apiHandler({
-      rawPath: url.pathname,
-      rawQueryString: url.search.replace(/^\?/, ""),
-      headers: Object.fromEntries(
-        Object.entries(req.headers).map(([key, value]) => [
-          key,
-          Array.isArray(value) ? value.join(", ") : (value ?? ""),
-        ]),
-      ),
-      body: body.length ? body.toString("utf8") : undefined,
-      isBase64Encoded: false,
-      requestContext: {
-        http: { method: req.method ?? "GET", path: url.pathname },
-      },
-    });
+    try {
+      const body = await readBody(req);
+      const result = await apiHandler({
+        rawPath: url.pathname,
+        rawQueryString: url.search.replace(/^\?/, ""),
+        headers: Object.fromEntries(
+          Object.entries(req.headers).map(([key, value]) => [
+            key,
+            Array.isArray(value) ? value.join(", ") : (value ?? ""),
+          ]),
+        ),
+        body: body.length ? body.toString("utf8") : undefined,
+        isBase64Encoded: false,
+        requestContext: {
+          http: { method: req.method ?? "GET", path: url.pathname },
+        },
+      });
 
-    res.writeHead(result.statusCode, result.headers);
-    res.end(result.body);
+      res.writeHead(result.statusCode, result.headers);
+      res.end(result.body);
+    } catch (error) {
+      console.error(error);
+      if (!res.headersSent)
+        res.writeHead(500, { "content-type": "application/json" });
+      res.end('{"error":"api handler failed"}');
+    }
     return;
   }
 

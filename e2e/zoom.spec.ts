@@ -10,6 +10,7 @@ const PAGES = [
 ];
 
 const ZOOMS = [
+  { label: "phone", width: 390, height: 844 },
   { label: "200%", width: 720, height: 450 },
   { label: "400%", width: 360, height: 225 },
 ];
@@ -66,4 +67,27 @@ test("the header lockup wraps without overflow or shrinking the mark at 360px", 
     expect(box?.width, name).toBeGreaterThanOrEqual(20);
     expect(box?.height, name).toBeGreaterThanOrEqual(20);
   }
+});
+
+test("long footer address and email wrap instead of widening the page at 390px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  await page.evaluate(() => {
+    const set = (selector: string, value: string) => {
+      const el = document.querySelector(selector);
+      if (!el) throw new Error(`missing ${selector}`);
+      el.textContent = value;
+    };
+    set("[data-footer-address]", "x".repeat(60));
+    set("[data-footer-email]", `${"y".repeat(50)}@${"z".repeat(9)}`);
+  });
+
+  const { scrollW, clientW } = await page.evaluate(() => ({
+    scrollW: document.documentElement.scrollWidth,
+    clientW: document.documentElement.clientWidth,
+  }));
+  expect(scrollW).toBeLessThanOrEqual(clientW + 1);
 });

@@ -109,13 +109,23 @@ test.describe("night close", () => {
     return { context, page };
   };
 
-  const toClose = (page: Page) =>
-    page.locator(CLOSE).evaluate((el) =>
-      el.scrollIntoView({
-        block: "center",
-        behavior: "instant" as ScrollBehavior,
-      }),
+  const toClose = async (page: Page) => {
+    const centre = () =>
+      page.locator(CLOSE).evaluate((el) =>
+        el.scrollIntoView({
+          block: "center",
+          behavior: "instant" as ScrollBehavior,
+        }),
+      );
+    await centre();
+    await page.evaluate(
+      () =>
+        new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(r)),
+        ),
     );
+    await centre();
+  };
 
   const staticStars = async (page: Page) => {
     await expect(page.locator(STARS)).toBeVisible();

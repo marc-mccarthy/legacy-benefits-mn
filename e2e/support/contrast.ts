@@ -1,5 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
+export const HIDE_CHROME = `[data-site-header], [role="dialog"][aria-label="Cookie choices"], [data-effects-pause] { visibility: hidden !important; }`;
+
 export const brightestBackground = async (page: Page, selector: string) => {
   const box = await page.locator(selector).boundingBox();
   expect(box, `${selector} has no box`).not.toBeNull();

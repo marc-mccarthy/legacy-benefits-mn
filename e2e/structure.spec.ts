@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   brightestBackground,
   contrast as contrastRatio,
+  HIDE_CHROME,
 } from "./support/contrast";
 import { services as authoredServices } from "../src/content/services";
 import { testimonials as authoredTestimonials } from "../src/content/testimonials";
@@ -812,7 +813,7 @@ test.describe("the noise band", () => {
     const { context, page } = await withMotion(browser);
     await page.goto("/");
     await page.addStyleTag({
-      content: `${NOISE} h2, ${NOISE} p { visibility: hidden !important; }`,
+      content: `${NOISE} h2, ${NOISE} p { visibility: hidden !important; } ${HIDE_CHROME}`,
     });
 
     const { top, height } = await page.locator(NOISE).evaluate((el) => {
@@ -903,7 +904,11 @@ test.describe("the signal band", () => {
 
   test("pointer light moves with the pointer on desktop only", async ({
     browser,
-  }) => {
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name === "mobile",
+      "coarse pointer: the touch test below asserts no light",
+    );
     const context = await browser.newContext({
       viewport: DESKTOP,
       reducedMotion: "no-preference",

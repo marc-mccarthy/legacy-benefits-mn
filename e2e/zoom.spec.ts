@@ -1,13 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-const PAGES = [
-  "/",
-  "/services",
-  "/learn",
-  "/events",
-  "/contact",
-  "/disclosures",
-];
+import { PAGES } from "./support/routes";
 
 const ZOOMS = [
   { label: "phone", width: 390, height: 844 },

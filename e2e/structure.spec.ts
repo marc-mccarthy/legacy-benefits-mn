@@ -1,4 +1,8 @@
 import { expect, test } from "@playwright/test";
+import {
+  brightestBackground,
+  contrast as contrastRatio,
+} from "./support/contrast";
 import { testimonials as authoredTestimonials } from "../src/content/testimonials";
 
 const DESKTOP = { width: 1440, height: 900 };
@@ -533,5 +537,140 @@ test.describe("the cookie strip", () => {
         .locator('[role="dialog"][aria-label="Cookie choices"]')
         .evaluate((el) => getComputedStyle(el).display),
     ).toBe("none");
+  });
+});
+
+test.describe("home scroll length", () => {
+  for (const [name, viewport] of [
+    ["desktop", { width: 1440, height: 900 }],
+    ["mobile", { width: 390, height: 844 }],
+  ] as const) {
+    test(`stays within 16 screens at ${name}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/");
+      const screens = await page.evaluate(
+        () => document.documentElement.scrollHeight / window.innerHeight,
+      );
+      expect(screens).toBeLessThanOrEqual(16);
+    });
+  }
+});
+
+test.describe("the noise band", () => {
+  const NOISE = "[data-noise]";
+  const SHAPES = "img[data-noise-shape]";
+  const NOISE_OPACITY_CAP = 0.26;
+
+  const withMotion = async (browser: import("@playwright/test").Browser) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    return { context, page: await context.newPage() };
+  };
+
+  test("under reduced motion: text visible, five hidden shapes, zero canvas", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("/");
+
+    await expect(page.locator(`${NOISE} h2`)).toBeVisible();
+    await expect(page.locator(`${NOISE} p`)).toBeVisible();
+    await expect(page.locator(`${NOISE} canvas`)).toHaveCount(0);
+    await expect(page.locator(SHAPES)).toHaveCount(5);
+    for (const shape of await page.locator(SHAPES).all()) {
+      await expect(shape).toHaveAttribute("aria-hidden", "true");
+      await expect(shape).toBeHidden();
+    }
+
+    await context.close();
+  });
+
+  test("with JavaScript disabled: text visible, shapes hidden", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/");
+
+    await expect(page.locator(`${NOISE} h2`)).toBeVisible();
+    await expect(page.locator(`${NOISE} p`)).toBeVisible();
+    await expect(page.locator(`${NOISE} canvas`)).toHaveCount(0);
+
+    await context.close();
+  });
+
+  test("with motion: shapes show at or below the opacity cap, and Pause hides them", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await page.locator(NOISE).scrollIntoViewIfNeeded();
+
+    const shapes = await page.locator(SHAPES).all();
+    expect(shapes).toHaveLength(5);
+    for (const shape of shapes) {
+      await expect(shape).toBeVisible();
+      const opacity = await shape.evaluate((el) =>
+        Number(getComputedStyle(el).opacity),
+      );
+      expect(opacity).toBeLessThanOrEqual(NOISE_OPACITY_CAP);
+      expect(opacity).toBeGreaterThan(0);
+    }
+
+    await page.locator("[data-effects-pause]").first().click();
+    for (const shape of shapes) {
+      await expect(shape).toHaveCSS("display", "none");
+    }
+
+    await context.close();
+  });
+
+  test("white text keeps AA contrast over the brightest background at five scroll positions", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await page.addStyleTag({
+      content: `${NOISE} h2, ${NOISE} p { visibility: hidden !important; }`,
+    });
+
+    const { top, height } = await page.locator(NOISE).evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      return { top: box.top + window.scrollY, height: box.height };
+    });
+    const viewport = page.viewportSize()!.height;
+
+    for (let step = 0; step < 5; step += 1) {
+      const y = top - viewport + ((height + viewport) * (step + 0.5)) / 5;
+      await page.evaluate((to) => window.scrollTo(0, to), y);
+      await page.waitForTimeout(300);
+      for (const selector of [`${NOISE} h2`, `${NOISE} p`]) {
+        const box = await page.locator(selector).boundingBox();
+        if (!box || box.y + box.height < 0 || box.y > viewport) continue;
+        const brightest = await brightestBackground(page, selector);
+        expect(
+          contrastRatio("#FFFFFF", brightest),
+          `${selector} at scroll ${Math.round(y)}`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+
+    await context.close();
+  });
+
+  test("in print: shapes hidden, text visible", async ({ browser }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await page.emulateMedia({ media: "print" });
+
+    await expect(page.locator(`${NOISE} h2`)).toBeVisible();
+    await expect(page.locator(`${NOISE} p`)).toBeVisible();
+    for (const shape of await page.locator(SHAPES).all()) {
+      await expect(shape).toBeHidden();
+    }
+
+    await context.close();
   });
 });

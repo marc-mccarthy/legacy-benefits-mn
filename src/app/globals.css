@@ -567,3 +567,73 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
     content-visibility: visible;
   }
 }
+
+[data-noise-shape] {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    :root:not([data-effects-paused]) [data-noise-shape] {
+      display: block;
+      opacity: 0.26;
+      animation: noise-drift linear both;
+      animation-timeline: view();
+    }
+
+    :root:not([data-effects-paused]) [data-noise-shape="envelope"] {
+      left: 2%;
+      top: 6%;
+      width: 34vw;
+      filter: blur(4px);
+      --noise-drift: 9rem;
+    }
+
+    :root:not([data-effects-paused]) [data-noise-shape="torn-envelope"] {
+      left: 62%;
+      top: 2%;
+      width: 30vw;
+      filter: blur(4px);
+      --noise-drift: 6rem;
+    }
+
+    :root:not([data-effects-paused]) [data-noise-shape="form"] {
+      left: 38%;
+      top: 58%;
+      width: 22vw;
+      --noise-drift: 12rem;
+    }
+
+    :root:not([data-effects-paused]) [data-noise-shape="card"] {
+      left: 4%;
+      top: 66%;
+      width: 28vw;
+      filter: blur(4px);
+      --noise-drift: 5rem;
+    }
+
+    :root:not([data-effects-paused]) [data-noise-shape="folder"] {
+      left: 68%;
+      top: 52%;
+      width: 26vw;
+      --noise-drift: 10rem;
+    }
+  }
+}
+
+@keyframes noise-drift {
+  from {
+    transform: translateY(var(--noise-drift)) rotate(-8deg);
+  }
+  to {
+    transform: translateY(calc(var(--noise-drift) * -1)) rotate(8deg);
+  }
+}
+
+@media print {
+  [data-noise-shape] {
+    display: none !important;
+  }
+}

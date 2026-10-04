@@ -8,6 +8,7 @@ import {
 } from "motion/react";
 import { useRef } from "react";
 
+import { useEffectsPaused } from "@/lib/effects-pause";
 import { DURATION_REVEAL, EASE_MOVE } from "@/lib/motion";
 
 type LitWordsProps = {
@@ -16,7 +17,8 @@ type LitWordsProps = {
 };
 
 export function LitWords({ children, className }: LitWordsProps) {
-  const reduced = useReducedMotion();
+  const paused = useEffectsPaused();
+  const reduced = useReducedMotion() || paused;
   const ref = useRef<HTMLParagraphElement>(null);
 
   const { scrollYProgress } = useScroll({

@@ -11,6 +11,7 @@ import {
   LearningGrid,
   type ArticleItem,
 } from "@/components/sections/learning-grid";
+import { NoiseStage } from "@/components/sections/noise-stage";
 import { RichTextSection } from "@/components/sections/rich-text";
 import {
   ServiceGrid,
@@ -63,6 +64,15 @@ export function RenderBlocks({
                 subheading={block.subheading as string | null}
                 ctaLabel={block.ctaLabel as string | null}
                 ctaHref={block.ctaHref as string | null}
+              />
+            );
+
+          case "noise":
+            return (
+              <NoiseStage
+                key={key}
+                heading={block.heading as string}
+                body={block.body as string}
               />
             );
 

@@ -1,4 +1,5 @@
 import { faq } from "./faq";
+import { site } from "./site";
 import type { PageBlock } from "./types";
 
 export const homeBlocks: PageBlock[] = [
@@ -10,6 +11,12 @@ export const homeBlocks: PageBlock[] = [
       "Independent, licensed guidance on Medicare Advantage, Supplement, and Part D, from Nate Best, the same person every time you call.",
     ctaLabel: "Talk to a licensed agent",
     ctaHref: "/contact",
+  },
+  {
+    blockType: "noise",
+    scheme: "black",
+    heading: `${site.compliance.orgCount} carriers. ${site.compliance.planCount} plans. One deadline.`,
+    body: "Medicare comes at you from every direction. Nate's job is to turn it into one clear answer you can act on.",
   },
   {
     blockType: "serviceGrid",

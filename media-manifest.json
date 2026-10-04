@@ -634,6 +634,226 @@
       "usage": "commercial",
       "query": null,
       "fetchedBy": "owner"
+    },
+    {
+      "slot": "noise.envelope",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-envelope.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-envelope",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-envelope.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.tornEnvelope",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-torn-envelope.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-torn-envelope",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-torn-envelope.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.form",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-form.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-form",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-form.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.card",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-card.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-card",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-card.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.folder",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-folder-v2.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-folder-v2",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-folder-v2.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
     }
   ]
 }

@@ -27,7 +27,7 @@ export function BrandLockup({ name }: { name: string }) {
   return (
     <span
       data-brand-lockup
-      className="inline-flex min-w-0 items-baseline gap-1.5 text-base leading-tight sm:text-lg"
+      className="inline-flex min-w-0 items-baseline gap-1.5 text-xl leading-tight sm:text-2xl"
     >
       <BrandMark />
       <span className="min-w-0 font-(family-name:--font-display) font-extrabold tracking-[-0.02em] [overflow-wrap:anywhere]">

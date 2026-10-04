@@ -44,6 +44,15 @@ export default async function AccessibilityPage() {
           </ul>
 
           <h2 className="font-display text-(length:--text-display-lg)">
+            Animations
+          </h2>
+          <p className="leading-relaxed">
+            Every page works without animation. Use the Pause animations button
+            at the top of any page, or turn on Reduce motion in your device
+            settings, and the site shows still images instead.
+          </p>
+
+          <h2 className="font-display text-(length:--text-display-lg)">
             Alternative formats
           </h2>
           <p className="leading-relaxed">

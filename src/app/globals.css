@@ -43,17 +43,15 @@
   --font-display:
     var(--font-archivo, ui-sans-serif), ui-sans-serif, system-ui, sans-serif;
 
-  --text-display-xl: clamp(3.5rem, 0.33rem + 14.07vw, 13rem);
+  --text-display-xl: clamp(3.5rem, 0.5rem + 12vw, 11.5rem);
   --text-display-page: clamp(2.75rem, 1.5rem + 5.56vw, 6.5rem);
   --text-display-lg: clamp(2.25rem, 2rem + 1.11vw, 3rem);
   --text-display-md: clamp(1.5rem, 1.333rem + 0.74vw, 2rem);
 
-  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
-  --ease-move: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
-  --ease-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-move: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-fade: cubic-bezier(0.25, 0.1, 0.25, 1);
 
+  --duration-fast: 200ms;
   --duration-state: 140ms;
   --duration-exit: 180ms;
   --duration-enter: 240ms;
@@ -348,7 +346,7 @@
   }
 
   [data-nav-sheet][data-state="closed"] {
-    animation: sheet-out-to-right var(--duration-exit) var(--ease-exit);
+    animation: sheet-out-to-right var(--duration-exit) var(--ease-fade);
   }
 }
 
@@ -393,11 +391,11 @@
 }
 
 ::view-transition-old(.page-exit) {
-  animation: page-fade-out var(--duration-exit) var(--ease-exit) both;
+  animation: page-fade-out var(--duration-exit) var(--ease-fade) both;
 }
 
 ::view-transition-new(.page-enter) {
-  animation: page-fade-in var(--duration-enter) var(--ease-enter)
+  animation: page-fade-in var(--duration-enter) var(--ease-fade)
     var(--duration-exit) both;
 }
 

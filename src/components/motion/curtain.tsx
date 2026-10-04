@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
-import { DURATION_REVEAL, EASE_ENTER } from "@/lib/motion";
+import { DURATION_REVEAL, EASE_MOVE } from "@/lib/motion";
 
 type CurtainProps = {
   children: ReactNode;
@@ -21,7 +21,7 @@ export function Curtain({ children, className }: CurtainProps) {
       initial={reduced ? false : { clipPath: "inset(0 0 100% 0)" }}
       whileInView={reduced ? undefined : { clipPath: "inset(0 0 0 0)" }}
       viewport={{ once: true, margin: "0px 0px 15% 0px" }}
-      transition={{ duration: DURATION_REVEAL / 1000, ease: EASE_ENTER }}
+      transition={{ duration: DURATION_REVEAL / 1000, ease: EASE_MOVE }}
     >
       {children}
     </motion.div>

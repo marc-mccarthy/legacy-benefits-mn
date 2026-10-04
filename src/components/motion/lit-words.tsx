@@ -8,7 +8,7 @@ import {
 } from "motion/react";
 import { useRef } from "react";
 
-import { DURATION_REVEAL, EASE_ENTER } from "@/lib/motion";
+import { DURATION_REVEAL, EASE_MOVE } from "@/lib/motion";
 
 type LitWordsProps = {
   children: string;
@@ -72,7 +72,7 @@ function Word({
         data-lit-word
         className="text-on-surface absolute inset-0"
         style={reduced ? { opacity: 1 } : { opacity }}
-        transition={{ duration: DURATION_REVEAL / 1000, ease: EASE_ENTER }}
+        transition={{ duration: DURATION_REVEAL / 1000, ease: EASE_MOVE }}
       >
         {word}
       </motion.span>

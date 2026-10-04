@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   DURATION_HOUSE,
   DURATION_REVEAL,
-  EASE_ENTER,
-  EASE_QUINT,
+  EASE_FADE,
+  EASE_MOVE,
 } from "./motion";
 
 const css = readFileSync(
@@ -12,7 +12,6 @@ const css = readFileSync(
   "utf8",
 );
 
-/** Reads the declared value of a custom property from the `:root` block. */
 function customProperty(name: string): string {
   const match = css.match(new RegExp(`--${name}:\\s*([^;]+);`));
   if (!match?.[1]) throw new Error(`--${name} is not declared in globals.css`);
@@ -27,11 +26,12 @@ const DURATIONS: ReadonlyArray<readonly [string, number]> = [
 const EASES: ReadonlyArray<
   readonly [string, readonly [number, number, number, number]]
 > = [
-  ["ease-enter", EASE_ENTER],
-  ["ease-quint", EASE_QUINT],
+  ["ease-move", EASE_MOVE],
+  ["ease-fade", EASE_FADE],
 ];
 
 const CSS_ONLY_DURATIONS: ReadonlyArray<readonly [string, string]> = [
+  ["duration-fast", "200ms"],
   ["duration-state", "140ms"],
   ["duration-exit", "180ms"],
   ["duration-enter", "240ms"],
@@ -40,11 +40,7 @@ const CSS_ONLY_DURATIONS: ReadonlyArray<readonly [string, string]> = [
   ["duration-stage", "900ms"],
 ];
 
-const CSS_ONLY_EASES: ReadonlyArray<readonly [string, string]> = [
-  ["ease-exit", "cubic-bezier(0.4, 0, 1, 1)"],
-  ["ease-move", "cubic-bezier(0.4, 0, 0.2, 1)"],
-  ["ease-quart", "cubic-bezier(0.165, 0.84, 0.44, 1)"],
-];
+const REMOVED_TOKENS = ["ease-quart", "ease-quint", "ease-enter", "ease-exit"];
 
 describe("motion tokens match globals.css", () => {
   it.each(DURATIONS)("--%s is %ims", (name, ms) => {
@@ -61,8 +57,14 @@ describe("motion tokens with no TypeScript twin", () => {
     expect(customProperty(name)).toBe(value);
   });
 
-  it.each(CSS_ONLY_EASES)("--%s is %s", (name, value) => {
-    expect(customProperty(name)).toBe(value);
+  it.each(REMOVED_TOKENS)("--%s is absent", (name) => {
+    expect(css).not.toMatch(new RegExp(`--${name}:`));
+  });
+
+  it("caps display type at 11.5rem", () => {
+    expect(customProperty("text-display-xl")).toBe(
+      "clamp(3.5rem, 0.5rem + 12vw, 11.5rem)",
+    );
   });
 });
 
@@ -75,8 +77,6 @@ describe("motion token shapes", () => {
   });
 
   it("keeps easing control points in the range cubic-bezier accepts", () => {
-    // x must sit in [0,1] or the curve is not a function of time; y may
-    // overshoot, which is what EASE_ENTER does to land past its target.
     for (const [, [x1, , x2]] of EASES) {
       expect(x1).toBeGreaterThanOrEqual(0);
       expect(x1).toBeLessThanOrEqual(1);

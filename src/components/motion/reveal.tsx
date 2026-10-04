@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
-import { DURATION_REVEAL, EASE_ENTER } from "@/lib/motion";
+import { DURATION_REVEAL, EASE_MOVE } from "@/lib/motion";
 
 type RevealProps = {
   children: ReactNode;
@@ -30,7 +30,7 @@ export function Reveal({
       transition={{
         duration: DURATION_REVEAL / 1000,
         delay,
-        ease: EASE_ENTER,
+        ease: EASE_MOVE,
       }}
     >
       {children}

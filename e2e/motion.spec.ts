@@ -94,11 +94,12 @@ test.describe("scroll reveal", () => {
   });
 });
 
-test.describe("particle field", () => {
-  const FIELD = "[data-particle-field]";
-  const CANVAS = "[data-particle-field] canvas";
-  const PAUSE = "button:has-text('Pause background field')";
-  const PLAY = "button:has-text('Play background field')";
+test.describe("night close", () => {
+  const CLOSE = "main [data-night-close]";
+  const PHONE = `${CLOSE} a[href^="tel:"]`;
+  const STARS = `${CLOSE} [data-close-stars]`;
+  const STAGE = '[data-three-stage="signal-close"]';
+  const ANY_STAGE = "canvas[data-three-stage]";
 
   const withMotion = async (browser: import("@playwright/test").Browser) => {
     const context = await browser.newContext({
@@ -108,90 +109,227 @@ test.describe("particle field", () => {
     return { context, page };
   };
 
-  const settled = async (page: import("@playwright/test").Page) => {
-    const root = page.locator(FIELD);
-    await root.waitFor({ state: "attached", timeout: 15_000 });
-    await root.scrollIntoViewIfNeeded();
-    await expect(root).toHaveAttribute("data-running", "true");
-    return root;
+  const toClose = (page: Page) =>
+    page.locator(CLOSE).evaluate((el) =>
+      el.scrollIntoView({
+        block: "center",
+        behavior: "instant" as ScrollBehavior,
+      }),
+    );
+
+  const staticStars = async (page: Page) => {
+    await expect(page.locator(STARS)).toBeVisible();
+    await expect(page.locator(`${STARS} circle`)).toHaveCount(40);
   };
 
-  test("item 1: renders zero canvases and zero pause controls under reduced motion", async ({
+  test("the phone number is set at headline size in gold, with a full tap target", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await toClose(page);
+
+    const phone = page.locator(PHONE);
+    await expect(phone).toBeVisible();
+    const size = await phone.evaluate((el) =>
+      parseFloat(getComputedStyle(el).fontSize),
+    );
+    expect(size).toBeGreaterThanOrEqual(48);
+    await expect(phone).toHaveCSS("color", "rgb(255, 192, 0)");
+    await expect(page.locator(CLOSE)).toHaveAttribute("data-scheme", "black");
+
+    const box = await phone.boundingBox();
+    expect(box, "the phone link has no box").not.toBeNull();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  });
+
+  test("the phone link shows a focus ring when reached by keyboard", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const phone = page.locator(PHONE);
+    await phone.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(phone).toBeFocused();
+    const outline = await phone.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { style: style.outlineStyle, width: style.outlineWidth };
+    });
+    expect(outline.style).not.toBe("none");
+    expect(parseFloat(outline.width)).toBeGreaterThanOrEqual(2);
+  });
+
+  test("with reduced motion: static stars and the phone, zero canvas", async ({
     browser,
   }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
+    await toClose(page);
+    await page.waitForTimeout(1000);
 
-    await expect(page.locator(CANVAS)).toHaveCount(0);
-    await expect(page.locator(FIELD)).toHaveCount(0);
-    await expect(page.locator(PAUSE)).toHaveCount(0);
-    await expect(page.locator(PLAY)).toHaveCount(0);
-
-    await expect(
-      page.locator("main section").last().getByRole("heading", { level: 2 }),
-    ).toBeVisible();
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await staticStars(page);
+    await expect(page.locator(PHONE)).toBeVisible();
 
     await context.close();
   });
 
-  test("item 2: renders zero canvases with JavaScript disabled", async ({
+  test("with JavaScript disabled: static stars and the phone, zero canvas", async ({
     browser,
   }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/");
 
-    await expect(page.locator(CANVAS)).toHaveCount(0);
-    await expect(page.locator(FIELD)).toHaveCount(0);
-    await expect(page.locator(PAUSE)).toHaveCount(0);
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await staticStars(page);
+    await expect(page.locator(PHONE)).toBeVisible();
 
     await context.close();
   });
 
-  test("item 3: the root is hidden under print, by the rule that names it", async ({
+  test("without WebGL: the static stars stay", async ({ browser }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    await context.addInitScript(() => {
+      const original = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (
+        this: HTMLCanvasElement,
+        ...args: unknown[]
+      ) {
+        if (String(args[0]).startsWith("webgl")) return null;
+        return (
+          original as unknown as (
+            this: HTMLCanvasElement,
+            ...rest: unknown[]
+          ) => unknown
+        ).apply(this, args);
+      } as typeof HTMLCanvasElement.prototype.getContext;
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await toClose(page);
+    await page.waitForTimeout(1500);
+
+    await expect(page.locator(STAGE)).toHaveCount(0);
+    await staticStars(page);
+
+    await context.close();
+  });
+
+  test("the star field mounts and replaces the static stars", async ({
     browser,
   }) => {
     const { context, page } = await withMotion(browser);
     await page.goto("/");
-    const root = await settled(page);
+    await toClose(page);
 
-    await expect(root).toHaveCount(1);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator(ANY_STAGE)).toHaveCount(1);
+    await expect(page.locator(STARS)).toBeHidden();
+    await expect(page.locator(PHONE)).toBeVisible();
 
-    await expect(root).not.toHaveAttribute("data-print-hide", /.*/);
+    await context.close();
+  });
+
+  test("scrolling from the hero to the close never shows two stages at once", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await context.addInitScript(() => {
+      const w = window as unknown as { maxStages: number; seen: string[] };
+      w.maxStages = 0;
+      w.seen = [];
+      const sample = () => {
+        const stages = document.querySelectorAll<HTMLCanvasElement>(
+          "canvas[data-three-stage]",
+        );
+        w.maxStages = Math.max(w.maxStages, stages.length);
+        for (const stage of stages) {
+          const key = stage.dataset.threeStage ?? "";
+          if (!w.seen.includes(key)) w.seen.push(key);
+        }
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    });
+    await page.goto("/");
+    await page.evaluate(() => window.scrollTo(0, window.innerHeight * 0.1));
+    await expect(page.locator('[data-three-stage="signal-hero"]')).toHaveCount(
+      1,
+      { timeout: 15_000 },
+    );
+
+    const end = await page.locator(CLOSE).evaluate((el) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      return top - window.innerHeight * 0.25;
+    });
+    for (let y = 0; y <= end; y += 300) {
+      await page.evaluate((top) => window.scrollTo(0, top), y);
+      await page.waitForTimeout(50);
+    }
+    await toClose(page);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+
+    const record = await page.evaluate(() => {
+      const w = window as unknown as { maxStages: number; seen: string[] };
+      return { maxStages: w.maxStages, seen: [...w.seen].sort() };
+    });
+    expect(record).toEqual({
+      maxStages: 1,
+      seen: ["signal-close", "signal-hero"],
+    });
+
+    await context.close();
+  });
+
+  test("paused while live: the close canvas goes and the static stars return", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await toClose(page);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+
+    await page.locator(EFFECTS_PAUSE).first().click();
+    await expect(page.locator(EFFECTS_PAUSE).first()).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    await expect(page.locator(STAGE)).toHaveCount(0);
+    await staticStars(page);
+
+    await context.close();
+  });
+
+  test("in print with the field mounted: no stars, the phone prints", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await toClose(page);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
 
     await page.emulateMedia({ media: "print" });
-    await expect(root).toBeHidden();
-    expect(
-      await root.evaluate((el) => getComputedStyle(el).display),
-      "the named selector inside the print block is the only thing that can be hiding this",
-    ).toBe("none");
+    await expect(page.locator(STAGE)).toBeHidden();
+    await expect(page.locator(STARS)).toBeHidden();
+    await expect(page.locator(PHONE)).toBeVisible();
 
     await context.close();
   });
+});
 
-  test("item 4: exactly one field exists, and its pause control exists with it", async ({
-    browser,
-  }) => {
-    const { context, page } = await withMotion(browser);
+test.describe("effects pause control", () => {
+  test("is reachable by keyboard and toggles", async ({ browser }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
     await page.goto("/");
-    await settled(page);
-
-    await expect(page.locator(FIELD)).toHaveCount(1);
-    await expect(page.locator(CANVAS)).toHaveCount(1);
-
-    await expect(page.locator(EFFECTS_PAUSE)).toHaveCount(1);
-    await expect(page.locator(EFFECTS_PAUSE)).toBeVisible();
-
-    await context.close();
-  });
-
-  test("item 5: the pause control is reachable by keyboard", async ({
-    browser,
-  }) => {
-    const { context, page } = await withMotion(browser);
-    await page.goto("/");
-    await settled(page);
 
     const stops: string[] = [];
     let reached = false;
@@ -222,14 +360,17 @@ test.describe("particle field", () => {
     await context.close();
   });
 
-  test("item 6: the pause control carries a visible text label, not an icon alone", async ({
+  test("carries a visible text label, not an icon alone", async ({
     browser,
   }) => {
-    const { context, page } = await withMotion(browser);
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
     await page.goto("/");
-    await settled(page);
 
     const control = page.locator(EFFECTS_PAUSE);
+    await expect(control).toHaveCount(1);
     await expect(control).toHaveText(/Pause animations/);
 
     const box = await control.boundingBox();
@@ -238,111 +379,6 @@ test.describe("particle field", () => {
       box!.width,
       "the control is narrow enough to be icon-only: the words are not being painted",
     ).toBeGreaterThan(100);
-
-    await expect(page.locator("button:text-is('Pause')")).toHaveCount(0);
-
-    await context.close();
-  });
-
-  test("item 7: the motion runs, and pressing the control freezes it", async ({
-    browser,
-  }) => {
-    const { context, page } = await withMotion(browser);
-    await page.goto("/");
-    const root = await settled(page);
-
-    const frame = () =>
-      page.evaluate(() => {
-        const canvas = document.querySelector<HTMLCanvasElement>(
-          "[data-particle-field] canvas",
-        );
-        return canvas ? canvas.toDataURL() : null;
-      });
-
-    const before = await frame();
-    expect(before, "no canvas to sample").not.toBeNull();
-    await page.waitForTimeout(300);
-    const after = await frame();
-    expect(
-      after,
-      "two frames 300ms apart are byte-identical: the canvas is static",
-    ).not.toBe(before);
-
-    await page.locator(EFFECTS_PAUSE).click();
-    await expect(root).toHaveAttribute("data-running", "false");
-    await expect(root).toHaveAttribute("data-paused", "true");
-    await expect(page.locator(EFFECTS_PAUSE)).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-
-    await page.waitForTimeout(100);
-    const frozen = await frame();
-    await page.waitForTimeout(300);
-    expect(await frame(), "the field kept moving after it was paused").toBe(
-      frozen,
-    );
-
-    await context.close();
-  });
-
-  test("item 8: renders nothing and throws nothing when the 2D context is null", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({
-      reducedMotion: "no-preference",
-    });
-    await context.addInitScript(() => {
-      const original = HTMLCanvasElement.prototype.getContext;
-
-      HTMLCanvasElement.prototype.getContext = function (
-        this: HTMLCanvasElement,
-        ...args: unknown[]
-      ) {
-        if (args[0] === "2d") return null;
-        return (
-          original as unknown as (
-            this: HTMLCanvasElement,
-            ...rest: unknown[]
-          ) => unknown
-        ).apply(this, args);
-      } as typeof HTMLCanvasElement.prototype.getContext;
-    });
-
-    const page = await context.newPage();
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto("/");
-
-    await expect(page.locator(PAUSE)).toHaveCount(0);
-    await expect(page.locator(CANVAS)).toHaveCount(0);
-
-    await expect(
-      page.locator("main section").last().getByRole("heading", { level: 2 }),
-    ).toBeVisible();
-
-    expect(errors, `uncaught errors: ${errors.join(" | ")}`).toEqual([]);
-
-    await context.close();
-  });
-
-  test("the point count is capped at 80 on a very wide viewport", async ({
-    browser,
-  }) => {
-    const { context, page } = await withMotion(browser);
-    await page.setViewportSize({ width: 2560, height: 1440 });
-    await page.goto("/");
-    const root = await settled(page);
-
-    const points = Number(await root.getAttribute("data-points"));
-    expect(
-      points,
-      "the field reported no points at all, so the cap is not what is holding this down",
-    ).toBeGreaterThan(0);
-    expect(
-      points,
-      `the density calculation returned ${points} points at 2560px wide`,
-    ).toBeLessThanOrEqual(80);
 
     await context.close();
   });
@@ -498,7 +534,7 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("paused while live: the hero canvas goes and the particle field pauses", async ({
+  test("paused while live: the hero canvas goes and Nate's photo returns", async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -508,13 +544,15 @@ test.describe("hero signal field", () => {
     await page.goto("/");
     await scrollHeroTo(page, 0.05);
     await expect(page.locator(CANVAS)).toHaveCount(1, { timeout: 15_000 });
-    const field = page.locator("[data-particle-field]");
-    await field.waitFor({ state: "attached", timeout: 15_000 });
+    await expect(page.locator(PORTRAIT)).toHaveCSS("opacity", "0");
 
     await page.locator(EFFECTS_PAUSE).first().click();
 
     await expect(page.locator(CANVAS)).toHaveCount(0);
-    await expect(field).toHaveAttribute("data-paused", "true");
+    await expect(page.locator(EFFECTS_PAUSE).first()).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await portraitShown(page);
 
     await context.close();

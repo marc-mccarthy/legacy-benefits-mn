@@ -51,7 +51,7 @@ export const homeBlocks: PageBlock[] = [
   },
   {
     blockType: "ctaBand",
-    scheme: "dark",
+    scheme: "black",
     heading: "Not sure where to start?",
     body: "Tell us a little about your situation and a licensed agent will walk you through the options. No cost, no obligation.",
     ctaLabel: "Request a call",

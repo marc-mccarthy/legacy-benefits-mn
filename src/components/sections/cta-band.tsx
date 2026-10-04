@@ -1,8 +1,46 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Container, Section, type Scheme } from "@/components/ui/section";
-import { ParticleField } from "@/components/motion/particle-field";
 import { Reveal } from "@/components/motion/reveal";
+import { ThreeStage } from "@/components/motion/three-stage";
+import { seededRandom } from "@/lib/portrait-points";
+import { cn } from "@/lib/utils";
+
+const STAR_COUNT = 40;
+
+const fallbackStars = (() => {
+  const random = seededRandom(20261003);
+  return Array.from({ length: STAR_COUNT }, () => ({
+    cx: Math.round(random() * 1600),
+    cy: Math.round(random() * 900),
+    r: 1.5 + Math.round(random() * 25) / 10,
+    opacity: 0.45 + Math.round(random() * 55) / 100,
+  }));
+})();
+
+function StaticStars() {
+  return (
+    <svg
+      aria-hidden
+      data-close-stars=""
+      viewBox="0 0 1600 900"
+      preserveAspectRatio="xMidYMid slice"
+      className="absolute inset-0 h-full w-full print:hidden [:has(>canvas)>&]:hidden"
+    >
+      {fallbackStars.map((star, index) => (
+        <circle
+          key={index}
+          cx={star.cx}
+          cy={star.cy}
+          r={star.r}
+          opacity={star.opacity}
+          fill="var(--color-star-gold)"
+        />
+      ))}
+    </svg>
+  );
+}
 
 export function CtaBand({
   heading,
@@ -19,11 +57,21 @@ export function CtaBand({
   phone?: string | null;
   scheme?: Scheme;
 }) {
-  const isNightBand = scheme === "dark";
+  const isNightBand = scheme === "black";
 
   return (
-    <Section scheme={scheme} className="relative isolate">
-      {isNightBand ? <ParticleField /> : null}
+    <Section
+      scheme={scheme}
+      className="relative isolate"
+      data-night-close={isNightBand ? "" : undefined}
+    >
+      {isNightBand ? (
+        <ThreeStage
+          scene="signal-close"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_115%,var(--color-ground-dark),transparent_70%)]"
+          fallback={<StaticStars />}
+        />
+      ) : null}
       <Container>
         <Reveal className="flex max-w-4xl flex-col items-start gap-6">
           <h2 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em] text-balance">
@@ -34,9 +82,19 @@ export function CtaBand({
           {phone ? (
             <a
               href={`tel:${phone.replace(/\D/g, "")}`}
-              className="tabular text-(length:--text-display-lg) font-semibold tracking-[0.02em] hover:underline"
+              className={cn(
+                "tabular inline-block min-h-11 min-w-11 font-semibold tracking-[0.02em] hover:underline",
+                isNightBand
+                  ? "text-star-gold text-[length:clamp(3rem,8.5vw_-_0.5rem,5.75rem)] leading-none"
+                  : "text-(length:--text-display-lg)",
+              )}
             >
-              {phone}
+              {phone.split(" ").map((part, index) => (
+                <Fragment key={index}>
+                  {index > 0 ? " " : null}
+                  <span className="whitespace-nowrap">{part}</span>
+                </Fragment>
+              ))}
             </a>
           ) : null}
 

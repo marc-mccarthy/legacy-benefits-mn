@@ -191,6 +191,13 @@ export const media: Record<string, MediaAsset> = {
     alt: "Nate Best",
     srcSet: [],
   },
+  "close.starSprite": {
+    src: "/media/star-particle-glow.png",
+    width: 256,
+    height: 256,
+    alt: "A four-point North Star with a soft glow",
+    srcSet: [],
+  },
   "nate.duotone": {
     src: "/media/nate-duotone.jpg",
     width: 651,

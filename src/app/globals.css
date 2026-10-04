@@ -325,10 +325,6 @@
     );
   }
 
-  [data-particle-field] {
-    mask-image: linear-gradient(to bottom, black 70%, transparent);
-  }
-
   [data-faq-panel] {
     overflow: hidden;
   }
@@ -462,10 +458,6 @@
 
   [data-lit-words] [data-lit-word] {
     opacity: 1 !important;
-  }
-
-  [data-particle-field] {
-    display: none !important;
   }
 
   *,

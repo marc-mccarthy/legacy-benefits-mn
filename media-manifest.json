@@ -477,6 +477,50 @@
       "usage": "commercial",
       "query": null,
       "fetchedBy": "scripts/portrait-assets.sh"
+    },
+    {
+      "slot": "close.starSprite",
+      "lane": "generated-antigravity",
+      "file": "public/media/star-particle-glow.png",
+      "variants": [],
+      "intrinsic": {
+        "width": 256,
+        "height": 256
+      },
+      "alt": "A four-point North Star with a soft glow",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "star-particle-glow",
+        "pageUrl": null,
+        "downloadUrl": "public/media/star-particle-glow.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white-on-alpha sprite for the night close star field; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
     }
   ]
 }

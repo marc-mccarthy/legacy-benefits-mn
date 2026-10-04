@@ -66,6 +66,7 @@ describe("media slots", () => {
     expect(Object.keys(media).sort()).toEqual(
       [
         "articles.coverImage",
+        "close.starSprite",
         "events.image",
         "nate.cutout",
         "nate.cutoutSample",

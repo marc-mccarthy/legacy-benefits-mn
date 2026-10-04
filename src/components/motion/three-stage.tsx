@@ -10,6 +10,7 @@ type SceneLoader = () => Promise<{ default: SceneFactory }>;
 
 const sceneLoaders: Partial<Record<SceneKey, SceneLoader>> = {
   "signal-hero": () => import("./scenes/signal-hero"),
+  "signal-close": () => import("./scenes/signal-close"),
 };
 
 const CANVAS_CLASS =

@@ -937,6 +937,7 @@ test.describe("view transitions", () => {
       delete (document as unknown as Record<string, unknown>)
         .startViewTransition;
     });
+    await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
     await navigate(page);
     expect(errors).toEqual([]);
@@ -950,6 +951,7 @@ test.describe("view transitions", () => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await recordViewTransitions(page);
+    await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
     await navigate(page);
     const animations = await lastTransitionAnimations(page);

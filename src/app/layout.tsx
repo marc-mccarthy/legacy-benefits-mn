@@ -6,6 +6,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { getBusinessIdentity } from "@/lib/business";
+import { getSiteUrl } from "@/lib/site-url";
 
 const atkinson = AtkinsonHyperlegibleNext({
   variable: "--font-atkinson",
@@ -30,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }));
 
   return {
+    metadataBase: new URL(getSiteUrl()),
     title: {
       default: `${name} — Medicare Plans & Guidance`,
       template: `%s | ${name}`,

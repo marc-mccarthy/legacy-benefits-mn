@@ -33,18 +33,16 @@ export async function bandsWithoutVisibleText(page: Page): Promise<string[]> {
 
 export async function sweepAndSettle(page: Page): Promise<void> {
   await page.waitForLoadState("networkidle");
-  await page.evaluate(async () => {
-    const step = window.innerHeight / 2;
-    const max = document.documentElement.scrollHeight;
-    for (let y = 0; y < max; y += step) {
-      window.scrollTo(0, y);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    for (let y = max; y > 0; y -= step) {
-      window.scrollTo(0, y);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    window.scrollTo(0, 0);
-  });
+  const { step, max } = await page.evaluate(() => ({
+    step: window.innerHeight / 2,
+    max: document.documentElement.scrollHeight,
+  }));
+  const scrollTo = async (y: number) => {
+    await page.evaluate((top) => window.scrollTo(0, top), y);
+    await page.waitForTimeout(100);
+  };
+  for (let y = 0; y < max; y += step) await scrollTo(y);
+  for (let y = max; y > 0; y -= step) await scrollTo(y);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(3000);
 }

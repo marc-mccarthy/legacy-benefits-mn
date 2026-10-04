@@ -5,6 +5,7 @@ import { JsonLd, personSchema } from "@/components/seo/json-ld";
 import { Button } from "@/components/ui/button";
 import { PhoneLink } from "@/components/ui/phone-link";
 import { Container, Section } from "@/components/ui/section";
+import imageLoader from "@/lib/image-loader";
 import type { TeamMember as Member } from "@/content/types";
 
 export function TeamMember({ member }: { member: Member }) {
@@ -33,11 +34,11 @@ export function TeamMember({ member }: { member: Member }) {
         <Container className="grid items-start gap-10 md:grid-cols-[480px_1fr] md:gap-16">
           {photo ? (
             <Image
-              src={photo.src}
+              src={imageLoader({ src: photo.src, width: photo.width })}
               alt={photo.alt}
               width={photo.width}
               height={photo.height}
-              sizes="(min-width: 768px) 480px, 90vw"
+              unoptimized
               className="h-auto w-full max-w-[480px] rounded-(--radius-card)"
               priority
             />

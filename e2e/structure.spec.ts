@@ -113,9 +113,24 @@ test.describe("the service band", () => {
       await next.click();
       await expect.poll(scrollLeft).toBeGreaterThan(before);
 
+      const settled = async () => {
+        let last = Number.NaN;
+        await expect
+          .poll(
+            async () => {
+              const now = await scrollLeft();
+              const still = now === last;
+              last = now;
+              return still;
+            },
+            { intervals: [200] },
+          )
+          .toBe(true);
+      };
+      await settled();
       while (await next.isEnabled()) {
         await next.click();
-        await page.waitForTimeout(400);
+        await settled();
       }
       await expect(next).toBeDisabled();
       await expect(prev).toBeEnabled();

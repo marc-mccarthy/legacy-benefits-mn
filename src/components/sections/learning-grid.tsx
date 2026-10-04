@@ -141,7 +141,7 @@ export function LearningGrid({
                         <h3 className="text-lg font-semibold">
                           <Link
                             href={`/learn/${article.slug}`}
-                            className="after:absolute after:inset-0"
+                            className="flex min-h-11 items-center after:absolute after:inset-0"
                           >
                             {article.title}
                           </Link>

@@ -564,13 +564,13 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  :root:not([data-effects-paused])[data-iris]
-    ::view-transition-new(.page-enter) {
+  :root:not([data-effects-paused])[data-iris]::view-transition-new(
+      .page-enter
+    ) {
     animation: page-iris var(--duration-house) var(--ease-move) both;
   }
 
-  :root:not([data-effects-paused])[data-iris]
-    ::view-transition-old(.page-exit) {
+  :root:not([data-effects-paused])[data-iris]::view-transition-old(.page-exit) {
     animation: none;
   }
 
@@ -739,6 +739,7 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
 }
 
 [data-rail] > li {
+  position: relative;
   flex: 0 0 min(26rem, 85vw);
   scroll-snap-align: start;
   scroll-margin-top: calc(var(--header-stack) + 1.5rem);

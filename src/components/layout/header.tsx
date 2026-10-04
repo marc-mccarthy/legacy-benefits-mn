@@ -104,7 +104,7 @@ export function Header({ nav, clientPortal, phone, brand }: HeaderProps) {
       style={{ viewTransitionName: "site-header" }}
       className={cn(
         "group/header bg-surface text-on-surface sticky top-0 z-50 transition-shadow duration-(--duration-house)",
-        scrolled && "shadow-sm",
+        scrolled && "mb-[calc(var(--header-stack)-4rem)] shadow-sm",
       )}
     >
       <div data-header-utility className="group-data-[stuck]/header:hidden">

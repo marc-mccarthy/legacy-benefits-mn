@@ -61,6 +61,12 @@ describe("motion tokens with no TypeScript twin", () => {
     expect(css).not.toMatch(new RegExp(`--${name}:`));
   });
 
+  it("sets the hero headline and the night-close phone on one clamp", () => {
+    expect(customProperty("text-display-hero")).toBe(
+      "clamp(3rem, 8.5vw - 0.5rem, 5.75rem)",
+    );
+  });
+
   it("caps display type at 11.5rem", () => {
     expect(customProperty("text-display-xl")).toBe(
       "clamp(3.5rem, 0.5rem + 12vw, 11.5rem)",

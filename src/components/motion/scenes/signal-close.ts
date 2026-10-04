@@ -71,12 +71,26 @@ const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
   });
   const camera = new OrthographicCamera(-1, 1, 1, -1, -10, 10);
 
-  const renderer = new WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: false,
-    powerPreference: "low-power",
-  });
+  const disposeAssets = () => {
+    for (const { geometry, material } of layers) {
+      geometry.dispose();
+      material.dispose();
+    }
+    texture.dispose();
+  };
+
+  let renderer: WebGLRenderer;
+  try {
+    renderer = new WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: false,
+      powerPreference: "low-power",
+    });
+  } catch (error) {
+    disposeAssets();
+    throw error;
+  }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setClearColor(0x000000, 0);
 
@@ -105,11 +119,7 @@ const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
     },
     dispose() {
       cancelAnimationFrame(frame);
-      for (const { geometry, material } of layers) {
-        geometry.dispose();
-        material.dispose();
-      }
-      texture.dispose();
+      disposeAssets();
       renderer.dispose();
       renderer.forceContextLoss();
     },

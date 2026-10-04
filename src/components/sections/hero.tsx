@@ -78,7 +78,7 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
 
           <Container className="relative pb-32 md:pb-24">
             <div className="space-y-5 text-white md:max-w-[48%] md:space-y-6">
-              <h1 className="font-display text-[clamp(3rem,8.5vw_-_0.5rem,5.75rem)] leading-none font-bold tracking-[-0.06em] text-balance [font-stretch:125%]">
+              <h1 className="font-display text-(length:--text-display-hero) leading-none font-bold tracking-[-0.06em] text-balance [font-stretch:125%]">
                 {heading}
               </h1>
               {subheading ? (

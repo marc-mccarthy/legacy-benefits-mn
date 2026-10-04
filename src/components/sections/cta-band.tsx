@@ -62,18 +62,24 @@ export function CtaBand({
   return (
     <Section
       scheme={scheme}
-      className="relative isolate"
+      className={cn("relative isolate", isNightBand && "overflow-hidden")}
       data-night-close={isNightBand ? "" : undefined}
     >
       {isNightBand ? (
         <ThreeStage
           scene="signal-close"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_115%,var(--color-ground-dark),transparent_70%)]"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_40%_at_50%_100%,var(--color-ground-dark),transparent)]"
           fallback={<StaticStars />}
         />
       ) : null}
       <Container>
-        <Reveal className="flex max-w-4xl flex-col items-start gap-6">
+        <Reveal
+          className={cn(
+            "flex max-w-4xl flex-col items-start gap-6",
+            isNightBand &&
+              "bg-ground-black shadow-[0_0_5rem_2.5rem_var(--color-ground-black)]",
+          )}
+        >
           <h2 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em] text-balance">
             {heading}
           </h2>
@@ -85,7 +91,7 @@ export function CtaBand({
               className={cn(
                 "tabular inline-block min-h-11 min-w-11 font-semibold tracking-[0.02em] hover:underline",
                 isNightBand
-                  ? "text-star-gold text-[length:clamp(3rem,8.5vw_-_0.5rem,5.75rem)] leading-none"
+                  ? "text-star-gold text-(length:--text-display-hero) leading-none"
                   : "text-(length:--text-display-lg)",
               )}
             >

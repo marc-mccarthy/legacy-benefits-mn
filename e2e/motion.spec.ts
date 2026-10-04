@@ -321,6 +321,115 @@ test.describe("night close", () => {
 
     await context.close();
   });
+
+  const hideCopy = (page: Page) =>
+    page.addStyleTag({
+      content: `${CLOSE} h2, ${CLOSE} p, ${CLOSE} a { visibility: hidden !important; }`,
+    });
+
+  const brightestBackground = async (page: Page, selector: string) => {
+    const box = await page.locator(selector).boundingBox();
+    expect(box, `${selector} has no box`).not.toBeNull();
+    const shot = await page.screenshot({ clip: box!, scale: "css" });
+    return page.evaluate(async (png) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d")!;
+      context.drawImage(image, 0, 0);
+      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+      const linear = (channel: number) => {
+        const s = channel / 255;
+        return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      };
+      let brightest = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        brightest = Math.max(
+          brightest,
+          0.2126 * linear(data[i]) +
+            0.7152 * linear(data[i + 1]) +
+            0.0722 * linear(data[i + 2]),
+        );
+      }
+      return brightest;
+    }, shot.toString("base64"));
+  };
+
+  const luminance = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((at) => {
+      const s = parseInt(hex.slice(at, at + 2), 16) / 255;
+      return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+
+  const contrast = (text: string, background: number) =>
+    (luminance(text) + 0.05) / (background + 0.05);
+
+  for (const [label, reducedMotion] of [
+    ["the live star field", "no-preference"],
+    ["the static stars", "reduce"],
+  ] as const) {
+    test(`text over ${label} keeps AA contrast in every sampled frame`, async ({
+      browser,
+    }) => {
+      const context = await browser.newContext({ reducedMotion });
+      const page = await context.newPage();
+      await page.goto("/");
+      await toClose(page);
+      if (reducedMotion === "no-preference") {
+        await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+      } else {
+        await expect(page.locator(STARS)).toBeVisible();
+      }
+      await hideCopy(page);
+
+      const copy = { heading: 0, body: 0, phone: 0 };
+      for (let frame = 0; frame < 3; frame += 1) {
+        await page.waitForTimeout(400);
+        copy.heading = Math.max(
+          copy.heading,
+          await brightestBackground(page, `${CLOSE} h2`),
+        );
+        copy.body = Math.max(
+          copy.body,
+          await brightestBackground(page, `${CLOSE} p`),
+        );
+        copy.phone = Math.max(
+          copy.phone,
+          await brightestBackground(page, PHONE),
+        );
+      }
+
+      expect(contrast("#A0A8C0", copy.heading)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast("#A0A8C0", copy.body)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast("#FFC000", copy.phone)).toBeGreaterThanOrEqual(3);
+
+      await context.close();
+    });
+  }
+
+  test("the live star field moves", async ({ browser }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await toClose(page);
+    const stage = page.locator(STAGE);
+    await expect(stage).toHaveCount(1, { timeout: 15_000 });
+    await hideCopy(page);
+    await page.waitForTimeout(300);
+
+    const before = await stage.screenshot();
+    await page.waitForTimeout(500);
+    const after = await stage.screenshot();
+    expect(after.equals(before), "two frames 500ms apart are identical").toBe(
+      false,
+    );
+
+    await context.close();
+  });
 });
 
 test.describe("effects pause control", () => {

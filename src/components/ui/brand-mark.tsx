@@ -1,10 +1,10 @@
 export function BrandMark() {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="18 10 77 77"
       aria-hidden
       data-brand-mark
-      className="size-8 shrink-0"
+      className="size-[1em] shrink-0"
     >
       <path
         d="M25,20 L25,80 L80,80"
@@ -25,9 +25,12 @@ export function BrandMark() {
 
 export function BrandLockup({ name }: { name: string }) {
   return (
-    <span data-brand-lockup className="inline-flex min-w-0 items-center gap-2">
+    <span
+      data-brand-lockup
+      className="inline-flex min-w-0 items-baseline gap-1.5 text-base leading-tight sm:text-lg"
+    >
       <BrandMark />
-      <span className="min-w-0 font-(family-name:--font-display) text-base leading-tight font-extrabold tracking-[-0.02em] [overflow-wrap:anywhere] sm:text-lg">
+      <span className="min-w-0 font-(family-name:--font-display) font-extrabold tracking-[-0.02em] [overflow-wrap:anywhere]">
         {name}
       </span>
     </span>

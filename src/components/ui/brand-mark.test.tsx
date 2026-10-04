@@ -4,6 +4,7 @@ import { expect, test } from "vitest";
 import { BrandLockup, BrandMark } from "./brand-mark";
 
 const iconSvg = readFileSync("src/app/icon.svg", "utf8");
+const globalsCss = readFileSync("src/app/globals.css", "utf8");
 
 test("BrandLockup renders the name as text and an aria-hidden mark", () => {
   const html = renderToStaticMarkup(<BrandLockup name="Legacy Benefits" />);
@@ -30,5 +31,11 @@ test("neither BrandMark nor src/app/icon.svg contains #020B44", () => {
 test("icon.svg tile is #081A3A", () => {
   expect(iconSvg).toContain(
     '<rect width="100" height="100" rx="22" fill="#081A3A"/>',
+  );
+});
+
+test("globals.css prints the star in the gold ink", () => {
+  expect(globalsCss).toMatch(
+    /@media print[\s\S]*\[data-brand-mark\] \[data-star\]\s*\{\s*fill: var\(--color-star-gold-ink\);/,
   );
 });

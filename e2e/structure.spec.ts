@@ -236,5 +236,13 @@ for (const path of ["/", "/contact"]) {
     ).toHaveCount(1);
     await expect(header.locator("img")).toHaveCount(0);
     await expect(footer.locator("img")).toHaveCount(0);
+
+    const markLeft = (await page
+      .locator("header [data-brand-mark]")
+      .boundingBox())!.x;
+    const barLeft = (await page
+      .locator('header a[href^="tel:"]')
+      .boundingBox())!.x;
+    expect(Math.abs(markLeft - barLeft)).toBeLessThanOrEqual(1);
   });
 }

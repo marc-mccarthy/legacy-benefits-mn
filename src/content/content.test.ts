@@ -26,7 +26,7 @@ describe("row counts recorded in the spec's extraction table", () => {
     expect(testimonials).toHaveLength(3);
     expect(carriers).toHaveLength(6);
     expect(faq).toHaveLength(4);
-    expect(homeBlocks).toHaveLength(10);
+    expect(homeBlocks).toHaveLength(11);
   });
 
   it("carries the site settings children", () => {
@@ -45,6 +45,7 @@ describe("row counts recorded in the spec's extraction table", () => {
     expect(homeBlocks.map((block) => block.blockType)).toEqual([
       "hero",
       "noise",
+      "signal",
       "serviceGrid",
       "stats",
       "eventCarousel",

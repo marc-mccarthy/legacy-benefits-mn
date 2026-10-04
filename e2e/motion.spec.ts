@@ -1069,3 +1069,88 @@ test.describe("lenis smooth scroll", () => {
       .toBe(false);
   });
 });
+
+test.describe("the signal reveal", () => {
+  const COLOUR = "[data-signal-colour]";
+
+  const colourState = (page: Page) =>
+    page.locator(COLOUR).evaluate((el) => ({
+      opacity: getComputedStyle(el).opacity,
+      animationName: getComputedStyle(el).animationName,
+    }));
+
+  test("reduced motion, JS off and print show the colour photo with no animation", async ({
+    browser,
+  }) => {
+    const reduced = await browser.newContext({ reducedMotion: "reduce" });
+    const reducedPage = await reduced.newPage();
+    await reducedPage.goto("/");
+    expect(await colourState(reducedPage)).toEqual({
+      opacity: "1",
+      animationName: "none",
+    });
+    await expect(reducedPage.locator("[data-signal] canvas")).toHaveCount(0);
+    await reduced.close();
+
+    const noJs = await browser.newContext({
+      javaScriptEnabled: false,
+      reducedMotion: "no-preference",
+    });
+    const noJsPage = await noJs.newPage();
+    await noJsPage.goto("/");
+    await noJsPage.emulateMedia({ media: "print" });
+    expect(await colourState(noJsPage)).toEqual({
+      opacity: "1",
+      animationName: "none",
+    });
+    await expect(noJsPage.locator("[data-signal] canvas")).toHaveCount(0);
+    await noJs.close();
+  });
+
+  test("Pause removes the reveal and leaves the colour photo visible", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.locator("[data-effects-pause]").first().click();
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-effects-paused",
+      "",
+    );
+    expect(await colourState(page)).toEqual({
+      opacity: "1",
+      animationName: "none",
+    });
+    await context.close();
+  });
+
+  test("with motion the colour layer develops as the band scrolls to centre", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    const { top, height } = await page
+      .locator("[data-signal]")
+      .evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        return { top: box.top + window.scrollY, height: box.height };
+      });
+    await page.evaluate((y) => window.scrollTo(0, y), top - 890);
+    await page.waitForTimeout(300);
+    const entering = await colourState(page);
+    expect(entering.animationName).not.toBe("none");
+    expect(Number(entering.opacity)).toBeLessThan(1);
+
+    await page.evaluate((y) => window.scrollTo(0, y), top + height / 2 - 450);
+    await page.waitForTimeout(300);
+    expect(Number((await colourState(page)).opacity)).toBe(1);
+    await context.close();
+  });
+});

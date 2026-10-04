@@ -19,6 +19,12 @@ export const homeBlocks: PageBlock[] = [
     body: "Medicare comes at you from every direction. Nate's job is to turn it into one clear answer you can act on.",
   },
   {
+    blockType: "signal",
+    scheme: "dark",
+    heading: "You talk to Nate. Every time.",
+    ctaLabel: "Request a call back",
+  },
+  {
     blockType: "serviceGrid",
     scheme: "light",
     heading: "How we help",

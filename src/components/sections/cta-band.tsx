@@ -1,6 +1,6 @@
-import { Fragment } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PhoneLink } from "@/components/ui/phone-link";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { Reveal } from "@/components/motion/reveal";
 import { ThreeStage } from "@/components/motion/three-stage";
@@ -86,22 +86,14 @@ export function CtaBand({
           {body ? <p className="text-muted lead max-w-2xl">{body}</p> : null}
 
           {phone ? (
-            <a
-              href={`tel:${phone.replace(/\D/g, "")}`}
-              className={cn(
-                "tabular inline-block min-h-11 min-w-11 font-semibold tracking-[0.02em] hover:underline",
+            <PhoneLink
+              phone={phone}
+              className={
                 isNightBand
                   ? "text-star-gold text-(length:--text-display-hero) leading-none"
-                  : "text-(length:--text-display-lg)",
-              )}
-            >
-              {phone.split(" ").map((part, index) => (
-                <Fragment key={index}>
-                  {index > 0 ? " " : null}
-                  <span className="whitespace-nowrap">{part}</span>
-                </Fragment>
-              ))}
-            </a>
+                  : "text-(length:--text-display-lg)"
+              }
+            />
           ) : null}
 
           {ctaHref && ctaLabel ? (

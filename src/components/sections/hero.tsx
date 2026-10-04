@@ -50,7 +50,7 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
                   width={portrait.width}
                   height={portrait.height}
                   sizes="(min-width: 768px) 40vw, 60vw"
-                  className="h-full w-full object-contain object-bottom print:opacity-100! [:has(canvas)_&]:animate-[page-fade-in_var(--duration-stage)_var(--ease-fade)_var(--duration-converge)_both]"
+                  className="portrait-feather h-full w-full object-contain object-bottom print:opacity-100! [:has(canvas)_&]:animate-[page-fade-in_var(--duration-stage)_var(--ease-fade)_var(--duration-converge)_both]"
                 />
               ) : null
             }

@@ -674,3 +674,151 @@ test.describe("the noise band", () => {
     await context.close();
   });
 });
+
+test.describe("the signal band", () => {
+  const SIGNAL = "[data-signal]";
+  const LAYERS = "[data-signal-duotone], [data-signal-colour]";
+
+  test("lays out the portrait at or below natural width and aspect", async ({
+    browser,
+  }) => {
+    for (const width of [1440, 1920]) {
+      const context = await browser.newContext({
+        viewport: { width, height: 900 },
+        reducedMotion: "no-preference",
+      });
+      const page = await context.newPage();
+      await page.goto("/");
+      await page.locator(SIGNAL).scrollIntoViewIfNeeded();
+
+      for (const [selector, natural] of [
+        ["[data-signal-duotone]", 651],
+        ["[data-signal-colour]", 600],
+      ] as const) {
+        const box = await page
+          .locator(selector)
+          .evaluate((el) => el.getBoundingClientRect().toJSON());
+        expect(box.width, `${selector} at ${width}`).toBeLessThanOrEqual(
+          natural,
+        );
+        expect(
+          Math.abs(box.width / box.height / (651 / 1229) - 1),
+        ).toBeLessThan(0.01);
+      }
+      await expect(page.locator(`${SIGNAL} h2`)).toHaveText(
+        "You talk to Nate. Every time.",
+      );
+
+      const masks = await page
+        .locator(LAYERS)
+        .evaluateAll((els) =>
+          els.map((el) => [
+            getComputedStyle(el).maskImage,
+            getComputedStyle(el).opacity,
+          ]),
+        );
+      for (const [mask] of masks) expect(mask).toContain("linear-gradient");
+      await context.close();
+    }
+  });
+
+  test("pointer light moves with the pointer on desktop only", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: DESKTOP,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    const section = page.locator(SIGNAL);
+    await section.scrollIntoViewIfNeeded();
+    await expect(section).not.toHaveAttribute("data-light", "");
+
+    await page.mouse.move(300, 300);
+    await page.mouse.move(700, 400);
+    await expect(section).toHaveAttribute("data-light", "");
+    const before = await section.evaluate((el) =>
+      el.style.getPropertyValue("--mx"),
+    );
+    await page.mouse.move(900, 450);
+    await expect
+      .poll(() => section.evaluate((el) => el.style.getPropertyValue("--mx")))
+      .not.toBe(before);
+    expect(
+      await section.evaluate(
+        (el) => getComputedStyle(el, "::before").backgroundImage,
+      ),
+    ).toContain("rgba(8, 26, 58, 0.3)");
+
+    await page.locator("[data-effects-pause]").first().click();
+    await expect(section).not.toHaveAttribute("data-light", "");
+    await context.close();
+  });
+
+  test("with touch or reduced motion: no light layer", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      reducedMotion:
+        testInfo.project.name === "mobile" ? "no-preference" : "reduce",
+      hasTouch: testInfo.project.name === "mobile",
+      isMobile: testInfo.project.name === "mobile",
+      viewport:
+        testInfo.project.name === "mobile"
+          ? { width: 390, height: 844 }
+          : DESKTOP,
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    const section = page.locator(SIGNAL);
+    await section.scrollIntoViewIfNeeded();
+    await page.mouse.move(300, 300);
+    await page.mouse.move(500, 400);
+    await expect(section).not.toHaveAttribute("data-light", "");
+    expect(
+      await section.evaluate((el) => el.style.getPropertyValue("--mx")),
+    ).toBe("");
+    expect(
+      await section.evaluate((el) => getComputedStyle(el, "::before").content),
+    ).toBe("none");
+    await context.close();
+  });
+
+  test("with JavaScript disabled and in print: copy and phone visible, zero canvas", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/");
+    for (const media of ["screen", "print"] as const) {
+      await page.emulateMedia({ media });
+      await expect(page.locator(`${SIGNAL} h2`)).toBeVisible();
+      await expect(page.locator(`${SIGNAL} p`).first()).toBeVisible();
+      await expect(page.locator(`${SIGNAL} a[href^="tel:"]`)).toBeVisible();
+      await expect(page.locator(`${SIGNAL} canvas`)).toHaveCount(0);
+    }
+    await context.close();
+  });
+
+  test("white heading keeps AA contrast with the pointer on it", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: DESKTOP,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.locator(SIGNAL).scrollIntoViewIfNeeded();
+    const box = (await page.locator(`${SIGNAL} h2`).boundingBox())!;
+    await page.mouse.move(box.x + 20, box.y + 20);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.addStyleTag({
+      content: `${SIGNAL} h2 { visibility: hidden !important; }`,
+    });
+    const brightest = await brightestBackground(page, `${SIGNAL} h2`);
+    expect(contrastRatio("#FFFFFF", brightest)).toBeGreaterThanOrEqual(4.5);
+    await context.close();
+  });
+});

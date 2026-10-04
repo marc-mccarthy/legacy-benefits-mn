@@ -176,8 +176,8 @@ export function ServiceRail({
         }
       />
 
-      {overflows ? (
-        <Container>
+      <Container>
+        {overflows ? (
           <div data-rail-controls="" className="mt-6 flex items-center gap-4">
             <button
               type="button"
@@ -205,8 +205,10 @@ export function ServiceRail({
               Swipe or use the arrows to see all three.
             </p>
           </div>
-        </Container>
-      ) : null}
+        ) : (
+          <div aria-hidden className="mt-6 h-11" />
+        )}
+      </Container>
     </Section>
   );
 }

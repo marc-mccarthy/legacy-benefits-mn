@@ -1198,6 +1198,8 @@ test.describe("services glass", () => {
   }) => {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
       reducedMotion: "no-preference",
     });
     const page = await context.newPage();
@@ -1236,6 +1238,8 @@ test.describe("services glass", () => {
   }) => {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
       reducedMotion: "no-preference",
     });
     const page = await context.newPage();
@@ -1260,6 +1264,8 @@ test.describe("services glass", () => {
   }) => {
     const reduced = await browser.newContext({
       viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
       reducedMotion: "reduce",
     });
     const page = await reduced.newPage();
@@ -1272,6 +1278,8 @@ test.describe("services glass", () => {
 
     const noScript = await browser.newContext({
       viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
       javaScriptEnabled: false,
     });
     const still = await noScript.newPage();
@@ -1282,6 +1290,8 @@ test.describe("services glass", () => {
 
     const printed = await browser.newContext({
       viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
       reducedMotion: "no-preference",
     });
     const print = await printed.newPage();

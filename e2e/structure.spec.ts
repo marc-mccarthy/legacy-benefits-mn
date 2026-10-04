@@ -42,6 +42,23 @@ test("home: every band shows its heading after scrolling into view", async ({
   }
 });
 
+test("home: jumping to the bottom does not shift the page height", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(1000);
+
+  const height = () =>
+    page.evaluate(() => document.documentElement.scrollHeight);
+  const before = await height();
+  await page.keyboard.press("End");
+  await page.waitForTimeout(1500);
+
+  expect(Math.abs((await height()) - before)).toBeLessThanOrEqual(50);
+});
+
 test.describe("the service band", () => {
   const RAIL = `${SERVICE_BAND} ul[data-rail]`;
   const CONTROLS = `${SERVICE_BAND} [data-rail-controls]`;

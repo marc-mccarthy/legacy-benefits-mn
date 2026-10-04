@@ -557,21 +557,6 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
   padding-bottom: var(--consent-h);
 }
 
-[data-band] ~ [data-band] {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 600px;
-}
-
-@media print {
-  [data-band] ~ [data-band] {
-    content-visibility: visible;
-  }
-}
-
-[data-band][data-stage] {
-  content-visibility: visible;
-}
-
 [data-noise-shape] {
   display: none;
   pointer-events: none;

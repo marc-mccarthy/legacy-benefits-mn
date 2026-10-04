@@ -122,7 +122,9 @@ export function EventCarousel({
             </button>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div aria-hidden className="h-11" />
+      )}
     </Container>
   );
 }

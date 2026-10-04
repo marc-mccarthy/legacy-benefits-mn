@@ -20,7 +20,7 @@ const publicPath = (src: string) =>
 describe("row counts recorded in the spec's extraction table", () => {
   it("carries every row the database held", () => {
     expect(services).toHaveLength(3);
-    expect(team).toHaveLength(3);
+    expect(team).toHaveLength(1);
     expect(articles).toHaveLength(7);
     expect(events).toHaveLength(4);
     expect(testimonials).toHaveLength(3);
@@ -37,7 +37,7 @@ describe("row counts recorded in the spec's extraction table", () => {
   });
 
   it("keeps the team licences the database held", () => {
-    expect(team.map((member) => member.licenses.length)).toEqual([3, 2, 1]);
+    expect(team.map((member) => member.licenses.length)).toEqual([3]);
     expect(team[0]?.licenses).toContain("NPN 19472086");
   });
 
@@ -57,7 +57,7 @@ describe("row counts recorded in the spec's extraction table", () => {
 
   it("orders collections by their authored order", () => {
     expect(services.map((service) => service.order)).toEqual([1, 2, 3]);
-    expect(team.map((member) => member.order)).toEqual([1, 2, 3]);
+    expect(team.map((member) => member.order)).toEqual([1]);
   });
 });
 
@@ -73,6 +73,7 @@ describe("media slots", () => {
         "nate.duotone",
         "pages.image",
         "services.image",
+        "team.owner",
       ].sort(),
     );
   });
@@ -123,6 +124,10 @@ describe("media slots", () => {
 });
 
 describe("no two people share a photograph", () => {
+  it("gives the team owner the team.owner media slot", () => {
+    expect(team[0]?.photo).toBe(media["team.owner"]);
+  });
+
   it("holds for the team", () => {
     const used = team
       .map((member) => member.photo)
@@ -152,11 +157,7 @@ describe("slugs", () => {
       "medicare-supplement",
       "part-d",
     ]);
-    expect(team.map((m) => m.slug)).toEqual([
-      "owner",
-      "renata-cruz",
-      "marcus-bell",
-    ]);
+    expect(team.map((m) => m.slug)).toEqual(["owner"]);
     expect(events.map((e) => e.slug)).toEqual([
       "medicare-basics-workshop",
       "turning-65-this-year",

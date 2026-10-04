@@ -11,6 +11,7 @@ export type TeamMember = {
   name: string;
   slug: string;
   role: string;
+  bio?: string;
   photo?: unknown;
 };
 
@@ -40,7 +41,7 @@ export function TeamGrid({
               : "font-display text-(length:--text-display-lg)"
           }
         >
-          {heading ?? "Meet the team"}
+          {heading ?? "Meet Nate"}
         </Heading>
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((member, i) => {
@@ -78,6 +79,7 @@ export function TeamGrid({
                         </Link>
                       </h3>
                       <p className="text-muted">{member.role}</p>
+                      {member.bio ? <p>{member.bio}</p> : null}
                     </CardBody>
                   </Card>
                 </Reveal>

@@ -521,6 +521,75 @@
       "usage": "commercial",
       "query": null,
       "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "team.owner",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-best-authentic.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/nate-best-authentic-480.avif",
+          "bytes": 51830
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/nate-best-authentic-480.webp",
+          "bytes": 85786
+        },
+        {
+          "width": 600,
+          "format": "avif",
+          "path": "public/media/nate-best-authentic-600.avif",
+          "bytes": 67542
+        },
+        {
+          "width": 600,
+          "format": "webp",
+          "path": "public/media/nate-best-authentic-600.webp",
+          "bytes": 118812
+        }
+      ],
+      "intrinsic": {
+        "width": 651,
+        "height": 1229
+      },
+      "alt": "Nate Best, founder of Legacy Benefits Group",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "owner"
     }
   ]
 }

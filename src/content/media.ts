@@ -230,4 +230,36 @@ export const media: Record<string, MediaAsset> = {
       },
     ],
   },
+  "team.owner": {
+    src: "/media/nate-best-authentic.jpg",
+    width: 651,
+    height: 1229,
+    alt: "Nate Best, founder of Legacy Benefits Group",
+    srcSet: [
+      {
+        width: 480,
+        format: "avif",
+        src: "/media/nate-best-authentic-480.avif",
+        bytes: 51830,
+      },
+      {
+        width: 480,
+        format: "webp",
+        src: "/media/nate-best-authentic-480.webp",
+        bytes: 85786,
+      },
+      {
+        width: 600,
+        format: "avif",
+        src: "/media/nate-best-authentic-600.avif",
+        bytes: 67542,
+      },
+      {
+        width: 600,
+        format: "webp",
+        src: "/media/nate-best-authentic-600.webp",
+        bytes: 118812,
+      },
+    ],
+  },
 };

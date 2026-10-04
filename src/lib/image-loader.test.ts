@@ -121,7 +121,7 @@ describe("the variant chosen at each declared width", () => {
       }
     }
 
-    expect(checked).toBe(14);
+    expect(checked).toBe(16);
   });
 
   it("keeps AVIF where AVIF is the smaller file", () => {

@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const { name } = await getBusinessIdentity().catch(() => ({
-    name: "Medicare Advisors",
+    name: "Legacy Benefits Group",
   }));
 
   return {

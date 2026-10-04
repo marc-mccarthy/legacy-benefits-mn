@@ -5,7 +5,7 @@ export const site: SiteContent = {
     { label: "Services", href: "/services" },
     { label: "Events", href: "/events" },
     { label: "Learning Center", href: "/learn" },
-    { label: "Our Team", href: "/team" },
+    { label: "Meet Nate", href: "/team" },
     { label: "Contact", href: "/contact" },
   ],
 

@@ -16,6 +16,7 @@ _None. No asset in this project carries an attribution obligation._
 - **nate.cutout** — Owner-owned · `public/media/nate-cutout.png`
 - **nate.cutoutSample** — Owner-owned · `public/media/nate-cutout-sample.webp`
 - **nate.duotone** — Owner-owned · `public/media/nate-duotone.jpg`
+- **team.owner** — Owner-owned · `public/media/nate-best-authentic.jpg`
 - **close.starSprite** — Owner-commissioned, generated · `public/media/star-particle-glow.png`
 
 ## Usage restrictions

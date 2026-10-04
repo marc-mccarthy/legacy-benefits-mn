@@ -12,8 +12,6 @@ import {
 import { Field, FormStatus, Input, Textarea } from "./fields";
 import { Turnstile } from "./turnstile";
 
-// Checkboxes rather than one catch-all: the submitted row names each product
-// type separately.
 export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",

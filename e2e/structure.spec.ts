@@ -218,3 +218,23 @@ test("team/owner: the portrait never renders wider than its 600 px source", asyn
   expect(box, "no portrait on /team/owner").not.toBeNull();
   expect(box!.width).toBeLessThanOrEqual(600);
 });
+
+for (const path of ["/", "/contact"]) {
+  test(`${path}: header and footer lockups carry the same real-text name`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+
+    const header = page.locator("header [data-brand-lockup]");
+    const footer = page.locator("footer [data-brand-lockup]");
+    const name = (await header.innerText()).trim();
+
+    expect(name, "header lockup has no text").not.toBe("");
+    expect((await footer.innerText()).trim()).toBe(name);
+    await expect(
+      page.locator("header").getByRole("link", { name }),
+    ).toHaveCount(1);
+    await expect(header.locator("img")).toHaveCount(0);
+    await expect(footer.locator("img")).toHaveCount(0);
+  });
+}

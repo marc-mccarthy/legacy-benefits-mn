@@ -10,6 +10,7 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 import * as NavigationMenu from "@radix-ui/react-navigation-menu";
 import { ChevronDown, Menu, X } from "lucide-react";
+import { BrandLockup } from "@/components/ui/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/section";
 import { EffectsPauseButton } from "@/components/motion/effects-pause-button";
@@ -116,9 +117,9 @@ export function Header({ nav, cta, clientPortal, phone, brand }: HeaderProps) {
         <Link
           href="/"
           aria-current={isCurrentPage("/") ? "page" : undefined}
-          className="inline-flex min-h-11 items-center text-lg font-bold tracking-tight"
+          className="inline-flex min-h-11 min-w-0 items-center"
         >
-          {brand}
+          <BrandLockup name={brand} />
         </Link>
 
         <NavigationMenu.Root aria-label="Main" className="hidden lg:block">

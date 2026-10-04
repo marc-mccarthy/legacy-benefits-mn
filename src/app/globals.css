@@ -471,6 +471,10 @@
     box-shadow: none !important;
   }
 
+  [data-brand-mark] [data-star] {
+    fill: var(--color-star-gold-ink);
+  }
+
   body {
     font-size: 12pt;
     line-height: 1.5;

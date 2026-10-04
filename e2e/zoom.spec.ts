@@ -1,16 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-/**
- * WCAG 1.4.10 (Reflow): content must not require horizontal scrolling at 400%
- * zoom. Browser zoom presents to CSS as a proportionally narrower viewport, so
- * 200% and 400% on a 1440px window are emulated as 720px and 360px.
- *
- * This audience zooms — it is the primary way presbyopia is compensated for on
- * a laptop. The specific regression it guards is a fluid `clamp()` written with
- * only `vw` terms: those ignore zoom entirely, so type stays put while the
- * layout around it shrinks, and something eventually overflows.
- */
-
 const PAGES = [
   "/",
   "/services",
@@ -35,8 +24,6 @@ for (const { label, width, height } of ZOOMS) {
 
       const overflow = await page.evaluate(() => {
         const d = document.documentElement;
-        // Name the widest offenders, so a failure points at the element rather
-        // than just reporting that the page is too wide.
         const offenders = [...document.querySelectorAll("body *")]
           .filter((el) => el.getBoundingClientRect().right > d.clientWidth + 1)
           .slice(0, 3)
@@ -44,7 +31,6 @@ for (const { label, width, height } of ZOOMS) {
         return { scrollW: d.scrollWidth, clientW: d.clientWidth, offenders };
       });
 
-      // 1px of tolerance for sub-pixel rounding at fractional widths.
       expect(
         overflow.scrollW,
         `overflowing: ${overflow.offenders.join(" | ")}`,
@@ -52,3 +38,32 @@ for (const { label, width, height } of ZOOMS) {
     });
   }
 }
+
+test("the header lockup wraps without overflow or shrinking the mark at 360px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto("/");
+
+  const text = page.locator("header [data-brand-lockup] > span");
+  const mark = page.locator("header [data-brand-mark]");
+
+  for (const name of [
+    "Northern Lights Medicare Benefits Advisors LLC",
+    "x".repeat(40),
+  ]) {
+    await text.evaluate((el, value) => {
+      el.textContent = value;
+    }, name);
+
+    const { scrollW, clientW } = await page.evaluate(() => ({
+      scrollW: document.documentElement.scrollWidth,
+      clientW: document.documentElement.clientWidth,
+    }));
+    expect(scrollW, name).toBeLessThanOrEqual(clientW);
+
+    const box = await mark.boundingBox();
+    expect(box?.width, name).toBeGreaterThanOrEqual(32);
+    expect(box?.height, name).toBeGreaterThanOrEqual(32);
+  }
+});

@@ -20,6 +20,7 @@ import {
   TextureLoader,
   TorusKnotGeometry,
   Vector2,
+  type WebGLRenderTarget,
 } from "three";
 import { media } from "@/content/media";
 import { paletteColor } from "./palette";
@@ -139,7 +140,8 @@ const createGlass: SceneFactory = async (canvas) => {
   let turn = 0;
   let last = 0;
 
-  let loop: ReturnType<typeof createRenderLoop>;
+  let loop: ReturnType<typeof createRenderLoop> | undefined;
+  let environment: WebGLRenderTarget;
   try {
     loop = createRenderLoop(canvas, {
       onFrame(now) {
@@ -155,17 +157,18 @@ const createGlass: SceneFactory = async (canvas) => {
         draw();
       },
     });
+    loop.renderer.transmissionResolutionScale = 0.5;
+    const pmrem = new PMREMGenerator(loop.renderer);
+    environment = pmrem.fromEquirectangular(map);
+    pmrem.dispose();
   } catch (error) {
-    map.dispose();
+    loop?.release();
     throw error;
+  } finally {
+    map.dispose();
   }
   const { renderer, setRunning, release } = loop;
 
-  renderer.transmissionResolutionScale = 0.5;
-  const pmrem = new PMREMGenerator(renderer);
-  const environment = pmrem.fromEquirectangular(map);
-  pmrem.dispose();
-  map.dispose();
   scene.environment = environment.texture;
   scene.environmentIntensity = 2;
   scene.environmentRotation.set(-1, Math.PI, 0);

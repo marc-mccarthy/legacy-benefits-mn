@@ -55,7 +55,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
         <noscript>
-          <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
+          <style>{`[data-reveal]{opacity:1 !important;transform:none !important;clip-path:none !important}`}</style>
         </noscript>
       </head>
       <body className="bg-surface text-on-surface flex min-h-full flex-col">

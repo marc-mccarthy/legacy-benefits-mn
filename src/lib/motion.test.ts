@@ -4,7 +4,6 @@ import {
   DURATION_CONVERGE,
   DURATION_HOUSE,
   DURATION_REVEAL,
-  EASE_FADE,
   EASE_MOVE,
 } from "./motion";
 
@@ -27,12 +26,10 @@ const DURATIONS: ReadonlyArray<readonly [string, number]> = [
 
 const EASES: ReadonlyArray<
   readonly [string, readonly [number, number, number, number]]
-> = [
-  ["ease-move", EASE_MOVE],
-  ["ease-fade", EASE_FADE],
-];
+> = [["ease-move", EASE_MOVE]];
 
-const CSS_ONLY_DURATIONS: ReadonlyArray<readonly [string, string]> = [
+const CSS_ONLY_TOKENS: ReadonlyArray<readonly [string, string]> = [
+  ["ease-fade", "cubic-bezier(0.25, 0.1, 0.25, 1)"],
   ["duration-fast", "200ms"],
   ["duration-state", "140ms"],
   ["duration-exit", "180ms"],
@@ -55,7 +52,7 @@ describe("motion tokens match globals.css", () => {
 });
 
 describe("motion tokens with no TypeScript twin", () => {
-  it.each(CSS_ONLY_DURATIONS)("--%s is %s", (name, value) => {
+  it.each(CSS_ONLY_TOKENS)("--%s is %s", (name, value) => {
     expect(customProperty(name)).toBe(value);
   });
 

@@ -3,8 +3,6 @@
 import { useEffect, ViewTransition, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
-const IRIS = true;
-
 const FADE_ONLY = new Set([
   "/contact",
   "/scope-of-appointment",
@@ -26,7 +24,10 @@ function irisTarget(event: MouseEvent): URL | null {
 
 function startIris(event: MouseEvent) {
   const url = irisTarget(event);
-  if (!url) return;
+  if (!url) {
+    clearIris();
+    return;
+  }
   const root = document.documentElement;
   const pointed = event.detail > 0;
   root.style.setProperty(
@@ -52,7 +53,6 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!IRIS) return;
     document.addEventListener("click", startIris, true);
     addEventListener("popstate", clearIris);
     return () => {

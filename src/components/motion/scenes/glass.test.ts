@@ -16,6 +16,7 @@ const state = vi.hoisted(() => ({
   map: { mapping: 0, colorSpace: "", dispose: vi.fn() },
   environment: { texture: {}, dispose: vi.fn() },
   pmremDispose: vi.fn(),
+  pmremFails: false,
   release: vi.fn(),
 }));
 
@@ -26,6 +27,7 @@ vi.mock("three", async (importOriginal) => ({
   },
   PMREMGenerator: class {
     fromEquirectangular() {
+      if (state.pmremFails) throw new Error("pmrem failed");
       return state.environment;
     }
     dispose = state.pmremDispose;
@@ -74,6 +76,7 @@ const groups = () =>
 
 beforeEach(() => {
   state.rendered.length = 0;
+  state.pmremFails = false;
   state.load.mockReset().mockResolvedValue(state.map);
   vi.stubGlobal("window", { devicePixelRatio: 1, scrollY: 0 });
   vi.stubGlobal("requestAnimationFrame", vi.fn());
@@ -97,6 +100,16 @@ test("a failed studio map load rejects before any WebGL context is made", async 
     createGlass(canvasIn([]), { reducedQuality: false }),
   ).rejects.toThrow("glass: the studio map did not load");
   expect(state.rendererBuilt).not.toHaveBeenCalled();
+});
+
+test("a failed PMREM bake releases the WebGL context and the studio map", async () => {
+  state.pmremFails = true;
+
+  await expect(
+    createGlass(canvasIn([]), { reducedQuality: false }),
+  ).rejects.toThrow("pmrem failed");
+  expect(state.release).toHaveBeenCalledTimes(1);
+  expect(state.map.dispose).toHaveBeenCalledTimes(1);
 });
 
 test("lights the scene from the studio map through PMREM and frees the source", async () => {

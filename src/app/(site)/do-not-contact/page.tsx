@@ -22,8 +22,8 @@ export default function DoNotContactPage() {
             what we hold about you.
           </p>
           <p className="text-muted">
-            You can also reply STOP to any text message from us. We honour
-            Global Privacy Control signals sent by your browser automatically.
+            You can also reply STOP to any text message from us. We honor Global
+            Privacy Control signals sent by your browser automatically.
           </p>
         </Prose>
 

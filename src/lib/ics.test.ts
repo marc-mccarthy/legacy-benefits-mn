@@ -74,7 +74,7 @@ describe("eventToIcs", () => {
 
   it("escapes commas, semicolons, backslashes and newlines", () => {
     const out = ics({ title: "a,b;c\\d\ne\r\nf" });
-    expect(out).toContain("SUMMARY:a\\,b\;c\\\\d\\ne\\nf");
+    expect(out).toContain("SUMMARY:a\\,b\\;c\\\\d\\ne\\nf");
   });
 
   it("folds long lines at 75 octets, including multibyte characters", () => {

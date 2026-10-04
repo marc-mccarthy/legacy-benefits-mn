@@ -455,6 +455,7 @@
   [data-reveal] {
     opacity: 1 !important;
     transform: none !important;
+    clip-path: none !important;
     transition: none !important;
   }
 
@@ -551,6 +552,14 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
   header[data-site-header][data-stuck] [data-brand-lockup] > span {
     @apply sr-only;
   }
+}
+
+:root[data-consent-open] {
+  scroll-padding-bottom: var(--consent-h);
+}
+
+:root[data-consent-open] body {
+  padding-bottom: var(--consent-h);
 }
 
 :root[data-consent-open] [data-hero-copy] {

@@ -38,7 +38,7 @@ export function TeamMember({ member }: { member: Member }) {
               width={photo.width}
               height={photo.height}
               sizes="(min-width: 768px) 480px, 100vw"
-              className="h-auto w-full max-w-[480px] rounded-(--radius-card)"
+              className="mx-auto h-auto w-full max-w-[480px] rounded-(--radius-card) md:mx-0"
               priority
             />
           ) : null}

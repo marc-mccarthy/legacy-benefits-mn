@@ -22,11 +22,9 @@ const reportUnlessAborted = (error: unknown) => {
 export function PageBand({
   title,
   kicker,
-  priority = false,
 }: {
   title: string;
   kicker?: string;
-  priority?: boolean;
 }) {
   const bandRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -54,7 +52,7 @@ export function PageBand({
         alt=""
         aria-hidden
         fill
-        priority={priority}
+        priority
         sizes="100vw"
         className="object-cover object-[50%_55%]"
       />

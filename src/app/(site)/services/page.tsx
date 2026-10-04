@@ -16,7 +16,7 @@ export default async function ServicesPage() {
 
   return (
     <>
-      <PageBand title="Services" priority />
+      <PageBand title="Services" />
       <ServiceGrid
         heading="How we help"
         intro="Independent guidance across the coverage types we are appointed to offer."

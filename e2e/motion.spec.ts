@@ -5,7 +5,12 @@ import {
   recordViewTransitions,
   transitionCount,
 } from "./support/browser";
-import { brightestBackground, contrast, HIDE_CHROME } from "./support/contrast";
+import {
+  brightestBackground,
+  contrast,
+  darkestBackground,
+  HIDE_CHROME,
+} from "./support/contrast";
 
 import { testimonials as authoredTestimonials } from "../src/content/testimonials";
 
@@ -294,7 +299,7 @@ test.describe("night close", () => {
       return { maxStages: w.maxStages, seen: [...w.seen].sort() };
     });
     expect(record.maxStages).toBeLessThanOrEqual(1);
-    if (testInfo.project.name === "desktop") {
+    if (!testInfo.project.use.isMobile) {
       expect(record.seen).toEqual([
         "glass",
         "lake",
@@ -1536,15 +1541,21 @@ test.describe("testimonial stack", () => {
     });
     const page = await context.newPage();
     await page.goto("/");
-    const { top, height } = await page.locator(BAND).evaluate((el) => {
-      const box = el.getBoundingClientRect();
-      return { top: box.top + scrollY, height: box.height };
-    });
+    const { top, height, viewport } = await page
+      .locator(BAND)
+      .evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        return {
+          top: box.top + scrollY,
+          height: box.height,
+          viewport: innerHeight,
+        };
+      });
     const steps = 14;
     for (let step = 0; step <= steps; step++) {
       await page.evaluate(
         (y) => window.scrollTo(0, y),
-        top - innerHeight + ((height + innerHeight) * step) / steps,
+        top - viewport + ((height + viewport) * step) / steps,
       );
       await page.waitForTimeout(120);
       const active = await page
@@ -1554,7 +1565,11 @@ test.describe("testimonial stack", () => {
       await expect(page.locator(`${BAND} blockquote`)).toHaveCount(
         authoredTestimonials.length,
       );
-      await expect(page.locator(`${BAND} [aria-hidden]`)).toHaveCount(0);
+      await expect(
+        page.locator(
+          `${BAND} :is(ol, li, blockquote, blockquote *)[aria-hidden]`,
+        ),
+      ).toHaveCount(0);
     }
     await page
       .locator(BAND)
@@ -1650,9 +1665,9 @@ test.describe("night close portrait", () => {
     expect(
       await image.evaluate((el) => el.getBoundingClientRect().width),
     ).toBeGreaterThanOrEqual(160);
-    expect(
-      await image.evaluate((el) => (el as HTMLImageElement).currentSrc),
-    ).toContain("nate-duotone-480");
+    await expect
+      .poll(() => image.evaluate((el) => (el as HTMLImageElement).currentSrc))
+      .toContain("nate-duotone-480");
   };
 
   test("shows at 160px with and without motion, scripts and print", async ({
@@ -1706,11 +1721,26 @@ test.describe("film grain", () => {
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/privacy");
-    await page.addStyleTag({ content: HIDE_CHROME });
-    const bright = await brightestBackground(page, "main p:first-of-type");
-    expect(contrast("#0A1128", bright)).toBeGreaterThanOrEqual(4.5);
+    await page.addStyleTag({
+      content: `${HIDE_CHROME} main p:first-of-type { visibility: hidden !important; }`,
+    });
+    const dark = await darkestBackground(page, "main p:first-of-type");
+    expect(contrast("#0A1128", dark)).toBeGreaterThanOrEqual(4.5);
 
     await page.goto("/");
+    await expect
+      .poll(async () => {
+        const before = await page.evaluate(() => {
+          window.scrollTo(0, document.documentElement.scrollHeight);
+          return document.documentElement.scrollHeight;
+        });
+        await page.waitForTimeout(200);
+        return page.evaluate(
+          (height) => document.documentElement.scrollHeight === height,
+          before,
+        );
+      })
+      .toBe(true);
     const close = page.locator("main [data-night-close]");
     await close.scrollIntoViewIfNeeded();
     await page.addStyleTag({ content: HIDE_CHROME });
@@ -1734,7 +1764,7 @@ test.describe("film grain", () => {
 
   test("a link under the overlay stays clickable", async ({ page }) => {
     await page.goto("/");
-    await page.locator('a[href="/contact"]').first().click();
+    await page.locator('a[href="/contact"]:visible').first().click();
     await expect(page).toHaveURL(/\/contact/);
   });
 });

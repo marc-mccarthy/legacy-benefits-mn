@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { LitWords } from "@/components/motion/lit-words";
 import { Monogram } from "@/components/ui/monogram";
 
 export type StackQuote = {
@@ -44,9 +43,9 @@ export function QuoteStack({ items }: { items: StackQuote[] }) {
         >
           <figure className="flex flex-col gap-6">
             <blockquote>
-              <LitWords className="font-display max-w-[28ch] text-(length:--text-display-md) leading-snug text-pretty text-white">
+              <p className="max-w-[28ch] text-(length:--text-display-md) leading-snug text-pretty text-white">
                 {`“${item.quote}”`}
-              </LitWords>
+              </p>
             </blockquote>
             <figcaption className="flex items-center gap-3 text-base">
               {item.photoSrc ? (

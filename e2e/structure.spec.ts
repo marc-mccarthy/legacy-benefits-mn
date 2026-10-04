@@ -393,15 +393,70 @@ test.describe("authored content", () => {
   });
 });
 
-test("team/owner: the portrait never renders wider than its 600 px source", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 700, height: 900 });
-  await page.goto("/team/owner");
+const PLURAL_PEOPLE =
+  /\b(team|staff|agents|advisors|advisers|people|experts)\b/i;
 
-  const box = await page.locator("main img").first().boundingBox();
-  expect(box, "no portrait on /team/owner").not.toBeNull();
-  expect(box!.width).toBeLessThanOrEqual(600);
+test.describe("the team page is Nate", () => {
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    test(`/team: one h1 and one uncropped portrait at ${viewport.width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/team");
+
+      await expect(page.locator("h1")).toHaveCount(1);
+      const portrait = page.locator("main img[alt*='Nate Best']");
+      await expect(portrait).toHaveCount(1);
+
+      const box = (await portrait.boundingBox())!;
+      const natural = await portrait.evaluate((img: HTMLImageElement) => ({
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      }));
+      expect(box.width).toBeLessThanOrEqual(natural.width);
+      expect(box.width).toBeLessThanOrEqual(480);
+      const ratio = box.width / box.height;
+      const naturalRatio = natural.width / natural.height;
+      expect(Math.abs(ratio / naturalRatio - 1)).toBeLessThan(0.01);
+
+      const phone = page.locator("main a[href^='tel:']");
+      expect((await phone.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    });
+  }
+
+  test("/team: title, description and nav label name one person", async ({
+    page,
+  }) => {
+    await page.goto("/team");
+    expect(await page.title()).not.toMatch(PLURAL_PEOPLE);
+    const description = await page
+      .locator('meta[name="description"]')
+      .getAttribute("content");
+    expect(description).not.toMatch(PLURAL_PEOPLE);
+    const nav = await page
+      .locator('header a[href="/team"]')
+      .first()
+      .innerText();
+    expect(nav).not.toMatch(PLURAL_PEOPLE);
+  });
+
+  test("/team/owner canonicalises to /team", async ({ page }) => {
+    await page.goto("/team/owner");
+    const href = await page
+      .locator('link[rel="canonical"]')
+      .getAttribute("href");
+    expect(new URL(href!).pathname).toBe("/team");
+  });
+
+  for (const slug of ["renata-cruz", "marcus-bell"]) {
+    test(`/team/${slug} is 404`, async ({ page }) => {
+      const response = await page.goto(`/team/${slug}`);
+      expect(response?.status()).toBe(404);
+    });
+  }
 });
 
 for (const path of ["/", "/contact"]) {

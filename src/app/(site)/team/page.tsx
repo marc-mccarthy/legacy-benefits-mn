@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TeamGrid } from "@/components/sections/team-grid";
+import { TeamMember } from "@/components/sections/team-member";
 import { team } from "@/content/team";
 
 export const metadata: Metadata = {
@@ -9,7 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function TeamPage() {
-  return (
-    <TeamGrid headingLevel="h1" heading="Nate Best" members={team as never} />
-  );
+  return <TeamMember member={team[0]!} />;
 }

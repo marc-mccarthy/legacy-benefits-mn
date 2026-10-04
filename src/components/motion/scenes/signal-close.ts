@@ -12,6 +12,7 @@ import {
 } from "three";
 import { media } from "@/content/media";
 import { seededRandom } from "@/lib/random";
+import { paletteColor } from "./palette";
 import type { SceneFactory } from "./types";
 
 const SEED = 20261003;
@@ -35,14 +36,12 @@ function discPositions(count: number, seed: number): Float32Array {
 }
 
 const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
+  const gold = paletteColor("--color-star-gold");
   const texture = await new TextureLoader().loadAsync(
     media["close.starSprite"].src,
   );
   texture.colorSpace = SRGBColorSpace;
 
-  const gold = getComputedStyle(document.documentElement)
-    .getPropertyValue("--color-star-gold")
-    .trim();
   const scene = new Scene();
   const layers = LAYERS.map((layer, index) => {
     const geometry = new BufferGeometry();

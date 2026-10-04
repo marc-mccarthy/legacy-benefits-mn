@@ -13,6 +13,7 @@ import { media } from "@/content/media";
 import { DURATION_CONVERGE } from "@/lib/motion";
 import { stipplePortrait } from "@/lib/portrait-points";
 import { easeMove, fieldPositions, noisePositions } from "@/lib/signal-field";
+import { paletteColor } from "./palette";
 import type { SceneFactory } from "./types";
 
 const SEED = 20261002;
@@ -81,6 +82,8 @@ function portraitPoints(count: number) {
 }
 
 const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
+  const cyan = new Color(paletteColor("--color-signal-cyan"));
+  const gold = new Color(paletteColor("--color-star-gold"));
   const count = reducedQuality ? 2500 : 6000;
   const { points: portrait, lum } = await portraitPoints(count);
   const noise = noisePositions(count, SEED);
@@ -100,17 +103,12 @@ const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
     new BufferAttribute(phases.subarray(0, count), 1),
   );
 
-  const palette = getComputedStyle(document.documentElement);
   const uniforms = {
     uSettle: { value: 0 },
     uTime: { value: 0 },
     uSize: { value: 3 },
-    uCyan: {
-      value: new Color(palette.getPropertyValue("--color-signal-cyan").trim()),
-    },
-    uGold: {
-      value: new Color(palette.getPropertyValue("--color-star-gold").trim()),
-    },
+    uCyan: { value: cyan },
+    uGold: { value: gold },
   };
   const material = new ShaderMaterial({
     vertexShader: VERTEX,

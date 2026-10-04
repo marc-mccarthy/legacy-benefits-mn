@@ -19,7 +19,6 @@ token() {
 }
 
 NAVY="$(token ground-dark)"
-GOLD="$(token star-gold)"
 
 if [[ ! -f "$SRC" ]]; then
   echo "portrait-assets: missing source $SRC" >&2
@@ -106,7 +105,7 @@ DUOTONE_RGB="$TMPDIR_LOCAL/duotone-rgb.png"
 ALPHA="$TMPDIR_LOCAL/alpha.png"
 DUOTONE_RGBA="$TMPDIR_LOCAL/duotone-rgba.png"
 
-magick "$CUTOUT" -alpha off -colorspace gray -sigmoidal-contrast 4x50% \( -size 256x1 gradient:"$NAVY-$GOLD" \) -clut "$DUOTONE_RGB"
+magick "$CUTOUT" -alpha off -colorspace gray -sigmoidal-contrast 4x50% \( -size 256x1 gradient:"$NAVY-#FFE7A3" \) -clut "$DUOTONE_RGB"
 magick "$CUTOUT" -alpha extract "$ALPHA"
 magick "$DUOTONE_RGB" "$ALPHA" -alpha off -compose CopyOpacity -composite "$DUOTONE_RGBA"
 magick "$DUOTONE_RGBA" -background "$NAVY" -alpha remove -alpha off "$DUOTONE_PNG"
@@ -118,8 +117,8 @@ for width in 480 "$DUOTONE_WIDTH"; do
   if (( width > DUOTONE_WIDTH )); then
     continue
   fi
-  magick "$DUOTONE" -resize "${width}x" -quality 82 "$ROOT/public/media/nate-duotone-${width}.avif"
-  magick "$DUOTONE" -resize "${width}x" -quality 82 "$ROOT/public/media/nate-duotone-${width}.webp"
+  magick "$DUOTONE_RGBA" -resize "${width}x" -quality 82 "$ROOT/public/media/nate-duotone-${width}.avif"
+  magick "$DUOTONE_RGBA" -resize "${width}x" -quality 82 "$ROOT/public/media/nate-duotone-${width}.webp"
 done
 
 magick "$CUTOUT" -resize 50% -quality 80 -define webp:alpha-quality=100 "$SAMPLE"

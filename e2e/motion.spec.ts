@@ -683,13 +683,17 @@ test.describe("hero signal field", () => {
 });
 
 test.describe("view transitions", () => {
-  const navigate = async (page: import("@playwright/test").Page) => {
+  const navigate = async (
+    page: import("@playwright/test").Page,
+    name = "Services",
+    path = "services",
+  ) => {
     await page
       .locator("header[data-site-header]")
-      .getByRole("link", { name: "Services" })
+      .getByRole("link", { name, exact: true })
       .first()
       .click();
-    await page.waitForURL("**/services");
+    await page.waitForURL(`**/${path}`);
   };
 
   test("item 9: the three view-transition pseudo-elements animate for 0s under reduced motion", async ({
@@ -772,7 +776,7 @@ test.describe("view transitions", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
 
-    await navigate(page);
+    await navigate(page, "Contact", "contact");
     expect(await transitionCount(page)).toBeGreaterThan(0);
 
     const animations = await lastTransitionAnimations(page);
@@ -802,6 +806,169 @@ test.describe("view transitions", () => {
       root,
       `the root snapshot is still animating: ${JSON.stringify(root)}`,
     ).toEqual([]);
+
+    await context.close();
+  });
+
+  const irisRun = async (
+    page: import("@playwright/test").Page,
+    act: () => Promise<void>,
+  ) => {
+    await page.evaluate(() => {
+      const original = document.startViewTransition.bind(document);
+      document.startViewTransition = (options) => {
+        const transition = original(options);
+        void transition.ready.then(() => {
+          (window as unknown as { __iris: unknown }).__iris = document
+            .getAnimations()
+            .map((animation) => {
+              const effect = animation.effect as KeyframeEffect;
+              return {
+                name: (animation as CSSAnimation).animationName,
+                pseudo: effect.pseudoElement ?? "",
+                duration: effect.getComputedTiming().duration,
+                clip: effect.getKeyframes().map((frame) => frame.clipPath),
+              };
+            });
+        });
+        return transition;
+      };
+    });
+    await act();
+    await page.waitForFunction(
+      () => (window as unknown as { __iris?: unknown }).__iris !== undefined,
+    );
+    return page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __iris: {
+              name: string;
+              duration: number;
+              clip: (string | number | null | undefined)[];
+            }[];
+          }
+        ).__iris,
+    );
+  };
+
+  const freshHome = async (browser: import("@playwright/test").Browser) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await recordViewTransitions(page);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    return { context, page };
+  };
+
+  test("the iris opens from the click point over 450ms", async ({
+    browser,
+  }) => {
+    const { context, page } = await freshHome(browser);
+    const link = page
+      .locator("header[data-site-header]")
+      .getByRole("link", { name: "Services", exact: true })
+      .first();
+    const box = (await link.boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+
+    const run = await irisRun(page, () => link.click());
+    const iris = run.find((entry) => entry.name === "page-iris");
+    expect(iris, JSON.stringify(run)).toBeDefined();
+    expect(iris!.duration).toBe(450);
+    const first = String(iris!.clip[0]);
+    const match = /circle\(0px at ([\d.]+)px ([\d.]+)px\)/.exec(first);
+    expect(match, first).not.toBeNull();
+    expect(Math.abs(Number(match![1]) - x)).toBeLessThan(2);
+    expect(Math.abs(Number(match![2]) - y)).toBeLessThan(2);
+
+    await context.close();
+  });
+
+  test("keyboard activation opens the iris from the viewport centre", async ({
+    browser,
+  }) => {
+    const { context, page } = await freshHome(browser);
+    const link = page
+      .locator("header[data-site-header]")
+      .getByRole("link", { name: "Services", exact: true })
+      .first();
+    await link.focus();
+
+    const run = await irisRun(page, () => page.keyboard.press("Enter"));
+    const iris = run.find((entry) => entry.name === "page-iris");
+    expect(iris, JSON.stringify(run)).toBeDefined();
+    expect(String(iris!.clip[0])).toContain("circle(0px at 640px 450px)");
+
+    await context.close();
+  });
+
+  test("a fade-only destination records no clip-path keyframes", async ({
+    browser,
+  }) => {
+    const { context, page } = await freshHome(browser);
+    const link = page
+      .locator("header[data-site-header]")
+      .getByRole("link", { name: "Contact", exact: true })
+      .first();
+
+    const run = await irisRun(page, () => link.click());
+    expect(run.some((entry) => entry.name === "page-iris")).toBe(false);
+    expect(run.flatMap((entry) => entry.clip).filter((clip) => clip)).toEqual(
+      [],
+    );
+
+    await context.close();
+  });
+
+  test("without startViewTransition the click still navigates", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.addInitScript(() => {
+      delete (document as unknown as Record<string, unknown>)
+        .startViewTransition;
+    });
+    await page.goto("/");
+    await navigate(page);
+    expect(errors).toEqual([]);
+
+    await context.close();
+  });
+
+  test("the iris stays at zero duration under reduced motion", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await recordViewTransitions(page);
+    await page.goto("/");
+    await navigate(page);
+    const animations = await lastTransitionAnimations(page);
+    expect(animations.filter((entry) => entry.durationMs > 0)).toEqual([]);
+
+    await context.close();
+  });
+
+  test("the iris never adds a second canvas across forward and back", async ({
+    browser,
+  }) => {
+    const { context, page } = await freshHome(browser);
+    const canvases = () => page.locator("canvas").count();
+    expect(await canvases()).toBeLessThanOrEqual(1);
+    await navigate(page);
+    expect(await canvases()).toBeLessThanOrEqual(1);
+    await page.goBack();
+    await page.waitForURL("**/");
+    expect(await canvases()).toBeLessThanOrEqual(1);
 
     await context.close();
   });

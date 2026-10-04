@@ -200,7 +200,7 @@ test.describe("navigation state and anchors", () => {
     expect(
       rule.colour,
       `the active marker is drawn in ${rule.colour}, not the light-scheme accent`,
-    ).toBe("rgb(2, 11, 68)");
+    ).toBe("rgb(0, 122, 122)");
   });
 
   // §9.2 item 19 — SC-22, FR-85.

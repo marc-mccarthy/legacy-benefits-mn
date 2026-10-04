@@ -17,12 +17,11 @@ const archivo = Archivo({
   variable: "--font-archivo",
   subsets: ["latin"],
   display: "swap",
-  // wght ships by default on a variable font; wdth does not.
   axes: ["wdth"],
 });
 
 export const viewport: Viewport = {
-  themeColor: "#17304d",
+  themeColor: "#081A3A",
 };
 
 export async function generateMetadata(): Promise<Metadata> {

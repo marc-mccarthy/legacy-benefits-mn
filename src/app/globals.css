@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-night-900: #000000;
-  --color-night-800: #131a21;
-  --color-night-500: #79858f;
-  --color-night-300: #93a1ad;
-  --color-cyan-400: #00f5f3;
-  --color-abyss-900: #020b44;
-  --color-haze-400: #98bcce;
-  --color-slate-700: #384654;
-  --color-slate-500: #4f5d6c;
+  --color-ground-dark: #081a3a;
+  --color-ground-black: #000000;
+  --color-ground-light: #f7f9fa;
+  --color-ink-dark: #ffffff;
+  --color-ink-light: #0a1128;
+  --color-muted-dark: #a0a8c0;
+  --color-muted-light: #5a6482;
+  --color-signal-cyan: #00e0e0;
+  --color-signal-cyan-ink: #007a7a;
+  --color-star-gold: #ffc000;
+  --color-star-gold-ink: #996600;
+  --color-raised-dark: #10264d;
+  --color-raised-black: #0b0f1a;
+  --color-surface-muted: #eef1f4;
   --color-paper: #ffffff;
   --color-ink: #000000;
 
@@ -32,8 +37,6 @@
   --spacing-huge: 12.5rem;
   --spacing-enormous: 15.625rem;
 
-  /* Tailwind's preflight sets html's font-family from this key, so overriding
-     it here is what makes Atkinson the rendered default. */
   --default-font-family:
     var(--font-atkinson, ui-sans-serif), "Atkinson Hyperlegible Next Fallback",
     ui-sans-serif, system-ui, sans-serif;
@@ -112,71 +115,97 @@
   }
 
   :root {
-    /* The utility row (2.75rem) over the main row (4.5rem). In rem so the hero
-       that offsets itself by it tracks the header under zoom. */
     --header-stack: 7.25rem;
-    --scheme-surface: var(--color-paper);
-    --scheme-surface-raised: var(--color-paper);
-    caret-color: var(--color-abyss-900);
-    accent-color: var(--color-abyss-900);
-    --scheme-on-surface: var(--color-ink);
-    --scheme-muted: var(--color-slate-700);
-    --scheme-border: color-mix(in oklab, var(--color-ink) 12%, transparent);
-    --scheme-border-control: var(--color-slate-500);
-    --scheme-accent: var(--color-abyss-900);
-    --scheme-action: var(--color-abyss-900);
-    --scheme-on-action: var(--color-paper);
-    --scheme-accent-edge: var(--color-abyss-900);
-    --scheme-on-accent: var(--color-paper);
+    caret-color: var(--color-signal-cyan-ink);
+    accent-color: var(--color-signal-cyan-ink);
+    --scheme-surface: var(--color-ground-light);
+    --scheme-surface-raised: var(--color-ground-light);
+    --scheme-on-surface: var(--color-ink-light);
+    --scheme-muted: var(--color-muted-light);
+    --scheme-border: color-mix(
+      in oklab,
+      var(--color-ink-light) 12%,
+      transparent
+    );
+    --scheme-border-control: var(--color-muted-light);
+    --scheme-accent: var(--color-signal-cyan-ink);
+    --scheme-action: var(--color-star-gold-ink);
+    --scheme-on-action: #ffffff;
+    --scheme-accent-edge: var(--color-signal-cyan-ink);
+    --scheme-on-accent: #ffffff;
   }
 
   [data-scheme="light"] {
-    --scheme-surface: var(--color-paper);
-    --scheme-surface-raised: var(--color-paper);
-    --scheme-on-surface: var(--color-ink);
-    --scheme-muted: var(--color-slate-700);
-    --scheme-border: color-mix(in oklab, var(--color-ink) 12%, transparent);
-    --scheme-border-control: var(--color-slate-500);
-    --scheme-accent: var(--color-abyss-900);
-    --scheme-action: var(--color-abyss-900);
-    --scheme-on-action: var(--color-paper);
-    --scheme-accent-edge: var(--color-abyss-900);
-    --scheme-on-accent: var(--color-paper);
+    --scheme-surface: var(--color-ground-light);
+    --scheme-surface-raised: var(--color-ground-light);
+    --scheme-on-surface: var(--color-ink-light);
+    --scheme-muted: var(--color-muted-light);
+    --scheme-border: color-mix(
+      in oklab,
+      var(--color-ink-light) 12%,
+      transparent
+    );
+    --scheme-border-control: var(--color-muted-light);
+    --scheme-accent: var(--color-signal-cyan-ink);
+    --scheme-action: var(--color-star-gold-ink);
+    --scheme-on-action: #ffffff;
+    --scheme-accent-edge: var(--color-signal-cyan-ink);
+    --scheme-on-accent: #ffffff;
   }
 
   [data-scheme="muted"] {
-    --scheme-surface: var(--color-haze-400);
-    --scheme-surface-raised: var(--color-haze-400);
-    --scheme-on-surface: var(--color-ink);
-    --scheme-muted: var(--color-slate-700);
+    --scheme-surface: var(--color-surface-muted);
+    --scheme-surface-raised: var(--color-surface-muted);
+    --scheme-on-surface: var(--color-ink-light);
+    --scheme-muted: var(--color-muted-light);
     --scheme-border: color-mix(
       in oklab,
-      var(--color-abyss-900) 18%,
+      var(--color-ink-light) 18%,
       transparent
     );
-    --scheme-border-control: var(--color-slate-500);
-    --scheme-accent: var(--color-abyss-900);
-    --scheme-action: var(--color-abyss-900);
-    --scheme-on-action: var(--color-paper);
-    --scheme-accent-edge: var(--color-abyss-900);
-    --scheme-on-accent: var(--color-paper);
+    --scheme-border-control: var(--color-muted-light);
+    --scheme-accent: var(--color-signal-cyan-ink);
+    --scheme-action: var(--color-star-gold-ink);
+    --scheme-on-action: #ffffff;
+    --scheme-accent-edge: var(--color-signal-cyan-ink);
+    --scheme-on-accent: #ffffff;
   }
 
-  /* The second selector: a header that has not stuck yet sits on the hero
-     band's ground, so it reads its colours from that band's scheme. */
   [data-scheme="dark"],
   body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
-    --scheme-surface: var(--color-night-900);
-    --scheme-surface-raised: var(--color-night-800);
-    --scheme-on-surface: var(--color-paper);
-    --scheme-muted: var(--color-night-300);
-    --scheme-border: color-mix(in oklab, var(--color-paper) 20%, transparent);
-    --scheme-border-control: var(--color-night-500);
-    --scheme-accent: var(--color-cyan-400);
-    --scheme-action: var(--color-cyan-400);
-    --scheme-on-action: var(--color-night-900);
-    --scheme-accent-edge: var(--color-cyan-400);
-    --scheme-on-accent: var(--color-night-900);
+    --scheme-surface: var(--color-ground-dark);
+    --scheme-surface-raised: var(--color-raised-dark);
+    --scheme-on-surface: var(--color-ink-dark);
+    --scheme-muted: var(--color-muted-dark);
+    --scheme-border: color-mix(
+      in oklab,
+      var(--color-ink-dark) 20%,
+      transparent
+    );
+    --scheme-border-control: var(--color-muted-dark);
+    --scheme-accent: var(--color-signal-cyan);
+    --scheme-action: var(--color-star-gold);
+    --scheme-on-action: var(--color-ground-dark);
+    --scheme-accent-edge: var(--color-signal-cyan);
+    --scheme-on-accent: var(--color-ground-dark);
+  }
+
+  [data-scheme="black"] {
+    --scheme-surface: var(--color-ground-black);
+    --scheme-surface-raised: var(--color-raised-black);
+    --scheme-on-surface: var(--color-ink-dark);
+    --scheme-muted: var(--color-muted-dark);
+    --scheme-border: color-mix(
+      in oklab,
+      var(--color-ink-dark) 20%,
+      transparent
+    );
+    --scheme-border-control: var(--color-muted-dark);
+    --scheme-accent: var(--color-signal-cyan);
+    --scheme-action: var(--color-star-gold);
+    --scheme-on-action: var(--color-ground-dark);
+    --scheme-accent-edge: var(--color-signal-cyan);
+    --scheme-on-accent: var(--color-ground-dark);
   }
 
   html {
@@ -184,7 +213,7 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: color-mix(
       in oklab,
-      var(--color-slate-700) 35%,
+      var(--color-muted-light) 35%,
       transparent
     );
   }
@@ -211,7 +240,6 @@
       transform: none !important;
     }
 
-    /* The lit layer carries an inline opacity from the scroll transform. */
     [data-lit-words] [data-lit-word] {
       opacity: 1 !important;
     }
@@ -514,9 +542,6 @@
   display: none;
 }
 
-/* Unlayered so these outrank the padding and background utilities, responsive
-   variants included. The hero band starts under the header and pads its content
-   back down, and the header paints nothing while that band is behind it. */
 [data-band]:has(> .hero-scrim) {
   margin-top: calc(-1 * var(--header-stack));
   padding-top: var(--header-stack);
@@ -529,9 +554,6 @@ body:has(.hero-scrim)
   background-color: transparent;
 }
 
-/* Over the hero the nav's call to action draws as an outline. An inset shadow
-   rather than a border, so the control keeps its size when the header sticks
-   and the filled variant comes back. */
 body:has(.hero-scrim)
   header[data-site-header]:not([data-stuck])
   [data-header-cta] {

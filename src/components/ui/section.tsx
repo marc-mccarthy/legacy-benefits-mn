@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export type Scheme = "light" | "muted" | "dark";
+export type Scheme = "light" | "muted" | "dark" | "black";
 
 export type Signature = "F1" | "F2" | "F3" | "F4" | "F5" | "F6" | "F7";
 

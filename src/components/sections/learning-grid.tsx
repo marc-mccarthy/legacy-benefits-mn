@@ -24,9 +24,9 @@ const TYPE_LABEL: Record<ArticleItem["type"], string> = {
 };
 
 const TYPE_PANEL: Record<ArticleItem["type"], string> = {
-  article: "bg-night-900 text-paper",
-  tool: "bg-cyan-400 text-night-900",
-  video: "bg-abyss-900 text-paper",
+  article: "bg-ground-black text-ink-dark",
+  tool: "bg-signal-cyan text-ground-dark",
+  video: "bg-ground-dark text-ink-dark",
 };
 
 export function LearningFilters({

@@ -49,7 +49,7 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
         ref={trackRef}
         className="relative -mt-(--header-stack) print:h-auto! [@media(scripting:enabled)]:motion-safe:h-[200svh]"
       >
-        <div className="sticky top-0 flex h-svh min-h-[36rem] flex-col overflow-hidden bg-[#081A3A] md:justify-end">
+        <div className="bg-ground-dark sticky top-0 flex h-svh min-h-[36rem] flex-col overflow-hidden md:justify-end">
           <div
             data-hero-stage=""
             data-resolved={progress > RESOLVE_AT}

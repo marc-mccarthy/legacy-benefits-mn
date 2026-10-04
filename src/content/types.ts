@@ -88,13 +88,9 @@ export type Carrier = {
 
 export type FaqItem = { question: string; answer: ReactNode };
 
-/**
- * Keys are camelCase because `RenderBlocks` reads them that way, not the
- * snake_case of the columns the content was extracted from.
- */
 export type PageBlock = {
   blockType: string;
-  scheme?: "light" | "muted" | "dark";
+  scheme?: "light" | "muted" | "dark" | "black";
 } & Record<string, unknown>;
 
 /** Business identity is not here: it comes from the environment only, through

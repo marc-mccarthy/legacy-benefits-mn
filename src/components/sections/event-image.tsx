@@ -38,7 +38,7 @@ export function EventImage({
       ) : (
         <div
           aria-hidden
-          className="bg-night-900 text-paper/40 grid size-full place-items-center"
+          className="bg-ground-black text-ink-dark/40 grid size-full place-items-center"
         >
           <CalendarDays className="size-10" />
         </div>

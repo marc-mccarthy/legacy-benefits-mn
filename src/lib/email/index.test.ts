@@ -1,9 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// `server-only` throws when imported outside a React Server Component.
 vi.mock("server-only", () => ({}));
 
-// Hoisted so the vi.mock factory can close over the same spies the tests read.
 const { sesSend, clientConfigs, SESv2Client, SendEmailCommand } = vi.hoisted(
   () => {
     const sesSend = vi.fn();
@@ -40,7 +38,6 @@ const lead = {
 
 type Charsetted = { Data: string; Charset: string };
 
-/** The shape of SendEmailCommand's input that this module actually builds. */
 type SesInput = {
   FromEmailAddress: string;
   Destination: { ToAddresses: string[] };
@@ -48,17 +45,14 @@ type SesInput = {
   Content: { Simple: { Subject: Charsetted; Body: { Text: Charsetted } } };
 };
 
-/** The SendEmailCommand input SES was actually handed. */
 function sentCommand(): SesInput {
   return sesSend.mock.calls[0][0].input as SesInput;
 }
 
-/** The plain-text body of the sent email. */
 function sentBody(): string {
   return sentCommand().Content.Simple.Body.Text.Data;
 }
 
-/** The subject block of the sent email. */
 function sentSubject(): Charsetted {
   return sentCommand().Content.Simple.Subject;
 }
@@ -69,7 +63,6 @@ let error: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   sesSend.mockReset().mockResolvedValue({ MessageId: "abc" });
   clientConfigs.length = 0;
-  // A configured sender is the normal case; the unset case is tested explicitly.
   vi.stubEnv("SES_FROM_ADDRESS", "hello@agency.example");
   vi.stubEnv("LEAD_NOTIFICATION_EMAILS", undefined);
   vi.stubEnv("BUSINESS_NAME", undefined);
@@ -93,7 +86,6 @@ describe("sendEmail", () => {
   it("skips sending when SES_FROM_ADDRESS is unset", async () => {
     vi.stubEnv("SES_FROM_ADDRESS", undefined);
 
-    // Local dev and CI have no SES; sending must degrade to a log, not throw.
     await expect(sendEmail(email)).resolves.toEqual({
       sent: false,
       reason: "not-configured",
@@ -112,8 +104,6 @@ describe("sendEmail", () => {
   });
 
   it("refuses to send with no recipients", async () => {
-    // SES rejects an empty ToAddresses; catching it here keeps the error out
-    // of CloudWatch for what is a routine unconfigured-notifications case.
     await expect(sendEmail({ ...email, to: [] })).resolves.toEqual({
       sent: false,
       reason: "no-recipients",
@@ -143,7 +133,6 @@ describe("sendEmail", () => {
   });
 
   it("leaves ReplyToAddresses undefined rather than empty", async () => {
-    // An empty array is a validation error at the SES API; undefined is not.
     await sendEmail(email);
     expect(sentCommand().ReplyToAddresses).toBeUndefined();
   });
@@ -163,10 +152,6 @@ describe("sendEmail", () => {
 });
 
 describe("sendEmail client construction", () => {
-  /**
-   * `client` is memoised at module scope and survives between tests, so any
-   * assertion about constructing it needs a module instance of its own.
-   */
   async function freshSendEmail() {
     vi.resetModules();
     clientConfigs.length = 0;
@@ -181,8 +166,6 @@ describe("sendEmail client construction", () => {
     await send(email);
     await send(email);
 
-    // One client per warm container; reconnecting per lead would add latency
-    // to every submission.
     expect(clientConfigs).toHaveLength(1);
   });
 
@@ -249,8 +232,6 @@ describe("sendLeadNotification recipients", () => {
   });
 
   it("reports no recipients when nothing is configured anywhere", async () => {
-    // The agency silently never hearing about a lead is the failure this
-    // return value exists to make visible to the caller.
     await expect(sendLeadNotification(lead)).resolves.toEqual({
       sent: false,
       reason: "no-recipients",
@@ -270,7 +251,6 @@ describe("sendLeadNotification content", () => {
       Data: "New website lead: Jane Doe",
       Charset: "UTF-8",
     });
-    // Reply-to is the lead so hitting reply in a mail client just works.
     expect(sentCommand().ReplyToAddresses).toEqual(["jane@example.com"]);
   });
 
@@ -322,8 +302,6 @@ describe("sendLeadNotification content", () => {
   });
 
   it("falls back to the raw value for an unmapped interest", async () => {
-    // Adding an option to the form without adding a label here must not blank
-    // out the field in the agency's email.
     await sendLeadNotification({ ...lead, interest: "dental" });
     expect(sentBody()).toContain("Interest: dental");
   });
@@ -370,10 +348,11 @@ describe("sendLeadConfirmation", () => {
   });
 
   it("falls back again to a generic name", async () => {
-    // Never leave the visitor reading "A licensed agent at undefined".
     await sendLeadConfirmation(lead);
-    expect(sentSubject().Data).toBe("We got your request — our team");
-    expect(sentBody()).toContain("A licensed agent at our team");
+    expect(sentSubject().Data).toBe(
+      "We got your request — Legacy Benefits Group",
+    );
+    expect(sentBody()).toContain("A licensed agent at Legacy Benefits Group");
   });
 
   it("prefers the phone passed in and pairs it with the TTY number", async () => {
@@ -381,7 +360,6 @@ describe("sendLeadConfirmation", () => {
 
     await sendLeadConfirmation(lead, { phone: "612-555-9999" });
 
-    // TTY 711 accompanies every published phone number for Section 1557.
     expect(sentBody()).toContain(
       "If you need us sooner, call 612-555-9999 (TTY 711).",
     );
@@ -399,7 +377,6 @@ describe("sendLeadConfirmation", () => {
   });
 
   it("tells the visitor how to get their details removed", async () => {
-    // A confirmation to someone who never filled the form needs an exit.
     await sendLeadConfirmation(lead);
     expect(sentBody()).toContain(
       "If you did not fill in a form on our website, reply to this message and we will remove your details.",

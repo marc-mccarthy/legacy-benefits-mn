@@ -207,3 +207,14 @@ test.describe("authored content", () => {
     await expect(bar).toHaveCount(liveAtBuild ? 1 : 0);
   });
 });
+
+test("team/owner: the portrait never renders wider than its 600 px source", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 700, height: 900 });
+  await page.goto("/team/owner");
+
+  const box = await page.locator("main img").first().boundingBox();
+  expect(box, "no portrait on /team/owner").not.toBeNull();
+  expect(box!.width).toBeLessThanOrEqual(600);
+});

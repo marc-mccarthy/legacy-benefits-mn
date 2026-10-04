@@ -42,8 +42,8 @@ export default async function TeamMemberPage({ params }: Props) {
             alt={photo.alt || `Portrait of ${doc.name}, ${doc.role}`}
             width={640}
             height={768}
-            sizes="320px"
-            className="aspect-[5/6] w-full rounded-(--radius-card) object-cover"
+            sizes="(min-width: 768px) 320px, min(100vw, 600px)"
+            className="aspect-[5/6] w-full max-w-[600px] rounded-(--radius-card) object-cover"
             priority
           />
         ) : (
@@ -69,7 +69,7 @@ export default async function TeamMemberPage({ params }: Props) {
           {doc.licenses.length ? (
             <div className="space-y-2">
               <h2 className="text-base font-semibold">
-                Licences and designations
+                Licenses and designations
               </h2>
               <ul className="text-muted space-y-1 text-base">
                 {doc.licenses.map((l) => (

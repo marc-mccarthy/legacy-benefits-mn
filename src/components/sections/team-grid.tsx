@@ -59,7 +59,7 @@ export function TeamGrid({
                         alt={member.name}
                         width={600}
                         height={720}
-                        sizes="(min-width: 1024px) 25vw, 50vw"
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                         className="aspect-[5/6] w-full object-cover"
                       />
                     ) : (

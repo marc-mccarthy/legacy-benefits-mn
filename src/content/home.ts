@@ -7,7 +7,7 @@ export const homeBlocks: PageBlock[] = [
     scheme: "dark",
     heading: "Medicare, decoded.",
     subheading:
-      "Independent, licensed guidance on Medicare Advantage, Supplement, and Part D, from Nate Best. One person, every call.",
+      "Independent, licensed guidance on Medicare Advantage, Supplement, and Part D, from Nate Best, the same person every time you call.",
     ctaLabel: "Talk to a licensed agent",
     ctaHref: "/contact",
   },

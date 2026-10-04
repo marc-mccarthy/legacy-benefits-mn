@@ -2,11 +2,6 @@ import "server-only";
 
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 
-/**
- * Transactional email via SES. With SES_FROM_ADDRESS unset, sending is skipped
- * and logged rather than throwing.
- */
-
 let client: SESv2Client | undefined;
 
 function getClient(): SESv2Client {
@@ -78,13 +73,10 @@ const INTEREST_LABELS: Record<string, string> = {
   other: "Something else",
 };
 
-/** Tells the agency a lead arrived. Reply-to is the lead, so hitting reply works. */
 export async function sendLeadNotification(
   lead: LeadSummary,
   business?: { name?: string; notificationEmails?: string[] },
 ) {
-  // The caller's list wins; the env var is read directly only when it passes
-  // none, so a caller that resolved an empty list does not silence the mail.
   const to = business?.notificationEmails?.length
     ? business.notificationEmails
     : (process.env["LEAD_NOTIFICATION_EMAILS"] ?? "")
@@ -116,12 +108,12 @@ export async function sendLeadNotification(
   });
 }
 
-/** Confirms to the visitor that a human has their request. */
 export async function sendLeadConfirmation(
   lead: LeadSummary,
   identity?: { name?: string; phone?: string },
 ) {
-  const business = identity?.name ?? process.env["BUSINESS_NAME"] ?? "our team";
+  const business =
+    identity?.name ?? process.env["BUSINESS_NAME"] ?? "Legacy Benefits Group";
   const phone = identity?.phone ?? process.env["BUSINESS_PHONE"];
 
   return sendEmail({

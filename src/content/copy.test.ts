@@ -18,7 +18,7 @@ function sourceFiles(dir: string): string[] {
 
 describe("one-voice copy", () => {
   it("never speaks of a team, staff or advisors", () => {
-    const hits = ["content", "app", "components"]
+    const hits = ["content", "app", "components", "lib"]
       .flatMap((dir) => sourceFiles(join(srcRoot, dir)))
       .filter((file) => SOLO_VOICE_BREAKERS.test(readFileSync(file, "utf8")))
       .map((file) => file.slice(srcRoot.length + 1));

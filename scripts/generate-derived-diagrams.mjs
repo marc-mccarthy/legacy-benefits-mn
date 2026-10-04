@@ -1,10 +1,3 @@
-/**
- *   node scripts/generate-derived-diagrams.mjs          # rewrite D5 from the imports under src/
- *   node scripts/generate-derived-diagrams.mjs --check  # fail if the committed source is stale
- *
- * Writing the manifest and SOURCES.md over the result is a separate step:
- *   node scripts/generate-diagrams.mjs
- */
 import {
   existsSync,
   readFileSync,
@@ -23,14 +16,6 @@ const CHECK = process.argv.includes("--check");
 
 const d5Path = resolve(diagramsDir, "D5-module-map.mmd");
 
-// ---------------------------------------------------------------------------
-// Shared style, read rather than restated.
-//
-// D1 is hand-authored and is the reference for the shared style. Reading line 1 and the classDef
-// block from it means the invariant "every .mmd shares a byte-identical first line" holds by
-// construction: if the palette ever changes, this file follows it without anyone editing this
-// script. LEGEND.mmd is what documents that palette to a reader; this is what enforces it.
-// ---------------------------------------------------------------------------
 const styleSource = readFileSync(
   resolve(diagramsDir, "D1-system-context.mmd"),
   "utf8",
@@ -53,18 +38,6 @@ if (CLASSDEF_BLOCK.length !== 7) {
   process.exit(1);
 }
 
-// ---------------------------------------------------------------------------
-// Declared: which group each module belongs to, its node id, and its class.
-//
-// Grouping is editorial, so it is declared here rather than guessed. The node id is declared
-// beside it because several ids are deliberately shorter than their path. Every non-test module
-// under src/lib and every module under src/api must appear exactly once: an unlisted module is
-// a hard error, which is what stops a new module from silently vanishing from the map.
-//
-// The class is declared too, because "is this thing a gate" is a judgement about behaviour that no
-// import graph carries. `guard` is reserved for a module whose job is to reject: the two that
-// verify a request, and the one that decides whether a person may be contacted at all.
-// ---------------------------------------------------------------------------
 const GROUPS = [
   {
     title: "Route handlers",
@@ -153,13 +126,6 @@ for (const group of GROUPS) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Discovered: what is actually on disk.
-//
-// Test files are excluded, not because they do not matter but because their imports are the
-// inverse of the dependency this map is about — a test importing a module says nothing about how
-// the application is wired.
-// ---------------------------------------------------------------------------
 function walk(dir) {
   const found = [];
   for (const entry of readdirSync(dir)) {
@@ -200,17 +166,6 @@ if (missing.length || phantom.length) {
   process.exit(1);
 }
 
-// ---------------------------------------------------------------------------
-// Derived: the edges.
-//
-// Only static import and export-from specifiers count. A dynamic import() would be a real edge and
-// is deliberately NOT matched, because there are none today and matching a construct with no
-// instances is untested code pretending to be coverage. If one is added, it belongs here with a
-// test rather than inferred silently.
-//
-// Two specifier forms resolve: the '@/' alias, which tsconfig maps to src/, and a relative path.
-// Anything else is a package, and a package is not a node on this map.
-// ---------------------------------------------------------------------------
 const SPECIFIER =
   /(?:^|\n)\s*(?:import|export)[\s\S]*?from\s+["']([^"']+)["']/g;
 
@@ -246,17 +201,12 @@ for (const path of onDisk) {
   }
 }
 
-// Sorted by the rendered node ids rather than by path, so the edge order in the file matches the
-// order a reader meets the nodes, and so the output is stable across filesystems.
 edges.sort((a, b) => {
   const left = `${declared.get(a[0]).id}->${declared.get(a[1]).id}`;
   const right = `${declared.get(b[0]).id}->${declared.get(b[1]).id}`;
   return left < right ? -1 : left > right ? 1 : 0;
 });
 
-// ---------------------------------------------------------------------------
-// Render.
-// ---------------------------------------------------------------------------
 function buildD5() {
   const lines = [
     INIT_LINE,

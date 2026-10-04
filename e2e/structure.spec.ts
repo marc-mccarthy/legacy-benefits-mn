@@ -3,6 +3,7 @@ import {
   brightestBackground,
   contrast as contrastRatio,
 } from "./support/contrast";
+import { services as authoredServices } from "../src/content/services";
 import { testimonials as authoredTestimonials } from "../src/content/testimonials";
 
 const DESKTOP = { width: 1440, height: 900 };
@@ -40,45 +41,223 @@ test("home: every band shows its heading after scrolling into view", async ({
 });
 
 test.describe("the service band", () => {
-  test("item 23: renders alternating full-bleed rows and zero cards", async ({
+  const RAIL = `${SERVICE_BAND} ul[data-rail]`;
+  const CONTROLS = `${SERVICE_BAND} [data-rail-controls]`;
+  const PLAN_LINKS = `${SERVICE_BAND} nav[aria-label="Which plan fits you"] a`;
+
+  test("item 23: the band is a rail with one card per service", async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto("/");
 
-    const band = page.locator(SERVICE_BAND);
-    await expect(band, "no service band on the home route").toHaveCount(1);
-
-    await expect(band.locator("[data-card]")).toHaveCount(0);
-
-    await expect(
-      page.locator("[data-card]"),
-      "no cards anywhere on the page: the marker is missing rather than the band being card-free",
-    ).not.toHaveCount(0);
-
-    const rows = await band.locator("ul > li").count();
-    expect(rows, "the service band rendered no rows").toBeGreaterThan(1);
-
-    const sides = await band.evaluate((el) =>
-      [...el.querySelectorAll("ul > li")]
-        .map((row) => {
-          const image = row.querySelector("img");
-          const heading = row.querySelector("h3");
-          if (!image || !heading) return null;
-          return image.getBoundingClientRect().left <
-            heading.getBoundingClientRect().left
-            ? "image-left"
-            : "image-right";
-        })
-        .filter((side): side is "image-left" | "image-right" => side !== null),
+    const rail = page.locator(RAIL);
+    await expect(rail, "no rail in the service band").toHaveCount(1);
+    await expect(rail.locator("li[data-rail-card]")).toHaveCount(
+      authoredServices.length,
     );
+    await expect(
+      rail.locator("li[data-rail-card] [data-card-window]"),
+    ).toHaveCount(authoredServices.length);
+  });
 
-    for (let i = 1; i < sides.length; i += 1) {
-      expect(
-        sides[i],
-        `rows ${i - 1} and ${i} put the photograph on the same side: ${sides.join(", ")}`,
-      ).not.toBe(sides[i - 1]);
+  for (const width of [1440, 1920]) {
+    test(`item 23a: arrows page the rail at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+
+      const rail = page.locator(RAIL);
+      const controls = page.locator(CONTROLS);
+      const prev = controls.getByRole("button", { name: "Previous plan" });
+      const next = controls.getByRole("button", { name: "Next plan" });
+      const scrollLeft = () => rail.evaluate((el) => el.scrollLeft);
+
+      const overflows = await rail.evaluate(
+        (el) => el.scrollWidth > el.clientWidth,
+      );
+      if (!overflows) {
+        await expect(controls, "dead arrows are shown").toHaveCount(0);
+        return;
+      }
+
+      await expect(controls).toBeVisible();
+      for (const button of [prev, next]) {
+        const box = await button.boundingBox();
+        expect(box!.width).toBeGreaterThanOrEqual(44);
+        expect(box!.height).toBeGreaterThanOrEqual(44);
+        const target = await button.getAttribute("aria-controls");
+        await expect(page.locator(`#${target}`)).toHaveCount(1);
+      }
+
+      await expect(prev).toBeDisabled();
+      const before = await scrollLeft();
+      await next.click();
+      await expect.poll(scrollLeft).toBeGreaterThan(before);
+
+      while (await next.isEnabled()) {
+        await next.click();
+        await page.waitForTimeout(400);
+      }
+      await expect(next).toBeDisabled();
+      await expect(prev).toBeEnabled();
+    });
+  }
+
+  test("item 23b: tabbing into a card scrolls it into view", async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    await page.goto("/");
+
+    const last = page.locator(`${RAIL} li[data-rail-card]`).last();
+    await last.getByRole("link", { name: /Learn more/ }).focus();
+    await expect
+      .poll(async () => {
+        const box = await last.boundingBox();
+        return box!.x + box!.width <= DESKTOP.width + 1;
+      })
+      .toBe(true);
+  });
+
+  test("item 23c: a vertical wheel over the rail scrolls the page", async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    await page.goto("/");
+
+    const rail = page.locator(RAIL);
+    await rail.scrollIntoViewIfNeeded();
+    const box = (await rail.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const before = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, 400);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(before);
+  });
+
+  test("item 23d: below 700 px and in print the rail is a vertical stack", async ({
+    page,
+  }) => {
+    const lefts = () =>
+      page
+        .locator(`${RAIL} li[data-rail-card]`)
+        .evaluateAll((cards) =>
+          cards.map((card) => Math.round(card.getBoundingClientRect().left)),
+        );
+    const overflowX = () =>
+      page.locator(RAIL).evaluate((el) => getComputedStyle(el).overflowX);
+
+    await page.setViewportSize({ width: 699, height: 900 });
+    await page.goto("/");
+    expect(await overflowX()).not.toBe("auto");
+    expect(new Set(await lefts()).size).toBe(1);
+
+    await page.setViewportSize({ width: 700, height: 900 });
+    expect(await overflowX()).toBe("auto");
+    expect(new Set(await lefts()).size).toBeGreaterThan(1);
+
+    await page.emulateMedia({ media: "print" });
+    expect(await overflowX()).not.toBe("auto");
+    expect(new Set(await lefts()).size).toBe(1);
+  });
+
+  test("item 23e: no arrows at 390", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await expect(page.locator(CONTROLS)).toHaveCount(0);
+  });
+
+  for (const javaScriptEnabled of [true, false]) {
+    test(`item 23f: plan-fit links land on their card (javaScript ${javaScriptEnabled})`, async ({
+      browser,
+    }) => {
+      const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        javaScriptEnabled,
+      });
+      const page = await context.newPage();
+      await page.goto("/");
+
+      const links = page.locator(PLAN_LINKS);
+      const count = await links.count();
+      expect(count).toBe(3);
+
+      for (let i = 0; i < count; i += 1) {
+        const link = links.nth(i);
+        const href = (await link.getAttribute("href"))!;
+        const box = await link.boundingBox();
+        expect(box!.height).toBeGreaterThanOrEqual(44);
+
+        await link.click();
+        await page.waitForTimeout(500);
+
+        const result = await page.evaluate((hash) => {
+          const cards = [
+            ...document.querySelectorAll<HTMLElement>("[data-rail-card]"),
+          ];
+          const header = document.querySelector("header[data-site-header]")!;
+          const outlined = cards
+            .filter((card) => getComputedStyle(card).outlineStyle !== "none")
+            .map((card) => `#${card.id}`);
+          const target = document.querySelector(hash)!;
+          return {
+            hash: location.hash,
+            isCard: cards.includes(target as HTMLElement),
+            outlined,
+            top: target.getBoundingClientRect().top,
+            headerHeight: header.getBoundingClientRect().height,
+          };
+        }, href);
+
+        expect(result.hash).toBe(href);
+        expect(result.isCard).toBe(true);
+        expect(result.outlined).toEqual([href]);
+        expect(result.top).toBeGreaterThanOrEqual(result.headerHeight);
+      }
+      await context.close();
+    });
+  }
+
+  test("item 23g: nothing calls preventDefault on wheel or touch", async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "reduced-motion",
+      "Lenis calls preventDefault on wheel, so only this project is a meaningful probe",
+    );
+    await page.addInitScript(() => {
+      const calls: string[] = [];
+      (window as unknown as { __pd: string[] }).__pd = calls;
+      const original = Event.prototype.preventDefault;
+      Event.prototype.preventDefault = function () {
+        if (["wheel", "touchstart", "touchmove"].includes(this.type)) {
+          calls.push(this.type);
+        }
+        return original.call(this);
+      };
+    });
+    await page.setViewportSize(DESKTOP);
+    await page.goto("/");
+
+    const height = await page.evaluate(() => document.body.scrollHeight);
+    for (let y = 0; y < height; y += 600) {
+      await page.mouse.wheel(0, 600);
+      await page.waitForTimeout(50);
     }
+
+    const rail = page.locator(RAIL);
+    await rail.scrollIntoViewIfNeeded();
+    const next = page
+      .locator(CONTROLS)
+      .getByRole("button", { name: "Next plan" });
+    if (await next.count()) await next.click();
+    await rail.hover();
+    await page.mouse.wheel(300, 0);
+
+    expect(
+      await page.evaluate(() => (window as unknown as { __pd: string[] }).__pd),
+    ).toEqual([]);
   });
 });
 

@@ -14,10 +14,8 @@ import {
 import { NoiseStage } from "@/components/sections/noise-stage";
 import { SignalPortrait } from "@/components/sections/signal-portrait";
 import { RichTextSection } from "@/components/sections/rich-text";
-import {
-  ServiceGrid,
-  type ServiceItem,
-} from "@/components/sections/service-grid";
+import type { ServiceItem } from "@/components/sections/service-grid";
+import { ServiceRail } from "@/components/sections/service-rail";
 import { StatsBand, type Stat } from "@/components/sections/stats-band";
 import {
   Testimonials,
@@ -98,12 +96,17 @@ export function RenderBlocks({
 
           case "serviceGrid":
             return (
-              <ServiceGrid
+              <ServiceRail
                 key={key}
                 scheme={scheme}
                 heading={block.heading as string | null}
                 intro={block.intro as string | null}
-                services={data.services}
+                services={data.services.map(({ id, title, slug, summary }) => ({
+                  id,
+                  title,
+                  slug,
+                  summary,
+                }))}
               />
             );
 

@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { luminance } from "./support/contrast";
 
 test.describe("contact form", () => {
   test("shows the full TCPA consent text, not a summary", async ({ page }) => {
     await page.goto("/contact");
 
-    // The exact elements that make consent "express written consent".
     await expect(page.getByText("prior express written consent")).toBeVisible();
     await expect(
       page.getByText("consent is not a condition of purchase"),
@@ -70,8 +70,101 @@ test.describe("navigation", () => {
     await page.goto("/learn");
     await page.getByRole("link", { name: "Tools", exact: true }).click();
     await expect(page).toHaveURL(/type=tool/);
-    // Filtering is server-rendered, so a reload keeps the same view.
     await page.reload();
     await expect(page).toHaveURL(/type=tool/);
+  });
+});
+
+test.describe("transact pages", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  for (const route of [
+    "/contact",
+    "/scope-of-appointment",
+    "/do-not-contact",
+  ]) {
+    test(`${route} controls are at least 44x44`, async ({ page }) => {
+      await page.goto(route);
+
+      const small = await page
+        .locator("main input, main select, main textarea, main button, main a")
+        .evaluateAll((elements) =>
+          elements.flatMap((element) => {
+            if (
+              element instanceof HTMLInputElement &&
+              element.type === "hidden"
+            )
+              return [];
+            const row = element.closest("label") ?? element;
+            const box = row.getBoundingClientRect();
+            if (box.width === 0 || box.height === 0) return [];
+            const text = element.closest("p, li")?.textContent ?? "";
+            const inRunningText =
+              element instanceof HTMLAnchorElement &&
+              text.length - (element.textContent ?? "").length > 30;
+            if (inRunningText) return [];
+            return box.width < 44 || box.height < 44
+              ? [`${element.outerHTML.slice(0, 80)} ${box.width}x${box.height}`]
+              : [];
+          }),
+        );
+
+      expect(small).toEqual([]);
+    });
+  }
+
+  test("contact phone link is large and tappable", async ({ page }) => {
+    await page.goto("/contact");
+
+    const link = page.locator('main a[href^="tel:"]').first();
+    const style = await link.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return {
+        fontSize: parseFloat(computed.fontSize),
+        minHeight: parseFloat(computed.minHeight),
+      };
+    });
+
+    expect(style.fontSize).toBeGreaterThanOrEqual(32);
+    expect(style.minHeight).toBeGreaterThanOrEqual(44);
+  });
+
+  test("contact page shows Nate above the form", async ({ page }) => {
+    await page.goto("/contact");
+
+    const portrait = page.locator("main img[alt*='Nate Best']");
+    await expect(portrait).toBeVisible();
+    await expect(
+      page.getByText("Nate Best, Founder & Licensed Agent"),
+    ).toBeVisible();
+    expect(await page.locator("canvas").count()).toBe(0);
+
+    const portraitBox = await portrait.boundingBox();
+    const formBox = await page.locator("main form").first().boundingBox();
+    expect(portraitBox!.y).toBeLessThan(formBox!.y);
+  });
+
+  test("an invalid touched email changes border colour and keeps its error text", async ({
+    page,
+  }) => {
+    await page.goto("/contact");
+
+    const email = page.getByRole("textbox", { name: "Email", exact: true });
+    const border = () =>
+      email.evaluate((element) => getComputedStyle(element).borderTopColor);
+    const before = await border();
+
+    await email.fill("not-an-email");
+    await email.blur();
+    const after = await border();
+
+    expect(after).not.toBe(before);
+    const [r, g, b] = after.match(/\d+/g)!.map(Number);
+    const hex = `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+    const ratio = (luminance("#f7f9fa") + 0.05) / (luminance(hex) + 0.05);
+    expect(ratio).toBeGreaterThanOrEqual(3);
+
+    await page.getByRole("button", { name: /Request a call/ }).click();
+    await expect(page.getByRole("alert").first()).toBeVisible();
   });
 });

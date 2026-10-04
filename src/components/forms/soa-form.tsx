@@ -122,7 +122,10 @@ export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
           We may only discuss the products you select here.
         </p>
         {SOA_PRODUCT_TYPES.map((product) => (
-          <label key={product.value} className="flex gap-3 leading-relaxed">
+          <label
+            key={product.value}
+            className="flex min-h-11 items-center gap-3 leading-relaxed"
+          >
             <input
               type="checkbox"
               value={product.value}

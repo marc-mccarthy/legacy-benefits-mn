@@ -579,6 +579,16 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  :root:not([data-effects-paused]) .fade-in {
+    animation: fade-in var(--duration-house) var(--ease-fade) both;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
   @supports (animation-timeline: view()) {
     :root:not([data-effects-paused]) [data-noise-shape] {
       display: block;

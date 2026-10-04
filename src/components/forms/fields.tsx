@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const controlClasses =
   "border-border-control rounded-(--radius-control) bg-surface text-on-surface w-full border px-4 py-3 text-base " +
-  "aria-[invalid=true]:border-red-600";
+  "aria-[invalid=true]:border-red-600 user-invalid:border-red-600";
 
 export function Field({
   label,

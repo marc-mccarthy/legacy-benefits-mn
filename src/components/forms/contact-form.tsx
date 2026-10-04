@@ -165,11 +165,11 @@ export function ContactForm({
       </Field>
 
       <Field htmlFor="consent" error={errors.consent?.message}>
-        <label className="flex gap-3 leading-relaxed">
+        <label className="flex min-h-11 items-center gap-3 leading-relaxed">
           <input
             id="consent"
             type="checkbox"
-            className="mt-1 size-6 shrink-0"
+            className="size-6 shrink-0"
             {...register("consent")}
           />
           <span>{consentText}</span>

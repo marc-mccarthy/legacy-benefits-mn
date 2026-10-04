@@ -15,7 +15,6 @@ import { seededRandom } from "@/lib/random";
 import type { SceneFactory } from "./types";
 
 const SEED = 20261003;
-const GOLD = "#FFC000";
 
 const LAYERS = [
   { count: 900, reduced: 320, size: 8, opacity: 0.5, spin: 0.004 },
@@ -41,6 +40,9 @@ const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
   );
   texture.colorSpace = SRGBColorSpace;
 
+  const gold = getComputedStyle(document.documentElement)
+    .getPropertyValue("--color-star-gold")
+    .trim();
   const scene = new Scene();
   const layers = LAYERS.map((layer, index) => {
     const geometry = new BufferGeometry();
@@ -56,7 +58,7 @@ const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
     );
     const material = new PointsMaterial({
       map: texture,
-      color: GOLD,
+      color: gold,
       size: layer.size,
       sizeAttenuation: false,
       opacity: layer.opacity,
@@ -117,6 +119,7 @@ const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
       camera.updateProjectionMatrix();
       const radius = Math.hypot(w, h) / 2;
       for (const { points } of layers) points.scale.set(radius, radius, 1);
+      renderer.render(scene, camera);
     },
     dispose() {
       cancelAnimationFrame(frame);

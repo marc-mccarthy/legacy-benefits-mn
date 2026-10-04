@@ -16,7 +16,6 @@ type VisualEffectLifecycle = {
   tabVisible: boolean;
   finePointer: boolean;
   paused: boolean;
-  running: boolean;
 };
 
 const FINE_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
@@ -72,8 +71,6 @@ export function useVisualEffectLifecycle(
     return () => observer.disconnect();
   }, [ref, mounted]);
 
-  const running = mounted && !reduced && !paused && onscreen && tabVisible;
-
   return {
     mounted,
     reduced,
@@ -81,6 +78,5 @@ export function useVisualEffectLifecycle(
     tabVisible,
     finePointer,
     paused,
-    running,
   };
 }

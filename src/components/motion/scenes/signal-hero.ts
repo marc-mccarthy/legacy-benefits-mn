@@ -16,8 +16,6 @@ import { easeMove, fieldPositions, noisePositions } from "@/lib/signal-field";
 import type { SceneFactory } from "./types";
 
 const SEED = 20261002;
-const CYAN = "#00E0E0";
-const GOLD = "#FFC000";
 
 const VERTEX = `
 attribute float aLum;
@@ -53,7 +51,7 @@ void main() {
 const cutout = media["nate.cutoutSample"];
 
 const portraits = new Map<
-  string,
+  number,
   Promise<ReturnType<typeof stipplePortrait>>
 >();
 
@@ -71,14 +69,13 @@ async function loadCutout(): Promise<ImageData> {
 }
 
 function portraitPoints(count: number) {
-  const key = `${cutout.src}|${count}|${SEED}`;
-  let portrait = portraits.get(key);
+  let portrait = portraits.get(count);
   if (!portrait) {
     portrait = loadCutout().then((image) =>
       stipplePortrait(image, count, SEED),
     );
-    portraits.set(key, portrait);
-    portrait.catch(() => portraits.delete(key));
+    portraits.set(count, portrait);
+    portrait.catch(() => portraits.delete(count));
   }
   return portrait;
 }
@@ -103,12 +100,17 @@ const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
     new BufferAttribute(phases.subarray(0, count), 1),
   );
 
+  const palette = getComputedStyle(document.documentElement);
   const uniforms = {
     uSettle: { value: 0 },
     uTime: { value: 0 },
     uSize: { value: 3 },
-    uCyan: { value: new Color(CYAN) },
-    uGold: { value: new Color(GOLD) },
+    uCyan: {
+      value: new Color(palette.getPropertyValue("--color-signal-cyan").trim()),
+    },
+    uGold: {
+      value: new Color(palette.getPropertyValue("--color-star-gold").trim()),
+    },
   };
   const material = new ShaderMaterial({
     vertexShader: VERTEX,
@@ -166,6 +168,7 @@ const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
     }
     uniforms.uSize.value = Math.max(2.5, (halfH / 260) * 2.6) * pixelRatio;
     place();
+    renderer.render(scene, camera);
   };
 
   const tick = (now: number) => {

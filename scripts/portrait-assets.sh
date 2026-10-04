@@ -6,6 +6,20 @@ SRC="$ROOT/public/media/nate-best-authentic.jpg"
 CUTOUT="$ROOT/public/media/nate-cutout.png"
 DUOTONE="$ROOT/public/media/nate-duotone.jpg"
 SAMPLE="$ROOT/public/media/nate-cutout-sample.webp"
+TOKENS="$ROOT/src/app/globals.css"
+
+token() {
+  local value
+  value="$(sed -n "s/^ *--color-$1: *\(#[0-9a-fA-F]*\);.*/\1/p" "$TOKENS")"
+  if [[ -z "$value" ]]; then
+    echo "portrait-assets: missing --color-$1 in $TOKENS" >&2
+    exit 1
+  fi
+  echo "$value"
+}
+
+NAVY="$(token ground-dark)"
+GOLD="$(token star-gold)"
 
 if [[ ! -f "$SRC" ]]; then
   echo "portrait-assets: missing source $SRC" >&2
@@ -86,15 +100,16 @@ fi
 
 magick "$CUTOUT" -channel A -level 15%,85% +channel "$CUTOUT"
 magick "$CUTOUT" -channel G -fx "g>((r+b)/2) ? ((r+b)/2) : g" +channel "$CUTOUT"
+magick "$CUTOUT" -channel A -fx "side=min(1,min(i,w-1-i)/(0.16*w)); low=min(1,max(0,(j/h-0.5)/0.2)); bottom=min(1,(h-1-j)/(0.22*h)); u*(1-low*(1-side*side*(3-2*side)))*bottom*bottom*(3-2*bottom)" +channel "$CUTOUT"
 
 DUOTONE_RGB="$TMPDIR_LOCAL/duotone-rgb.png"
 ALPHA="$TMPDIR_LOCAL/alpha.png"
 DUOTONE_RGBA="$TMPDIR_LOCAL/duotone-rgba.png"
 
-magick "$CUTOUT" -alpha off -colorspace gray -sigmoidal-contrast 4x50% \( -size 256x1 gradient:"#081A3A-#FFE7A3" \) -clut "$DUOTONE_RGB"
+magick "$CUTOUT" -alpha off -colorspace gray -sigmoidal-contrast 4x50% \( -size 256x1 gradient:"$NAVY-$GOLD" \) -clut "$DUOTONE_RGB"
 magick "$CUTOUT" -alpha extract "$ALPHA"
 magick "$DUOTONE_RGB" "$ALPHA" -alpha off -compose CopyOpacity -composite "$DUOTONE_RGBA"
-magick "$DUOTONE_RGBA" -background "#081A3A" -alpha remove -alpha off "$DUOTONE_PNG"
+magick "$DUOTONE_RGBA" -background "$NAVY" -alpha remove -alpha off "$DUOTONE_PNG"
 magick "$DUOTONE_PNG" -colorspace sRGB -quality 90 "$DUOTONE"
 
 DUOTONE_WIDTH="$(magick identify -format "%w" "$DUOTONE")"

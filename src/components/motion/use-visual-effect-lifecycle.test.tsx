@@ -66,7 +66,6 @@ function Probe() {
       data-tab-visible={state.tabVisible}
       data-fine-pointer={state.finePointer}
       data-paused={state.paused}
-      data-running={state.running}
     />
   );
 }
@@ -80,7 +79,6 @@ function readState() {
     tabVisible: node.dataset.tabVisible === "true",
     finePointer: node.dataset.finePointer === "true",
     paused: node.dataset.paused === "true",
-    running: node.dataset.running === "true",
   };
 }
 
@@ -101,67 +99,60 @@ afterEach(() => {
 });
 
 describe("useVisualEffectLifecycle", () => {
-  it("reports running false during SSR, before mount", () => {
+  it("reports mounted and onscreen false during SSR", () => {
     const html = renderToString(<Probe />);
     expect(html).toContain('data-mounted="false"');
-    expect(html).toContain('data-running="false"');
+    expect(html).toContain('data-onscreen="false"');
   });
 
-  it("reports running false after mount but before the observer reports visibility", () => {
+  it("reports mounted but not onscreen before the observer reports visibility", () => {
     render(<Probe />);
 
     const state = readState();
     expect(state.mounted).toBe(true);
     expect(state.onscreen).toBe(false);
-    expect(state.running).toBe(false);
   });
 
-  it("flips running true once onscreen, then false again off screen", () => {
+  it("follows the intersection observer for onscreen", () => {
     render(<Probe />);
 
     act(() => FakeIntersectionObserver.current?.trigger(true));
-    expect(readState().running).toBe(true);
+    expect(readState().onscreen).toBe(true);
 
     act(() => FakeIntersectionObserver.current?.trigger(false));
-    expect(readState().running).toBe(false);
+    expect(readState().onscreen).toBe(false);
   });
 
-  it("flips running false when reduced motion is preferred", () => {
+  it("reports reduced motion", () => {
     useReducedMotionMock.mockReturnValue(true);
     render(<Probe />);
-    act(() => FakeIntersectionObserver.current?.trigger(true));
 
     expect(readState().reduced).toBe(true);
-    expect(readState().running).toBe(false);
   });
 
-  it("flips running false when effects are paused", () => {
+  it("follows the effects pause flag", () => {
     render(<Probe />);
-    act(() => FakeIntersectionObserver.current?.trigger(true));
-    expect(readState().running).toBe(true);
+    expect(readState().paused).toBe(false);
 
     act(() => setEffectsPaused(true));
     expect(readState().paused).toBe(true);
-    expect(readState().running).toBe(false);
 
     act(() => setEffectsPaused(false));
-    expect(readState().running).toBe(true);
+    expect(readState().paused).toBe(false);
   });
 
-  it("flips running false when the tab is hidden", () => {
+  it("follows tab visibility", () => {
     render(<Probe />);
-    act(() => FakeIntersectionObserver.current?.trigger(true));
-    expect(readState().running).toBe(true);
+    expect(readState().tabVisible).toBe(true);
 
     act(() => setTabHidden(true));
     expect(readState().tabVisible).toBe(false);
-    expect(readState().running).toBe(false);
 
     act(() => setTabHidden(false));
-    expect(readState().running).toBe(true);
+    expect(readState().tabVisible).toBe(true);
   });
 
-  it("reports finePointer from the hover/pointer media query, independent of running", () => {
+  it("reports finePointer from the hover/pointer media query", () => {
     render(<Probe />);
     expect(readState().finePointer).toBe(false);
 
@@ -169,13 +160,11 @@ describe("useVisualEffectLifecycle", () => {
     expect(readState().finePointer).toBe(true);
   });
 
-  it("stays onscreen false and running false when IntersectionObserver is unavailable", () => {
+  it("stays onscreen false when IntersectionObserver is unavailable", () => {
     vi.stubGlobal("IntersectionObserver", undefined);
 
     render(<Probe />);
 
-    const state = readState();
-    expect(state.onscreen).toBe(false);
-    expect(state.running).toBe(false);
+    expect(readState().onscreen).toBe(false);
   });
 });

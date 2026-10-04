@@ -418,25 +418,25 @@
           "width": 480,
           "format": "avif",
           "path": "public/media/nate-duotone-480.avif",
-          "bytes": 70742
+          "bytes": 50748
         },
         {
           "width": 480,
           "format": "webp",
           "path": "public/media/nate-duotone-480.webp",
-          "bytes": 56808
+          "bytes": 40008
         },
         {
           "width": 651,
           "format": "avif",
           "path": "public/media/nate-duotone-651.avif",
-          "bytes": 107869
+          "bytes": 84713
         },
         {
           "width": 651,
           "format": "webp",
           "path": "public/media/nate-duotone-651.webp",
-          "bytes": 89702
+          "bytes": 65574
         }
       ],
       "intrinsic": {

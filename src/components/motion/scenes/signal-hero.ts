@@ -7,13 +7,13 @@ import {
   Points,
   Scene,
   ShaderMaterial,
-  WebGLRenderer,
 } from "three";
 import { media } from "@/content/media";
 import { DURATION_CONVERGE } from "@/lib/motion";
 import { stipplePortrait } from "@/lib/portrait-points";
 import { easeMove, fieldPositions, noisePositions } from "@/lib/signal-field";
 import { paletteColor } from "./palette";
+import { createRenderLoop } from "./render-loop";
 import type { SceneFactory } from "./types";
 
 const SEED = 20261002;
@@ -124,19 +124,8 @@ const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
   scene.add(new Points(geometry, material));
   const camera = new OrthographicCamera(-1, 1, 1, -1, -10, 10);
 
-  const renderer = new WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: false,
-    powerPreference: "low-power",
-  });
-  const pixelRatio = Math.min(window.devicePixelRatio, 1.5);
-  renderer.setPixelRatio(pixelRatio);
-  renderer.setClearColor(0x000000, 0);
-
   let settle = 0;
   let start = 0;
-  let frame = 0;
 
   const place = () => {
     fieldPositions(noisePx, targetPx, settle, flat);
@@ -169,30 +158,27 @@ const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
     renderer.render(scene, camera);
   };
 
-  const tick = (now: number) => {
-    start ||= now;
-    settle = easeMove(Math.min((now - start) / DURATION_CONVERGE, 1));
-    place();
-    uniforms.uTime.value = now / 1000;
-    renderer.render(scene, camera);
-    frame = requestAnimationFrame(tick);
-  };
+  const { renderer, setRunning, release } = createRenderLoop(canvas, {
+    onFrame(now) {
+      start ||= now;
+      settle = easeMove(Math.min((now - start) / DURATION_CONVERGE, 1));
+      place();
+      uniforms.uTime.value = now / 1000;
+      renderer.render(scene, camera);
+    },
+  });
+  const pixelRatio = renderer.getPixelRatio();
 
   return {
-    setRunning(on) {
-      cancelAnimationFrame(frame);
-      if (on) frame = requestAnimationFrame(tick);
-    },
+    setRunning,
     resize(w, h) {
       renderer.setSize(w, h, false);
       layout(w, h);
     },
     dispose() {
-      cancelAnimationFrame(frame);
       geometry.dispose();
       material.dispose();
-      renderer.dispose();
-      renderer.forceContextLoss();
+      release();
     },
   };
 };

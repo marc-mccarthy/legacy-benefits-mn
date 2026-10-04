@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { ThreeStage } from "@/components/motion/three-stage";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import type { ServiceItem } from "@/components/sections/service-grid";
 
@@ -26,6 +27,12 @@ const PLAN_FIT = [
 ];
 
 const RAIL_ID = "services-rail";
+
+const GLASS: Record<string, string> = {
+  "medicare-advantage": "knot",
+  "medicare-supplement": "shield",
+  "part-d": "prism",
+};
 
 const arrowClass =
   "border-border-control inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border text-xl enabled:hover:border-accent disabled:opacity-40";
@@ -111,35 +118,48 @@ export function ServiceRail({
         </nav>
       </Container>
 
-      <ul
-        ref={railRef}
-        id={RAIL_ID}
-        data-rail=""
+      <ThreeStage
+        scene="glass"
+        fineOnly
         className="mt-(--spacing-medium)"
-      >
-        {services.map((service) => (
-          <li key={service.id} id={service.slug} data-rail-card="">
-            <div data-card-window="">
-              <div data-card-orb="" />
-            </div>
-            <div className="space-y-3 p-6">
-              <h3 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em]">
-                {service.title}
-              </h3>
-              <p className="text-muted leading-relaxed text-pretty">
-                {service.summary}
-              </p>
-              <Link
-                href={`/services/${service.slug}`}
-                className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+        fallback={
+          <ul ref={railRef} id={RAIL_ID} data-rail="">
+            {services.map((service) => (
+              <li
+                key={service.id}
+                id={service.slug}
+                data-rail-card=""
+                onFocus={(event) =>
+                  event.currentTarget.scrollIntoView({
+                    block: "nearest",
+                    inline: "nearest",
+                    behavior: reduced ? "auto" : "smooth",
+                  })
+                }
               >
-                Learn more
-                <span className="sr-only"> about {service.title}</span>
-              </Link>
-            </div>
-          </li>
-        ))}
-      </ul>
+                <div data-card-window={GLASS[service.slug] ?? ""}>
+                  <div data-card-orb="" />
+                </div>
+                <div className="space-y-3 p-6">
+                  <h3 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em]">
+                    {service.title}
+                  </h3>
+                  <p className="text-muted leading-relaxed text-pretty">
+                    {service.summary}
+                  </p>
+                  <Link
+                    href={`/services/${service.slug}`}
+                    className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+                  >
+                    Learn more
+                    <span className="sr-only"> about {service.title}</span>
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        }
+      />
 
       {overflows ? (
         <Container>

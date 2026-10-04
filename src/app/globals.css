@@ -723,7 +723,7 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
 [data-rail] > li {
   flex: 0 0 min(26rem, 85vw);
   scroll-snap-align: start;
-  scroll-margin-top: 6rem;
+  scroll-margin-top: calc(var(--header-stack) + 1.5rem);
   background-color: var(--color-paper);
   color: var(--color-ink-light);
   border: 1px solid var(--scheme-border);
@@ -762,6 +762,12 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
     var(--color-signal-cyan),
     var(--color-raised-dark) 70%
   );
+}
+
+@media screen {
+  :has(> canvas[data-three-stage="glass"]) [data-card-orb] {
+    visibility: hidden;
+  }
 }
 
 @media (width < 700px), print {

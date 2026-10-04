@@ -180,6 +180,34 @@ test("a scene created while the tab is hidden stays stopped", async () => {
   expect(handle.setRunning).not.toHaveBeenCalledWith(true);
 });
 
+test("a fine-only stage never loads its scene on a touch device", async () => {
+  vi.stubGlobal("matchMedia", () => ({
+    matches: false,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
+  const { container } = render(
+    <ThreeStage scene="signal-hero" fineOnly fallback={fallback} />,
+  );
+  setOnscreen(true);
+
+  await act(async () => {});
+  expect(container.querySelector("canvas")).toBeNull();
+  expect(factory).not.toHaveBeenCalled();
+  expect(webglOwner()).toBeNull();
+  expect(screen.getByText("Nate Best").isConnected).toBe(true);
+});
+
+test("a fine-only stage mounts with a fine pointer", async () => {
+  const { container } = render(
+    <ThreeStage scene="signal-hero" fineOnly fallback={fallback} />,
+  );
+  setOnscreen(true);
+
+  await waitFor(() => expect(container.querySelector("canvas")).not.toBeNull());
+  expect(factory).toHaveBeenCalledTimes(1);
+});
+
 test("an inactive stage never loads its scene", async () => {
   const { container } = render(
     <ThreeStage scene="signal-hero" active={false} fallback={fallback} />,

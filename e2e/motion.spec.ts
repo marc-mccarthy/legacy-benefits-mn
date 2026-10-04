@@ -1154,3 +1154,126 @@ test.describe("the signal reveal", () => {
     await context.close();
   });
 });
+
+test.describe("services glass", () => {
+  const RAIL = 'section[aria-labelledby="services-heading"] ul[data-rail]';
+  const STAGE = 'canvas[data-three-stage="glass"]';
+  const ORBS = `${RAIL} [data-card-orb]`;
+
+  const toRail = async (page: Page) => {
+    await page.locator(RAIL).evaluate((el) =>
+      el.scrollIntoView({
+        block: "center",
+        behavior: "instant" as ScrollBehavior,
+      }),
+    );
+  };
+
+  const orbsShow = async (page: Page) => {
+    await expect(page.locator(ORBS)).toHaveCount(3);
+    for (const orb of await page.locator(ORBS).all()) {
+      await expect(orb).toBeVisible();
+    }
+  };
+
+  test("on a desktop the glass canvas mounts once the rail is in view", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await toRail(page);
+
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator("canvas[data-three-stage]")).toHaveCount(1);
+    await expect(page.locator(STAGE)).toHaveAttribute("aria-hidden", "true");
+
+    await context.close();
+  });
+
+  test("on a touch phone at 390 no glass canvas is created and the orbs show", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await toRail(page);
+    await page.waitForTimeout(1500);
+
+    await expect(page.locator(STAGE)).toHaveCount(0);
+    await orbsShow(page);
+
+    await context.close();
+  });
+
+  test("when the studio map fails the canvas never mounts and the orbs stay", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.route("**/env/studio-cool-gold.jpg", (route) => route.abort());
+    await page.goto("/");
+    await toRail(page);
+    await page.waitForTimeout(2000);
+
+    await expect(page.locator(STAGE)).toHaveCount(0);
+    await orbsShow(page);
+    expect(
+      errors.filter((message) => !message.startsWith("glass: the studio map")),
+    ).toEqual([]);
+
+    await context.close();
+  });
+
+  test("reduced motion, JavaScript off and print: orbs and zero canvas", async ({
+    browser,
+  }) => {
+    const reduced = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      reducedMotion: "reduce",
+    });
+    const page = await reduced.newPage();
+    await page.goto("/");
+    await toRail(page);
+    await page.waitForTimeout(1000);
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await orbsShow(page);
+    await reduced.close();
+
+    const noScript = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      javaScriptEnabled: false,
+    });
+    const still = await noScript.newPage();
+    await still.goto("/");
+    await expect(still.locator("canvas")).toHaveCount(0);
+    await orbsShow(still);
+    await noScript.close();
+
+    const printed = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      reducedMotion: "no-preference",
+    });
+    const print = await printed.newPage();
+    await print.goto("/");
+    await toRail(print);
+    await expect(print.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await print.emulateMedia({ media: "print" });
+    await expect(print.locator(STAGE)).toBeHidden();
+    await orbsShow(print);
+    await printed.close();
+  });
+});

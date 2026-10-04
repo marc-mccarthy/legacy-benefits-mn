@@ -10,6 +10,7 @@ const sceneLoaders: Record<SceneKey, () => Promise<{ default: SceneFactory }>> =
   {
     "signal-hero": () => import("./scenes/signal-hero"),
     "signal-close": () => import("./scenes/signal-close"),
+    glass: () => import("./scenes/glass"),
   };
 
 const CANVAS_CLASS =
@@ -19,6 +20,7 @@ type ThreeStageProps = {
   scene: SceneKey;
   fallback: ReactNode;
   active?: boolean;
+  fineOnly?: boolean;
   className?: string;
 };
 
@@ -26,6 +28,7 @@ export function ThreeStage({
   scene,
   fallback,
   active = true,
+  fineOnly = false,
   className,
 }: ThreeStageProps) {
   const id = useId();
@@ -34,7 +37,14 @@ export function ThreeStage({
   const [broken, setBroken] = useState(false);
   const { mounted, reduced, paused, onscreen, tabVisible, finePointer } =
     useVisualEffectLifecycle(rootRef);
-  const live = active && !broken && mounted && !reduced && !paused && onscreen;
+  const live =
+    active &&
+    !broken &&
+    mounted &&
+    !reduced &&
+    !paused &&
+    onscreen &&
+    (!fineOnly || finePointer);
 
   useEffect(() => {
     handleRef.current?.setRunning(tabVisible);

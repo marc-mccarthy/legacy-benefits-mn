@@ -8,6 +8,9 @@ vi.mock("three", async (importOriginal) => ({
   ...(await importOriginal<typeof import("three")>()),
   WebGLRenderer: class {
     setPixelRatio() {}
+    getPixelRatio() {
+      return 1;
+    }
     setClearColor() {}
     setSize() {}
     render(scene: Scene) {

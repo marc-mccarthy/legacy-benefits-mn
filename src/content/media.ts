@@ -198,6 +198,13 @@ export const media: Record<string, MediaAsset> = {
     alt: "A four-point North Star with a soft glow",
     srcSet: [],
   },
+  "env.studio": {
+    src: "/media/env/studio-cool-gold.jpg",
+    width: 2048,
+    height: 1024,
+    alt: "Studio lighting map",
+    srcSet: [],
+  },
   "nate.duotone": {
     src: "/media/nate-duotone.jpg",
     width: 651,

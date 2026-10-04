@@ -8,11 +8,11 @@ import {
   Scene,
   SRGBColorSpace,
   TextureLoader,
-  WebGLRenderer,
 } from "three";
 import { media } from "@/content/media";
 import { seededRandom } from "@/lib/random";
 import { paletteColor } from "./palette";
+import { createRenderLoop } from "./render-loop";
 import type { SceneFactory } from "./types";
 
 const SEED = 20261003;
@@ -80,35 +80,24 @@ const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
     texture.dispose();
   };
 
-  let renderer: WebGLRenderer;
+  let loop: ReturnType<typeof createRenderLoop>;
   try {
-    renderer = new WebGLRenderer({
-      canvas,
-      alpha: true,
-      antialias: false,
-      powerPreference: "low-power",
+    loop = createRenderLoop(canvas, {
+      onFrame(now) {
+        const t = now / 1000;
+        for (const { points, layer } of layers)
+          points.rotation.z = t * layer.spin;
+        renderer.render(scene, camera);
+      },
     });
   } catch (error) {
     disposeAssets();
     throw error;
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-  renderer.setClearColor(0x000000, 0);
-
-  let frame = 0;
-
-  const tick = (now: number) => {
-    const t = now / 1000;
-    for (const { points, layer } of layers) points.rotation.z = t * layer.spin;
-    renderer.render(scene, camera);
-    frame = requestAnimationFrame(tick);
-  };
+  const { renderer, setRunning, release } = loop;
 
   return {
-    setRunning(on) {
-      cancelAnimationFrame(frame);
-      if (on) frame = requestAnimationFrame(tick);
-    },
+    setRunning,
     resize(w, h) {
       renderer.setSize(w, h, false);
       camera.left = -w / 2;
@@ -121,10 +110,8 @@ const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
       renderer.render(scene, camera);
     },
     dispose() {
-      cancelAnimationFrame(frame);
       disposeAssets();
-      renderer.dispose();
-      renderer.forceContextLoss();
+      release();
     },
   };
 };

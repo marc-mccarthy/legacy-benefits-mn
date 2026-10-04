@@ -523,6 +523,50 @@
       "fetchedBy": "antigravity"
     },
     {
+      "slot": "env.studio",
+      "lane": "generated-three",
+      "file": "public/media/env/studio-cool-gold.jpg",
+      "variants": [],
+      "intrinsic": {
+        "width": 2048,
+        "height": 1024
+      },
+      "alt": "Studio lighting map",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-three",
+        "id": "studio-cool-gold",
+        "pageUrl": null,
+        "downloadUrl": "public/media/env/studio-cool-gold.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated equirectangular studio map (gold key, cyan fill) used only as the reflection environment for the services glass objects; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity three.js rig"
+    },
+    {
       "slot": "nate.chip",
       "lane": "owner-supplied",
       "file": "public/media/nate-chip-192.webp",

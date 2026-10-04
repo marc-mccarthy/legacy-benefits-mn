@@ -1,4 +1,4 @@
-export type SceneKey = "signal-hero" | "signal-close";
+export type SceneKey = "signal-hero" | "signal-close" | "glass";
 
 export type SceneHandle = {
   setRunning(on: boolean): void;

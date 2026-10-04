@@ -69,6 +69,7 @@ describe("media slots", () => {
         "close.starSprite",
         "events.image",
         "nate.cutout",
+        "nate.chip",
         "nate.cutoutSample",
         "nate.duotone",
         "pages.image",

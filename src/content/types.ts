@@ -93,8 +93,6 @@ export type PageBlock = {
   scheme?: "light" | "muted" | "dark" | "black";
 } & Record<string, unknown>;
 
-/** Business identity is not here: it comes from the environment only, through
- *  `getBusinessIdentity()`. */
 export type SiteContent = {
   nav: NavItem[];
   announcement: {
@@ -106,7 +104,6 @@ export type SiteContent = {
     endsAt: string | null;
   };
   stats: Stat[];
-  cta: { label: string | null; href: string | null };
   clientPortal: { label: string | null; href: string | null };
   compliance: {
     orgCount: number | null;

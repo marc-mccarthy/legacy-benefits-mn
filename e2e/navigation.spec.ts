@@ -140,8 +140,8 @@ test.describe("navigation state and anchors", () => {
     expect(rule.width).toBe("2px");
     expect(
       rule.colour,
-      `the active marker is drawn in ${rule.colour}, not the light-scheme accent`,
-    ).toBe("rgb(0, 122, 122)");
+      `the active marker is drawn in ${rule.colour}, not the dark-scheme accent`,
+    ).toBe("rgb(0, 224, 224)");
   });
 
   test("item 19: an anchor jump leaves the heading below the condensed header", async ({

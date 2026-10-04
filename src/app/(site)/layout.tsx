@@ -37,7 +37,6 @@ export default async function SiteLayout({
       <Header
         brand={identity.name}
         nav={site.nav}
-        cta={site.cta}
         clientPortal={site.clientPortal}
         phone={identity.phone}
       />

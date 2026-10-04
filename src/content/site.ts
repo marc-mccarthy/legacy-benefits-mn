@@ -25,8 +25,6 @@ export const site: SiteContent = {
     { value: 3, suffix: "", label: "States licensed" },
   ],
 
-  cta: { label: "Talk to an agent", href: "/contact" },
-
   clientPortal: {
     label: "Client Portal",
     href: "https://www.medicareproapp.com/",

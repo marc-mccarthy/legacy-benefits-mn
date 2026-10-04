@@ -34,7 +34,7 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
           data-hero-stage=""
           data-resolved={resolved}
           onAnimationEnd={() => setResolved(true)}
-          className="relative mt-(--header-stack) mb-6 min-h-0 flex-1 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] md:absolute md:top-[calc(var(--header-stack)/2)] md:right-0 md:bottom-0 md:left-1/2 md:m-0 md:[mask-image:none] [&_canvas]:animate-[page-fade-out_var(--duration-stage)_var(--ease-fade)_var(--duration-converge)_both]"
+          className="relative mt-(--header-stack) mb-6 min-h-0 flex-1 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] md:absolute md:top-(--header-stack) md:right-0 md:bottom-0 md:left-1/2 md:m-0 md:[mask-image:none] [&_canvas]:animate-[page-fade-out_var(--duration-stage)_var(--ease-fade)_var(--duration-converge)_both]"
         >
           <ThreeStage
             scene="signal-hero"
@@ -58,7 +58,10 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
         </div>
 
         <Container className="relative pb-32 md:pb-24">
-          <div className="space-y-5 text-white md:max-w-[48%] md:space-y-6">
+          <div
+            data-hero-copy
+            className="space-y-5 text-white md:max-w-[48%] md:space-y-6"
+          >
             <h1 className="font-display text-(length:--text-display-hero) leading-none font-bold tracking-[-0.06em] text-balance [font-stretch:125%]">
               {heading}
             </h1>

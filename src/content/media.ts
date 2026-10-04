@@ -230,6 +230,13 @@ export const media: Record<string, MediaAsset> = {
       },
     ],
   },
+  "nate.chip": {
+    src: "/media/nate-chip-192.webp",
+    width: 192,
+    height: 192,
+    alt: "Nate Best",
+    srcSet: [],
+  },
   "team.owner": {
     src: "/media/nate-best-authentic.jpg",
     width: 651,

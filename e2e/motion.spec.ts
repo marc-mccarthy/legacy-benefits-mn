@@ -5,7 +5,7 @@ import {
   recordViewTransitions,
   transitionCount,
 } from "./support/browser";
-import { brightestBackground, contrast } from "./support/contrast";
+import { brightestBackground, contrast, HIDE_CHROME } from "./support/contrast";
 
 const EFFECTS_PAUSE = "[data-effects-pause]";
 
@@ -1275,5 +1275,223 @@ test.describe("services glass", () => {
     await expect(print.locator(STAGE)).toBeHidden();
     await orbsShow(print);
     await printed.close();
+  });
+});
+
+test.describe("minnesota dawn to dusk", () => {
+  const TRACK = "[data-lake-track]";
+  const STAGE = 'canvas[data-three-stage="lake"]';
+  const STILL = `${TRACK} img[data-lake-still]`;
+  const VIDEO = `${TRACK} video`;
+  const DESKTOP = { width: 1440, height: 900 };
+  const PHONE = { width: 390, height: 844 };
+
+  const open = async (
+    browser: import("@playwright/test").Browser,
+    viewport: { width: number; height: number },
+    options: { reducedMotion?: "reduce" | "no-preference"; js?: boolean } = {},
+  ) => {
+    const context = await browser.newContext({
+      viewport,
+      reducedMotion: options.reducedMotion ?? "no-preference",
+      javaScriptEnabled: options.js ?? true,
+      ...(viewport.width < 700 ? { hasTouch: true, isMobile: true } : {}),
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    return { context, page };
+  };
+
+  const toProgress = (page: Page, progress: number) =>
+    page.locator(TRACK).evaluate((el, p) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const travel = el.getBoundingClientRect().height - window.innerHeight;
+      window.scrollTo({ top: top + travel * p, behavior: "instant" });
+    }, progress);
+
+  const settleAt = async (page: Page, progress: number) => {
+    await toProgress(page, progress);
+    await expect
+      .poll(
+        async () =>
+          Math.abs(
+            Number(
+              await page.locator(STAGE).getAttribute("data-lake-progress"),
+            ) - progress,
+          ),
+        { timeout: 10_000 },
+      )
+      .toBeLessThanOrEqual(0.02);
+  };
+
+  const hideCopy = (page: Page) =>
+    page.addStyleTag({
+      content: `${HIDE_CHROME} ${TRACK} h2, ${TRACK} p { visibility: hidden !important; }`,
+    });
+
+  test("reduced motion and JavaScript off show the dusk still and zero canvas", async ({
+    browser,
+  }) => {
+    for (const options of [
+      { reducedMotion: "reduce" as const },
+      { js: false },
+    ]) {
+      const { context, page } = await open(browser, DESKTOP, options);
+      await toProgress(page, 0.5);
+      await page.waitForTimeout(1000);
+      await expect(page.locator(STILL)).toBeVisible();
+      await expect(page.locator(`${TRACK} h2`)).toBeVisible();
+      await expect(page.locator(`${TRACK} p`)).toBeVisible();
+      await expect(page.locator(`${TRACK} canvas`)).toHaveCount(0);
+      await expect(page.locator(VIDEO)).toHaveCount(0);
+      await context.close();
+    }
+  });
+
+  test("on a desktop the lake canvas mounts and its progress rises with scroll", async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, DESKTOP);
+    await toProgress(page, 0.1);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator(STAGE)).toHaveAttribute("aria-hidden", "true");
+    await expect(page.locator("canvas[data-three-stage]")).toHaveCount(1);
+
+    await settleAt(page, 0.1);
+    const early = Number(
+      await page.locator(STAGE).getAttribute("data-lake-progress"),
+    );
+    await settleAt(page, 0.9);
+    const late = Number(
+      await page.locator(STAGE).getAttribute("data-lake-progress"),
+    );
+    expect(late).toBeGreaterThan(early);
+
+    await context.close();
+  });
+
+  test("at 390 the loop plays instead of a canvas", async ({ browser }) => {
+    const { context, page } = await open(browser, PHONE);
+    await toProgress(page, 0.2);
+    await page.waitForTimeout(1500);
+
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await expect(page.locator(VIDEO)).toHaveCount(1);
+    const video = page.locator(VIDEO);
+    expect(await video.evaluate((el) => (el as HTMLVideoElement).muted)).toBe(
+      true,
+    );
+    await expect(video).toHaveAttribute("playsinline", "");
+    await expect(video).toHaveAttribute("poster", /lake-dusk/);
+    await expect(video).toHaveAttribute("preload", "none");
+
+    await context.close();
+  });
+
+  test("under reduced motion no video at either width", async ({ browser }) => {
+    for (const viewport of [DESKTOP, PHONE]) {
+      const { context, page } = await open(browser, viewport, {
+        reducedMotion: "reduce",
+      });
+      await toProgress(page, 0.2);
+      await page.waitForTimeout(1000);
+      await expect(page.locator("video")).toHaveCount(0);
+      await expect(page.locator(STILL)).toBeVisible();
+      await context.close();
+    }
+  });
+
+  test("pressing Pause pauses the loop and the still shows", async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, PHONE);
+    await toProgress(page, 0.2);
+    const video = page.locator(VIDEO);
+    await expect
+      .poll(() => video.evaluate((el) => (el as HTMLVideoElement).paused), {
+        timeout: 15_000,
+      })
+      .toBe(false);
+
+    await page.locator(EFFECTS_PAUSE).first().click();
+
+    await expect
+      .poll(() => video.evaluate((el) => (el as HTMLVideoElement).paused))
+      .toBe(true);
+    await expect(video).toBeHidden();
+    await expect(page.locator(STILL)).toBeVisible();
+
+    await context.close();
+  });
+
+  test("white copy keeps AA over the brightest frame of the live grade", async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, DESKTOP);
+    await toProgress(page, 0);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await hideCopy(page);
+
+    const worst = { heading: 0, body: 0 };
+    for (const progress of [0, 0.35, 0.7, 1]) {
+      await settleAt(page, progress);
+      await page.waitForTimeout(200);
+      worst.heading = Math.max(
+        worst.heading,
+        await brightestBackground(page, `${TRACK} h2`),
+      );
+      worst.body = Math.max(
+        worst.body,
+        await brightestBackground(page, `${TRACK} p`),
+      );
+    }
+
+    expect(contrast("#FFFFFF", worst.heading)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#FFFFFF", worst.body)).toBeGreaterThanOrEqual(4.5);
+
+    await context.close();
+  });
+
+  test("white copy keeps AA over the brightest frame of the phone loop", async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, PHONE);
+    await toProgress(page, 0.2);
+    const video = page.locator(VIDEO);
+    await expect(video).toHaveCount(1);
+    await hideCopy(page);
+
+    const worst = { heading: 0, body: 0 };
+    for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+      await video.evaluate(async (el, f) => {
+        const v = el as HTMLVideoElement;
+        v.pause();
+        if (Number.isNaN(v.duration)) {
+          v.load();
+          await new Promise((r) =>
+            v.addEventListener("loadedmetadata", r, { once: true }),
+          );
+        }
+        const seeked = new Promise((r) =>
+          v.addEventListener("seeked", r, { once: true }),
+        );
+        v.currentTime = Math.min(f * v.duration, v.duration - 0.05);
+        await seeked;
+      }, fraction);
+      await page.waitForTimeout(150);
+      worst.heading = Math.max(
+        worst.heading,
+        await brightestBackground(page, `${TRACK} h2`),
+      );
+      worst.body = Math.max(
+        worst.body,
+        await brightestBackground(page, `${TRACK} p`),
+      );
+    }
+
+    expect(contrast("#FFFFFF", worst.heading)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#FFFFFF", worst.body)).toBeGreaterThanOrEqual(4.5);
+
+    await context.close();
   });
 });

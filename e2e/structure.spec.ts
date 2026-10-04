@@ -736,6 +736,42 @@ test.describe("home scroll length", () => {
   }
 });
 
+test.describe("the lake band", () => {
+  const TRACK = "[data-lake-track]";
+
+  for (const [name, viewport, screens] of [
+    ["desktop", { width: 1440, height: 900 }, 2],
+    ["mobile", { width: 390, height: 844 }, 1.5],
+  ] as const) {
+    test(`follows the services band as a ${screens}-screen pinned track at ${name}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/");
+
+      const track = page.locator(TRACK);
+      await expect(track).toHaveCount(1);
+      await expect(track).toHaveAttribute("data-stage", "");
+      await expect(track.locator("h2")).toHaveText(
+        "Every season of Medicare, one call away.",
+      );
+      expect(
+        await track.evaluate(
+          (el) =>
+            el.previousElementSibling?.getAttribute("aria-labelledby") ?? "",
+        ),
+      ).toBe("services-heading");
+      expect(
+        await track.evaluate((el) => getComputedStyle(el).contentVisibility),
+      ).toBe("visible");
+      const ratio = await track.evaluate(
+        (el) => el.getBoundingClientRect().height / window.innerHeight,
+      );
+      expect(ratio).toBeCloseTo(screens, 1);
+    });
+  }
+});
+
 test.describe("the noise band", () => {
   const NOISE = "[data-noise]";
   const SHAPES = "img[data-noise-shape]";

@@ -11,6 +11,7 @@ import {
   LearningGrid,
   type ArticleItem,
 } from "@/components/sections/learning-grid";
+import { LakeSequence } from "@/components/sections/lake-sequence";
 import { NoiseStage } from "@/components/sections/noise-stage";
 import { SignalPortrait } from "@/components/sections/signal-portrait";
 import { RichTextSection } from "@/components/sections/rich-text";
@@ -107,6 +108,15 @@ export function RenderBlocks({
                   slug,
                   summary,
                 }))}
+              />
+            );
+
+          case "lake":
+            return (
+              <LakeSequence
+                key={key}
+                heading={block.heading as string}
+                body={block.body as string}
               />
             );
 

@@ -32,6 +32,12 @@ export const homeBlocks: PageBlock[] = [
       "We compare what is actually available to you, across the carriers we represent, against the doctors and prescriptions you already have.",
   },
   {
+    blockType: "lake",
+    scheme: "black",
+    heading: "Every season of Medicare, one call away.",
+    body: "Turning 65, changing plans, or checking in every fall. Nate is here for each part of the year.",
+  },
+  {
     blockType: "stats",
     scheme: "dark",
   },

@@ -898,6 +898,175 @@
       "usage": "commercial",
       "query": null,
       "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "lake.source",
+      "lane": "cc0",
+      "file": "public/media/lake-boundary-waters.jpg",
+      "variants": [],
+      "intrinsic": {
+        "width": 2560,
+        "height": 1707
+      },
+      "alt": "Alice Lake in the Boundary Waters near Ely, Minnesota, at twilight",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Dan Carlson",
+        "provider": "wikimedia-commons",
+        "id": "62225288",
+        "pageUrl": "https://commons.wikimedia.org/?curid=62225288",
+        "downloadUrl": null
+      },
+      "license": {
+        "id": "CC0-1.0",
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": true,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Resized to 2560 px from lake-boundary-waters-original.jpg; used only as the texture the home lake scene grades from dawn to dusk."
+        ],
+        "creditLine": "Dan Carlson / Unsplash, CC0 via Wikimedia Commons"
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "sourcing-media"
+    },
+    {
+      "slot": "lake.dusk",
+      "lane": "generated-antigravity",
+      "file": "public/media/lake-dusk.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/lake-dusk-480.avif",
+          "bytes": 8984
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/lake-dusk-480.webp",
+          "bytes": 8372
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/lake-dusk-900.avif",
+          "bytes": 21751
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/lake-dusk-900.webp",
+          "bytes": 20290
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/lake-dusk-1920.avif",
+          "bytes": 67589
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/lake-dusk-1920.webp",
+          "bytes": 58384
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A Minnesota lake under a crimson sunset sky",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "lake-dusk",
+        "pageUrl": null,
+        "downloadUrl": "public/media/lake-dusk.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Dusk frame of the graded dawn-to-dusk video, graded from the CC0 Boundary Waters plate (Dan Carlson / Unsplash); no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "lake.loop",
+      "lane": "generated-antigravity",
+      "file": "public/video/mn-lake-dawn-dusk-mobile.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 1080,
+        "height": 608
+      },
+      "alt": "A Minnesota lake moving from dawn to dusk",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "mn-lake-dawn-dusk-mobile",
+        "pageUrl": null,
+        "downloadUrl": "public/video/mn-lake-dawn-dusk-mobile.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Muted H.264 dawn-to-dusk grade of the CC0 Boundary Waters plate (Dan Carlson / Unsplash) for phones below 700 px; no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
     }
   ]
 }

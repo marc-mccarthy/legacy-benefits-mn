@@ -109,6 +109,7 @@ const GROUPS = [
       ["lib/webgl-registry.ts", "webglRegistry", "ours"],
       ["lib/portrait-points.ts", "portraitPoints", "ours"],
       ["lib/signal-field.ts", "signalField", "ours"],
+      ["lib/lake-grade.ts", "lakeGrade", "ours"],
       ["lib/random.ts", "random", "ours"],
       ["lib/utils.ts", "utils", "ours"],
     ],

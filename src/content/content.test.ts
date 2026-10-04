@@ -26,7 +26,7 @@ describe("row counts recorded in the spec's extraction table", () => {
     expect(testimonials).toHaveLength(3);
     expect(carriers).toHaveLength(6);
     expect(faq).toHaveLength(4);
-    expect(homeBlocks).toHaveLength(11);
+    expect(homeBlocks).toHaveLength(12);
   });
 
   it("carries the site settings children", () => {
@@ -47,6 +47,7 @@ describe("row counts recorded in the spec's extraction table", () => {
       "noise",
       "signal",
       "serviceGrid",
+      "lake",
       "stats",
       "eventCarousel",
       "testimonials",
@@ -71,6 +72,9 @@ describe("media slots", () => {
         "close.starSprite",
         "env.studio",
         "events.image",
+        "lake.dusk",
+        "lake.loop",
+        "lake.source",
         "nate.cutout",
         "nate.chip",
         "nate.cutoutSample",

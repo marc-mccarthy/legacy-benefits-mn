@@ -568,6 +568,10 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
   }
 }
 
+[data-band][data-stage] {
+  content-visibility: visible;
+}
+
 [data-noise-shape] {
   display: none;
   pointer-events: none;

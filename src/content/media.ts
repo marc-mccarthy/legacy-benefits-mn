@@ -311,4 +311,62 @@ export const media: Record<string, MediaAsset> = {
       },
     ],
   },
+  "lake.source": {
+    src: "/media/lake-boundary-waters.jpg",
+    width: 2560,
+    height: 1707,
+    alt: "Alice Lake in the Boundary Waters near Ely, Minnesota, at twilight",
+    srcSet: [],
+  },
+  "lake.dusk": {
+    src: "/media/lake-dusk.jpg",
+    width: 1920,
+    height: 1080,
+    alt: "A Minnesota lake under a crimson sunset sky",
+    srcSet: [
+      {
+        width: 480,
+        format: "avif",
+        src: "/media/lake-dusk-480.avif",
+        bytes: 8984,
+      },
+      {
+        width: 480,
+        format: "webp",
+        src: "/media/lake-dusk-480.webp",
+        bytes: 8372,
+      },
+      {
+        width: 900,
+        format: "avif",
+        src: "/media/lake-dusk-900.avif",
+        bytes: 21751,
+      },
+      {
+        width: 900,
+        format: "webp",
+        src: "/media/lake-dusk-900.webp",
+        bytes: 20290,
+      },
+      {
+        width: 1920,
+        format: "avif",
+        src: "/media/lake-dusk-1920.avif",
+        bytes: 67589,
+      },
+      {
+        width: 1920,
+        format: "webp",
+        src: "/media/lake-dusk-1920.webp",
+        bytes: 58384,
+      },
+    ],
+  },
+  "lake.loop": {
+    src: "/video/mn-lake-dawn-dusk-mobile.mp4",
+    width: 1080,
+    height: 608,
+    alt: "A Minnesota lake moving from dawn to dusk",
+    srcSet: [],
+  },
 };

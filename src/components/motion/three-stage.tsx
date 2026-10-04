@@ -11,6 +11,7 @@ const sceneLoaders: Record<SceneKey, () => Promise<{ default: SceneFactory }>> =
     "signal-hero": () => import("./scenes/signal-hero"),
     "signal-close": () => import("./scenes/signal-close"),
     glass: () => import("./scenes/glass"),
+    lake: () => import("./scenes/lake"),
   };
 
 const CANVAS_CLASS =

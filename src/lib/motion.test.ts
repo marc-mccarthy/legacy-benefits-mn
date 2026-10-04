@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  DURATION_CONVERGE,
   DURATION_HOUSE,
   DURATION_REVEAL,
   EASE_FADE,
@@ -21,6 +22,7 @@ function customProperty(name: string): string {
 const DURATIONS: ReadonlyArray<readonly [string, number]> = [
   ["duration-reveal", DURATION_REVEAL],
   ["duration-house", DURATION_HOUSE],
+  ["duration-converge", DURATION_CONVERGE],
 ];
 
 const EASES: ReadonlyArray<

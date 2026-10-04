@@ -10,12 +10,12 @@ import {
   WebGLRenderer,
 } from "three";
 import { media } from "@/content/media";
-import { samplePortraitPoints, seededRandom } from "@/lib/portrait-points";
+import { DURATION_CONVERGE } from "@/lib/motion";
+import { stipplePortrait } from "@/lib/portrait-points";
 import { easeMove, fieldPositions, noisePositions } from "@/lib/signal-field";
 import type { SceneFactory } from "./types";
 
 const SEED = 20261002;
-const OVERSAMPLE = 4;
 const CYAN = "#00E0E0";
 const GOLD = "#FFC000";
 
@@ -50,8 +50,14 @@ void main() {
 }
 `;
 
+const cutout = media["nate.cutoutSample"];
+
+const portraits = new Map<
+  string,
+  Promise<ReturnType<typeof stipplePortrait>>
+>();
+
 async function loadCutout(): Promise<ImageData> {
-  const cutout = media["nate.cutoutSample"];
   const image = new Image();
   image.src = cutout.src;
   await image.decode();
@@ -64,59 +70,22 @@ async function loadCutout(): Promise<ImageData> {
   return context.getImageData(0, 0, cutout.width, cutout.height);
 }
 
-function alphaChannel(data: Uint8ClampedArray): Uint8ClampedArray {
-  const alpha = new Uint8ClampedArray(data.length / 4);
-  for (let i = 0; i < alpha.length; i += 1) alpha[i] = data[i * 4 + 3];
-  return alpha;
-}
-
-function luminance(image: ImageData, x: number, y: number): number {
-  const px = Math.min(Math.floor(((x + 1) / 2) * image.width), image.width - 1);
-  const py = Math.min(
-    Math.floor(((1 - y) / 2) * image.height),
-    image.height - 1,
-  );
-  const o = (py * image.width + px) * 4;
-  const { data } = image;
-  return (0.2126 * data[o] + 0.7152 * data[o + 1] + 0.0722 * data[o + 2]) / 255;
-}
-
-function stipple(image: ImageData, count: number) {
-  const candidates = samplePortraitPoints(
-    alphaChannel(image.data),
-    image.width,
-    image.height,
-    count * OVERSAMPLE,
-    SEED,
-  );
-  const random = seededRandom(SEED + 2);
-  const kept = new Uint8Array(candidates.length / 2);
-  const portrait = new Float32Array(count * 2);
-  const lum = new Float32Array(count);
-  let n = 0;
-  const keep = (i: number, l: number) => {
-    kept[i] = 1;
-    portrait[n * 2] = candidates[i * 2];
-    portrait[n * 2 + 1] = candidates[i * 2 + 1];
-    lum[n] = 0.2 + l * 0.95;
-    n += 1;
-  };
-  for (let i = 0; i < kept.length && n < count; i += 1) {
-    const l = luminance(image, candidates[i * 2], candidates[i * 2 + 1]);
-    if (random() < 0.06 + 0.94 * Math.pow(l, 1.6)) keep(i, l);
+function portraitPoints(count: number) {
+  const key = `${cutout.src}|${count}|${SEED}`;
+  let portrait = portraits.get(key);
+  if (!portrait) {
+    portrait = loadCutout().then((image) =>
+      stipplePortrait(image, count, SEED),
+    );
+    portraits.set(key, portrait);
+    portrait.catch(() => portraits.delete(key));
   }
-  for (let i = 0; i < kept.length && n < count; i += 1) {
-    if (!kept[i]) {
-      keep(i, luminance(image, candidates[i * 2], candidates[i * 2 + 1]));
-    }
-  }
-  return { portrait, lum };
+  return portrait;
 }
 
 const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
   const count = reducedQuality ? 2500 : 6000;
-  const image = await loadCutout();
-  const { portrait, lum } = stipple(image, count);
+  const { points: portrait, lum } = await portraitPoints(count);
   const noise = noisePositions(count, SEED);
   const phases = noisePositions(count, SEED + 1);
 
@@ -165,17 +134,18 @@ const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
   renderer.setPixelRatio(pixelRatio);
   renderer.setClearColor(0x000000, 0);
 
-  let progress = 0;
+  let settle = 0;
+  let start = 0;
   let frame = 0;
 
   const place = () => {
-    fieldPositions(noisePx, targetPx, progress, flat);
+    fieldPositions(noisePx, targetPx, settle, flat);
     for (let i = 0; i < count; i += 1) {
       positions[i * 3] = flat[i * 2];
       positions[i * 3 + 1] = flat[i * 2 + 1];
     }
     position.needsUpdate = true;
-    uniforms.uSettle.value = easeMove(progress);
+    uniforms.uSettle.value = settle;
   };
 
   const layout = (w: number, h: number) => {
@@ -184,9 +154,9 @@ const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
     camera.top = h / 2;
     camera.bottom = -h / 2;
     camera.updateProjectionMatrix();
-    const scale = Math.min(w / image.width, h / image.height);
-    const halfW = (image.width * scale) / 2;
-    const halfH = (image.height * scale) / 2;
+    const scale = Math.min(w / cutout.width, h / cutout.height);
+    const halfW = (cutout.width * scale) / 2;
+    const halfH = (cutout.height * scale) / 2;
     const centerY = -h / 2 + halfH;
     for (let i = 0; i < count; i += 1) {
       noisePx[i * 2] = noise[i * 2] * w * 0.55;
@@ -199,18 +169,19 @@ const createSignalHero: SceneFactory = async (canvas, { reducedQuality }) => {
   };
 
   const tick = (now: number) => {
+    start ||= now;
+    settle = easeMove(Math.min((now - start) / DURATION_CONVERGE, 1));
+    place();
     uniforms.uTime.value = now / 1000;
     renderer.render(scene, camera);
     frame = requestAnimationFrame(tick);
   };
-  frame = requestAnimationFrame(tick);
 
   return {
-    setProgress(p) {
-      progress = Math.min(Math.max(p, 0), 1);
-      place();
+    setRunning(on) {
+      cancelAnimationFrame(frame);
+      if (on) frame = requestAnimationFrame(tick);
     },
-    setPointer() {},
     resize(w, h) {
       renderer.setSize(w, h, false);
       layout(w, h);

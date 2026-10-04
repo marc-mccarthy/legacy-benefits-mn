@@ -510,33 +510,19 @@ test.describe("hero signal field", () => {
       .toBeGreaterThan(0);
   };
 
-  const panelHeight = (page: Page) =>
+  const heroHeightInViewports = (page: Page) =>
     page
-      .locator(STAGE)
-      .evaluate((el) => el.parentElement!.getBoundingClientRect().height);
-
-  const heroHeightInViewports = async (page: Page) => {
-    const hero = await page
       .locator(HERO)
-      .evaluate((el) => el.getBoundingClientRect().height);
-    return hero / (await panelHeight(page));
+      .evaluate((el) => el.getBoundingClientRect().height / window.innerHeight);
+
+  const withMotion = async (browser: import("@playwright/test").Browser) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    return { context, page: await context.newPage() };
   };
 
-  const scrollHeroTo = (page: Page, viewports: number) =>
-    page.locator(STAGE).evaluate((stage, v) => {
-      const panel = stage.parentElement!;
-      const track = panel.parentElement!;
-      const top = track.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo(0, top + panel.getBoundingClientRect().height * v);
-    }, viewports);
-
-  const settle = async (page: Page) => {
-    await page.waitForLoadState("networkidle");
-    await scrollHeroTo(page, 0.2);
-    await page.waitForTimeout(1500);
-  };
-
-  test("with JavaScript disabled: the headline and Nate's photo, no canvas, no pin", async ({
+  test("with JavaScript disabled: the headline and Nate's photo, no canvas, one screen tall", async ({
     browser,
   }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
@@ -551,14 +537,15 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("with reduced motion: Nate's photo stays, no canvas ever mounts, no pin", async ({
+  test("with reduced motion: Nate's photo stays, no canvas ever mounts, one screen tall", async ({
     browser,
   }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
 
-    await settle(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(3000);
     await expect(page.locator(CANVAS)).toHaveCount(0);
     await portraitShown(page);
     expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
@@ -566,50 +553,41 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("the field mounts once, rises with scroll, and resolves into the photo", async ({
+  test("on load, without scrolling, the field converges and resolves into Nate's photo", async ({
     browser,
   }) => {
-    const context = await browser.newContext({
-      reducedMotion: "no-preference",
-    });
-    const page = await context.newPage();
+    const { context, page } = await withMotion(browser);
     await page.goto("/");
-    expect(await heroHeightInViewports(page)).toBeGreaterThan(1.8);
+    expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
 
-    await scrollHeroTo(page, 0.05);
     const canvas = page.locator(CANVAS);
     await canvas.waitFor({ state: "attached", timeout: 15_000 });
-    await expect(canvas).toHaveCount(1);
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "false");
     await expect(page.locator(PORTRAIT)).toHaveCSS("opacity", "0");
 
-    const progressOf = async () =>
-      Number(await canvas.getAttribute("data-stage-progress"));
-    const start = await progressOf();
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true", {
+      timeout: 6000,
+    });
+    await expect(canvas).toHaveCount(0);
+    await portraitShown(page);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
-    await scrollHeroTo(page, 0.5);
-    await expect.poll(progressOf).toBeGreaterThan(start + 0.3);
-    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "false");
-
-    await scrollHeroTo(page, 0.98);
-    await expect.poll(progressOf).toBeGreaterThan(0.85);
-    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true");
-    await expect(canvas).toHaveCSS("opacity", "0");
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(300);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(1000);
+    await expect(canvas).toHaveCount(0);
     await portraitShown(page);
 
     await context.close();
   });
 
-  test("in print with the field mounted: Nate's photo shows, no pin", async ({
+  test("in print with the field mounted: Nate's photo shows, one page tall", async ({
     browser,
   }) => {
-    const context = await browser.newContext({
-      reducedMotion: "no-preference",
-    });
-    const page = await context.newPage();
+    const { context, page } = await withMotion(browser);
     await page.goto("/");
-    await scrollHeroTo(page, 0.05);
     await page.locator(CANVAS).waitFor({ state: "attached", timeout: 15_000 });
-    await scrollHeroTo(page, 0);
 
     await page.emulateMedia({ media: "print" });
     await expect(page.locator(CANVAS)).toBeHidden();
@@ -622,18 +600,16 @@ test.describe("hero signal field", () => {
   test("paused before load: no canvas until the visitor resumes", async ({
     browser,
   }) => {
-    const context = await browser.newContext({
-      reducedMotion: "no-preference",
-    });
+    const { context, page } = await withMotion(browser);
     await context.addInitScript(() =>
       sessionStorage.setItem("effects-paused", "true"),
     );
-    const page = await context.newPage();
     await page.goto("/");
 
     const pause = page.locator(EFFECTS_PAUSE).first();
     await expect(pause).toHaveAttribute("aria-pressed", "true");
-    await settle(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(3000);
     await expect(page.locator(CANVAS)).toHaveCount(0);
     await portraitShown(page);
 
@@ -646,18 +622,15 @@ test.describe("hero signal field", () => {
   test("paused while live: the hero canvas goes and Nate's photo returns", async ({
     browser,
   }) => {
-    const context = await browser.newContext({
-      reducedMotion: "no-preference",
-    });
-    const page = await context.newPage();
+    const { context, page } = await withMotion(browser);
     await page.goto("/");
-    await scrollHeroTo(page, 0.05);
     await expect(page.locator(CANVAS)).toHaveCount(1, { timeout: 15_000 });
     await expect(page.locator(PORTRAIT)).toHaveCSS("opacity", "0");
 
     await page.locator(EFFECTS_PAUSE).first().click();
 
     await expect(page.locator(CANVAS)).toHaveCount(0);
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "false");
     await expect(page.locator(EFFECTS_PAUSE).first()).toHaveAttribute(
       "aria-pressed",
       "true",

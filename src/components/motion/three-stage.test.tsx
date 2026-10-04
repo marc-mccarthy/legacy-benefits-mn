@@ -12,8 +12,7 @@ const reducedMotion = vi.fn<() => boolean>(() => false);
 vi.mock("motion/react", () => ({ useReducedMotion: () => reducedMotion() }));
 
 const handle = {
-  setProgress: vi.fn(),
-  setPointer: vi.fn(),
+  setRunning: vi.fn(),
   resize: vi.fn(),
   dispose: vi.fn(),
 } satisfies SceneHandle;
@@ -41,11 +40,26 @@ function setOnscreen(isIntersecting: boolean) {
   }
 }
 
+function setTabHidden(hidden: boolean) {
+  Object.defineProperty(document, "hidden", {
+    configurable: true,
+    value: hidden,
+  });
+  act(() => document.dispatchEvent(new Event("visibilitychange")));
+}
+
 const fallback = <p>Nate Best</p>;
 
 beforeEach(() => {
   FakeIntersectionObserver.all = [];
   vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
   vi.stubGlobal("matchMedia", () => ({
     matches: true,
     addEventListener() {},
@@ -57,6 +71,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  Reflect.deleteProperty(document, "hidden");
   releaseWebGL("other-scene");
   vi.unstubAllGlobals();
   vi.clearAllMocks();
@@ -111,9 +126,9 @@ test("takes the stage once the other owner releases it", async () => {
   );
 });
 
-test("mounts the scene canvas over the fallback when running", async () => {
+test("mounts the scene canvas over the fallback and starts it", async () => {
   const { container } = render(
-    <ThreeStage scene="signal-hero" progress={0.5} fallback={fallback} />,
+    <ThreeStage scene="signal-hero" fallback={fallback} />,
   );
   setOnscreen(true);
 
@@ -123,29 +138,75 @@ test("mounts the scene canvas over the fallback when running", async () => {
     return found as HTMLCanvasElement;
   });
   expect(canvas.dataset.threeStage).toBe("signal-hero");
-  expect(canvas.dataset.stageProgress).toBe("0.500");
   expect(canvas.getAttribute("aria-hidden")).toBe("true");
   expect(factory).toHaveBeenCalledWith(canvas, { reducedQuality: false });
-  expect(handle.setProgress).toHaveBeenCalledWith(0.5);
+  expect(handle.setRunning).toHaveBeenLastCalledWith(true);
   expect(handle.resize).toHaveBeenCalled();
   expect(screen.getByText("Nate Best").isConnected).toBe(true);
   expect(webglOwner()).not.toBeNull();
 });
 
-test("progress updates reach the canvas and the scene", async () => {
+test("hiding the tab stops the scene without disposing it, showing it resumes", async () => {
+  const { container } = render(
+    <ThreeStage scene="signal-hero" fallback={fallback} />,
+  );
+  setOnscreen(true);
+  const canvas = await waitFor(() => {
+    const found = container.querySelector("canvas");
+    expect(found).not.toBeNull();
+    return found;
+  });
+
+  setTabHidden(true);
+  expect(handle.setRunning).toHaveBeenLastCalledWith(false);
+  expect(handle.dispose).not.toHaveBeenCalled();
+  expect(container.querySelector("canvas")).toBe(canvas);
+  expect(webglOwner()).not.toBeNull();
+
+  setTabHidden(false);
+  expect(handle.setRunning).toHaveBeenLastCalledWith(true);
+  expect(factory).toHaveBeenCalledTimes(1);
+});
+
+test("a scene created while the tab is hidden stays stopped", async () => {
+  setTabHidden(true);
+  const { container } = render(
+    <ThreeStage scene="signal-hero" fallback={fallback} />,
+  );
+  setOnscreen(true);
+
+  await waitFor(() => expect(container.querySelector("canvas")).not.toBeNull());
+  expect(handle.setRunning).toHaveBeenCalledWith(false);
+  expect(handle.setRunning).not.toHaveBeenCalledWith(true);
+});
+
+test("an inactive stage never loads its scene", async () => {
+  const { container } = render(
+    <ThreeStage scene="signal-hero" active={false} fallback={fallback} />,
+  );
+  setOnscreen(true);
+
+  await act(async () => {});
+  expect(container.querySelector("canvas")).toBeNull();
+  expect(factory).not.toHaveBeenCalled();
+  expect(webglOwner()).toBeNull();
+});
+
+test("deactivating a live stage disposes it and frees the registry", async () => {
   const { container, rerender } = render(
-    <ThreeStage scene="signal-hero" progress={0} fallback={fallback} />,
+    <ThreeStage scene="signal-hero" fallback={fallback} />,
   );
   setOnscreen(true);
   await waitFor(() => expect(container.querySelector("canvas")).not.toBeNull());
 
   rerender(
-    <ThreeStage scene="signal-hero" progress={0.12345} fallback={fallback} />,
+    <ThreeStage scene="signal-hero" active={false} fallback={fallback} />,
   );
 
-  const canvas = container.querySelector("canvas") as HTMLCanvasElement;
-  expect(canvas.dataset.stageProgress).toBe("0.123");
-  expect(handle.setProgress).toHaveBeenLastCalledWith(0.12345);
+  expect(container.querySelector("canvas")).toBeNull();
+  expect(handle.dispose).toHaveBeenCalledTimes(1);
+  expect(webglOwner()).toBeNull();
+  expect(screen.getByText("Nate Best").isConnected).toBe(true);
 });
 
 test("context loss removes the canvas, disposes, releases and keeps the fallback", async () => {
@@ -232,15 +293,6 @@ test("unmount before the scene resolves disposes it once it arrives", async () =
 
   expect(handle.dispose).toHaveBeenCalledTimes(1);
   expect(document.querySelector("canvas")).toBeNull();
-});
-
-test("a scene key without a module keeps the fallback and frees the registry", async () => {
-  const { container } = render(<ThreeStage scene="lake" fallback={fallback} />);
-  setOnscreen(true);
-
-  await act(async () => {});
-  expect(container.querySelector("canvas")).toBeNull();
-  expect(webglOwner()).toBeNull();
 });
 
 test("a scene that fails to start keeps the fallback and frees the registry", async () => {

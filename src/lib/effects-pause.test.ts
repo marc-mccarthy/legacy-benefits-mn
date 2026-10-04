@@ -70,6 +70,42 @@ describe("effects pause store", () => {
     expect(mod.getEffectsPaused()).toBe(true);
   });
 
+  it("reports a storage read that throws and starts unpaused", async () => {
+    const failure = new DOMException("denied", "SecurityError");
+    const reportError = vi.fn();
+    vi.stubGlobal("reportError", reportError);
+    vi.stubGlobal("sessionStorage", {
+      getItem() {
+        throw failure;
+      },
+    });
+    vi.resetModules();
+
+    const fresh = await import("./effects-pause");
+
+    expect(fresh.getEffectsPaused()).toBe(false);
+    expect(reportError).toHaveBeenCalledWith(failure);
+  });
+
+  it("reports a storage write that throws and keeps the in-memory value", () => {
+    const failure = new DOMException("full", "QuotaExceededError");
+    const reportError = vi.fn();
+    vi.stubGlobal("reportError", reportError);
+    vi.stubGlobal("sessionStorage", {
+      setItem() {
+        throw failure;
+      },
+    });
+    const listener = vi.fn();
+    mod.subscribeEffectsPaused(listener);
+
+    mod.setEffectsPaused(true);
+
+    expect(mod.getEffectsPaused()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledWith(failure);
+  });
+
   it("returns false during server-side rendering, via getServerSnapshot", () => {
     function Probe() {
       return createElement("span", null, String(mod.useEffectsPaused()));

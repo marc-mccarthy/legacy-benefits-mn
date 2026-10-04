@@ -1,9 +1,7 @@
-export type SceneKey = "signal-hero" | "signal-close" | "glass" | "lake";
+export type SceneKey = "signal-hero" | "signal-close";
 
 export type SceneHandle = {
-  setProgress(p: number): void;
-  setPointer(x: number, y: number): void;
-  setLayout?(rects: DOMRect[]): void;
+  setRunning(on: boolean): void;
   resize(w: number, h: number): void;
   dispose(): void;
 };

@@ -6,70 +6,49 @@ import { acquireWebGL, releaseWebGL } from "@/lib/webgl-registry";
 import type { SceneFactory, SceneHandle, SceneKey } from "./scenes/types";
 import { useVisualEffectLifecycle } from "./use-visual-effect-lifecycle";
 
-type SceneLoader = () => Promise<{ default: SceneFactory }>;
-
-const sceneLoaders: Partial<Record<SceneKey, SceneLoader>> = {
-  "signal-hero": () => import("./scenes/signal-hero"),
-  "signal-close": () => import("./scenes/signal-close"),
-};
+const sceneLoaders: Record<SceneKey, () => Promise<{ default: SceneFactory }>> =
+  {
+    "signal-hero": () => import("./scenes/signal-hero"),
+    "signal-close": () => import("./scenes/signal-close"),
+  };
 
 const CANVAS_CLASS =
   "pointer-events-none absolute inset-0 block h-full w-full print:hidden";
 
 type ThreeStageProps = {
   scene: SceneKey;
-  progress?: number;
   fallback: ReactNode;
+  active?: boolean;
   className?: string;
 };
 
-function formatProgress(progress: number): string {
-  return progress.toFixed(3);
-}
-
-function observeResize(node: Element, onResize: () => void): () => void {
-  if (typeof ResizeObserver === "undefined") {
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }
-  const observer = new ResizeObserver(onResize);
-  observer.observe(node);
-  return () => observer.disconnect();
-}
-
 export function ThreeStage({
   scene,
-  progress = 0,
   fallback,
+  active = true,
   className,
 }: ThreeStageProps) {
   const id = useId();
   const rootRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const handleRef = useRef<SceneHandle | null>(null);
-  const progressRef = useRef(progress);
   const [broken, setBroken] = useState(false);
-  const { running, finePointer } = useVisualEffectLifecycle(rootRef);
+  const { mounted, reduced, paused, onscreen, tabVisible, finePointer } =
+    useVisualEffectLifecycle(rootRef);
+  const live = active && !broken && mounted && !reduced && !paused && onscreen;
 
   useEffect(() => {
-    progressRef.current = progress;
-    canvasRef.current?.setAttribute(
-      "data-stage-progress",
-      formatProgress(progress),
-    );
-    handleRef.current?.setProgress(progress);
-  }, [progress]);
+    handleRef.current?.setRunning(tabVisible);
+  }, [tabVisible]);
 
   useEffect(() => {
     const root = rootRef.current;
-    const load = sceneLoaders[scene];
-    if (!running || broken || !root || !load) return;
+    if (!live || !root) return;
 
     let disposed = false;
     let acquired = false;
     let frame = 0;
     let handle: SceneHandle | null = null;
-    let stopResize = () => {};
+    let observer: ResizeObserver | null = null;
 
     const canvas = document.createElement("canvas");
     canvas.className = CANVAS_CLASS;
@@ -88,7 +67,7 @@ export function ThreeStage({
 
     const mount = async () => {
       try {
-        const { default: create } = await load();
+        const { default: create } = await sceneLoaders[scene]();
         if (disposed) return;
         const created = await create(canvas, { reducedQuality: !finePointer });
         if (disposed) {
@@ -97,12 +76,11 @@ export function ThreeStage({
         }
         handle = created;
         handleRef.current = created;
-        canvasRef.current = canvas;
-        canvas.dataset.stageProgress = formatProgress(progressRef.current);
-        created.setProgress(progressRef.current);
         root.append(canvas);
         resize();
-        stopResize = observeResize(root, resize);
+        created.setRunning(!document.hidden);
+        observer = new ResizeObserver(resize);
+        observer.observe(root);
       } catch (error) {
         reportError(error);
         if (!disposed) setBroken(true);
@@ -123,14 +101,13 @@ export function ThreeStage({
       disposed = true;
       cancelAnimationFrame(frame);
       canvas.removeEventListener("webglcontextlost", onLost);
-      stopResize();
+      observer?.disconnect();
       canvas.remove();
       handle?.dispose();
       handleRef.current = null;
-      canvasRef.current = null;
       if (acquired) releaseWebGL(id);
     };
-  }, [running, broken, scene, finePointer, id]);
+  }, [live, scene, finePointer, id]);
 
   return (
     <div ref={rootRef} className={cn("relative", className)}>

@@ -11,7 +11,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { media } from "@/content/media";
-import { seededRandom } from "@/lib/portrait-points";
+import { seededRandom } from "@/lib/random";
 import type { SceneFactory } from "./types";
 
 const SEED = 20261003;
@@ -102,11 +102,12 @@ const createSignalClose: SceneFactory = async (canvas, { reducedQuality }) => {
     renderer.render(scene, camera);
     frame = requestAnimationFrame(tick);
   };
-  frame = requestAnimationFrame(tick);
 
   return {
-    setProgress() {},
-    setPointer() {},
+    setRunning(on) {
+      cancelAnimationFrame(frame);
+      if (on) frame = requestAnimationFrame(tick);
+    },
     resize(w, h) {
       renderer.setSize(w, h, false);
       camera.left = -w / 2;

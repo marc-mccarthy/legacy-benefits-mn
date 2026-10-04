@@ -61,6 +61,7 @@
   --duration-morph: 400ms;
   --duration-house: 450ms;
   --duration-stage: 900ms;
+  --duration-converge: 1600ms;
 }
 
 @font-face {
@@ -455,6 +456,7 @@
   [data-reveal] {
     opacity: 1 !important;
     transform: none !important;
+    transition: none !important;
   }
 
   [data-lit-words] [data-lit-word] {

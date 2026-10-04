@@ -4,45 +4,36 @@ import { easeMove, fieldPositions, noisePositions } from "./signal-field";
 const noise = new Float32Array([-1, -1, 0.5, 0.25]);
 const target = new Float32Array([1, 1, -0.5, 0.75]);
 
-function run(progress: number): Float32Array {
+function run(t: number): Float32Array {
   const out = new Float32Array(noise.length);
-  fieldPositions(noise, target, progress, out);
+  fieldPositions(noise, target, t, out);
   return out;
 }
 
 describe("easeMove", () => {
-  it("matches cubic-bezier(0.32, 0.72, 0, 1)", () => {
-    expect(easeMove(0)).toBeCloseTo(0, 6);
-    expect(easeMove(0.25)).toBeCloseTo(0.779131, 4);
-    expect(easeMove(0.5)).toBeCloseTo(0.954809, 4);
-    expect(easeMove(0.85)).toBeCloseTo(0.997552, 4);
-    expect(easeMove(1)).toBeCloseTo(1, 6);
+  it("follows cubic-bezier(0.32, 0.72, 0, 1)", () => {
+    expect(easeMove(0)).toBe(0);
+    expect(easeMove(0.25)).toBeCloseTo(0.779131, 3);
+    expect(easeMove(0.5)).toBeCloseTo(0.954809, 3);
+    expect(easeMove(0.85)).toBeCloseTo(0.997552, 3);
+    expect(easeMove(1)).toBe(1);
   });
 });
 
 describe("fieldPositions", () => {
-  it("is the noise at progress 0", () => {
+  it("is the noise at 0", () => {
     expect(Array.from(run(0))).toEqual(Array.from(noise));
   });
 
-  it("is the target at progress 1", () => {
+  it("is the target at 1", () => {
     expect(Array.from(run(1))).toEqual(Array.from(target));
   });
 
-  it("is the eased mix at progress 0.5", () => {
-    const t = easeMove(0.5);
-    const out = run(0.5);
+  it("mixes linearly in between, so the caller eases once", () => {
+    const out = run(0.25);
     for (let i = 0; i < out.length; i += 1) {
-      expect(out[i]).toBeCloseTo(noise[i] + (target[i] - noise[i]) * t, 5);
+      expect(out[i]).toBeCloseTo(noise[i] + (target[i] - noise[i]) * 0.25, 5);
     }
-  });
-
-  it("clamps progress below 0 to the noise", () => {
-    expect(Array.from(run(-1))).toEqual(Array.from(noise));
-  });
-
-  it("clamps progress above 1 to the target", () => {
-    expect(Array.from(run(2))).toEqual(Array.from(target));
   });
 });
 

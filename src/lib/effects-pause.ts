@@ -7,8 +7,13 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 
 function readInitial(): boolean {
-  if (typeof sessionStorage === "undefined") return false;
-  return sessionStorage.getItem(STORAGE_KEY) === "true";
+  try {
+    if (typeof sessionStorage === "undefined") return false;
+    return sessionStorage.getItem(STORAGE_KEY) === "true";
+  } catch (error) {
+    reportError(error);
+    return false;
+  }
 }
 
 let paused = readInitial();
@@ -19,8 +24,12 @@ export function getEffectsPaused(): boolean {
 
 export function setEffectsPaused(value: boolean): void {
   paused = value;
-  if (typeof sessionStorage !== "undefined") {
-    sessionStorage.setItem(STORAGE_KEY, String(value));
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.setItem(STORAGE_KEY, String(value));
+    }
+  } catch (error) {
+    reportError(error);
   }
   for (const listener of listeners) listener();
 }

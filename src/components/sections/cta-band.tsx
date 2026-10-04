@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { Reveal } from "@/components/motion/reveal";
 import { ThreeStage } from "@/components/motion/three-stage";
-import { seededRandom } from "@/lib/portrait-points";
+import { seededRandom } from "@/lib/random";
 import { cn } from "@/lib/utils";
 
 const STAR_COUNT = 40;

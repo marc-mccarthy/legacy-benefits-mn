@@ -91,7 +91,6 @@ export function CtaBand({
               alt="Nate Best"
               width={160}
               height={160}
-              sizes="160px"
               className="ring-star-gold size-40 rounded-full object-cover object-top ring-[3px]"
             />
           ) : null}

@@ -685,7 +685,7 @@ body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
     :root:not([data-effects-paused]) [data-signal-colour] {
       animation: signal-develop linear both;
       animation-timeline: view();
-      animation-range: cover 0% cover 50%;
+      animation-range: cover 0% cover 45%;
     }
   }
 

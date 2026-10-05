@@ -51,18 +51,25 @@ resource "aws_lambda_permission" "cloudfront_invoke" {
   source_arn    = aws_cloudfront_distribution.this.arn
 }
 
-resource "aws_iam_openid_connect_provider" "github" {
-  url            = "https://token.actions.githubusercontent.com"
-  client_id_list = ["sts.amazonaws.com"]
+removed {
+  from = aws_iam_openid_connect_provider.github
+
+  lifecycle {
+    destroy = false
+  }
 }
 
-data "aws_iam_policy_document" "deploy_assume" {
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
+data "aws_iam_policy_document" "github_main_assume" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.github.arn]
+      identifiers = [data.aws_iam_openid_connect_provider.github.arn]
     }
 
     condition {
@@ -81,7 +88,7 @@ data "aws_iam_policy_document" "deploy_assume" {
 
 resource "aws_iam_role" "deploy" {
   name               = "${var.name}-github-deploy"
-  assume_role_policy = data.aws_iam_policy_document.deploy_assume.json
+  assume_role_policy = data.aws_iam_policy_document.github_main_assume.json
 }
 
 data "aws_iam_policy_document" "deploy" {
@@ -115,4 +122,15 @@ resource "aws_iam_role_policy" "deploy" {
   name   = "${var.name}-github-deploy"
   role   = aws_iam_role.deploy.id
   policy = data.aws_iam_policy_document.deploy.json
+}
+
+resource "aws_iam_role" "terraform" {
+  name                 = "${var.name}-github-terraform"
+  assume_role_policy   = data.aws_iam_policy_document.github_main_assume.json
+  max_session_duration = 7200
+}
+
+resource "aws_iam_role_policy_attachment" "terraform_admin" {
+  role       = aws_iam_role.terraform.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }

@@ -2,6 +2,10 @@ output "name" {
   value = var.name
 }
 
+output "business_name" {
+  value = var.business_name
+}
+
 output "region" {
   value = var.region
 }

@@ -38,15 +38,6 @@ variable "db_seconds_until_auto_pause" {
   }
 }
 
-variable "github_repository" {
-  type = string
-
-  validation {
-    condition     = can(regex("^[^/]+/[^/]+$", var.github_repository))
-    error_message = "github_repository must be owner/repo."
-  }
-}
-
 variable "github_subject_prefix" {
   type = string
 
@@ -129,9 +120,4 @@ variable "ses_from_address" {
     condition     = var.ses_from_address == "" || var.domain_name == "" || (endswith(lower(var.ses_from_address), "@${lower(var.domain_name)}") && can(regex("^[^@\\s]+@[^@\\s]+$", var.ses_from_address)))
     error_message = "ses_from_address must be empty or one address on domain_name, e.g. nbest@<domain_name>. It is ignored while domain_name is empty."
   }
-}
-
-variable "manage_github_variables" {
-  type    = bool
-  default = false
 }

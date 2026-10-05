@@ -39,7 +39,7 @@ export const handler = async () => {
   const pool = new Pool({
     connectionString,
     max: 1,
-    connectionTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 60_000,
   });
   try {
     await migrate(drizzle(pool), { migrationsFolder });

@@ -26,21 +26,6 @@ data "aws_iam_policy_document" "lambda" {
       "${aws_cloudwatch_log_group.migrate.arn}:*",
     ]
   }
-
-  statement {
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:AbortMultipartUpload",
-    ]
-    resources = ["${aws_s3_bucket.assets.arn}/*"]
-  }
-
-  statement {
-    actions   = ["s3:ListBucket"]
-    resources = [aws_s3_bucket.assets.arn]
-  }
 }
 
 resource "aws_iam_role_policy" "lambda" {
@@ -89,10 +74,7 @@ data "aws_iam_policy_document" "deploy_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        "${var.github_subject_prefix}:ref:refs/heads/main",
-        "${var.github_subject_prefix}:environment:production",
-      ]
+      values   = ["${var.github_subject_prefix}:ref:refs/heads/main"]
     }
   }
 }
@@ -104,14 +86,13 @@ resource "aws_iam_role" "deploy" {
 
 data "aws_iam_policy_document" "deploy" {
   statement {
-    actions = [
-      "lambda:UpdateFunctionCode",
-      "lambda:UpdateFunctionConfiguration",
-      "lambda:GetFunction",
-      "lambda:GetFunctionConfiguration",
-      "lambda:InvokeFunction",
-    ]
+    actions   = ["lambda:UpdateFunctionCode", "lambda:GetFunction"]
     resources = [aws_lambda_function.app.arn, aws_lambda_function.migrate.arn]
+  }
+
+  statement {
+    actions   = ["lambda:InvokeFunction"]
+    resources = [aws_lambda_function.migrate.arn]
   }
 
   statement {

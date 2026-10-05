@@ -1,0 +1,13 @@
+misconfigurations:
+  - id: AVD-AWS-0104
+    paths:
+      - "**/main.tf"
+    statement: Lambda must reach AWS APIs, SES and Turnstile, so egress to 0.0.0.0/0 and ::/0 is required.
+  - id: AVD-AWS-0132
+    paths:
+      - "**/main.tf"
+    statement: The assets bucket holds public site files; the default SSE-S3 encryption applies and a customer-managed KMS key adds cost without benefit.
+  - id: AVD-AWS-0011
+    paths:
+      - "**/compute.tf"
+    statement: A WAF on CloudFront is accepted as a cost trade-off; Turnstile protects the lead form.

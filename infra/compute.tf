@@ -12,7 +12,7 @@ resource "aws_lambda_function" "app" {
   function_name = var.name
   role          = aws_iam_role.lambda.arn
   architectures = ["arm64"]
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
   handler       = "index.handler"
   memory_size   = var.lambda_memory_mb
   timeout       = 60
@@ -54,7 +54,7 @@ resource "aws_lambda_function" "app" {
 
 resource "aws_lambda_function_url" "app" {
   function_name      = aws_lambda_function.app.function_name
-  authorization_type = "NONE"
+  authorization_type = "AWS_IAM"
   invoke_mode        = "BUFFERED"
 }
 
@@ -66,6 +66,13 @@ resource "aws_cloudwatch_log_group" "lambda" {
 resource "aws_cloudfront_origin_access_control" "s3" {
   name                              = "${var.name}-s3"
   origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_origin_access_control" "lambda" {
+  name                              = "${var.name}-lambda"
+  origin_access_control_origin_type = "lambda"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
@@ -122,6 +129,44 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
+locals {
+  media_origin = var.media_host != "" ? " https://${var.media_host}" : ""
+}
+
+resource "aws_cloudfront_response_headers_policy" "security" {
+  name = "${var.name}-security"
+
+  security_headers_config {
+    strict_transport_security {
+      access_control_max_age_sec = 63072000
+      include_subdomains         = false
+      override                   = true
+    }
+
+    content_type_options {
+      override = true
+    }
+
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+  }
+
+  custom_headers_config {
+    items {
+      header   = "Content-Security-Policy-Report-Only"
+      override = true
+      value    = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://challenges.cloudflare.com https://assets.calendly.com; style-src 'self' 'unsafe-inline' https://assets.calendly.com; img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com${local.media_origin}; media-src 'self'${local.media_origin}; font-src 'self'; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; frame-src https://challenges.cloudflare.com https://calendly.com https://www.googletagmanager.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    }
+  }
+}
+
 resource "aws_cloudfront_distribution" "this" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -138,8 +183,9 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   origin {
-    origin_id   = "lambda"
-    domain_name = replace(replace(aws_lambda_function_url.app.function_url, "https://", ""), "/", "")
+    origin_id                = "lambda"
+    domain_name              = replace(replace(aws_lambda_function_url.app.function_url, "https://", ""), "/", "")
+    origin_access_control_id = aws_cloudfront_origin_access_control.lambda.id
 
     custom_origin_config {
       http_port              = 80
@@ -156,6 +202,8 @@ resource "aws_cloudfront_distribution" "this" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = data.aws_cloudfront_cache_policy.optimized.id
+
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
 
     function_association {
       event_type   = "viewer-request"
@@ -181,6 +229,8 @@ resource "aws_cloudfront_distribution" "this" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = data.aws_cloudfront_cache_policy.optimized.id
+
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
   }
 
   ordered_cache_behavior {
@@ -190,6 +240,8 @@ resource "aws_cloudfront_distribution" "this" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = data.aws_cloudfront_cache_policy.optimized.id
+
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
   }
 
   ordered_cache_behavior {
@@ -199,13 +251,8 @@ resource "aws_cloudfront_distribution" "this" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = data.aws_cloudfront_cache_policy.optimized.id
-  }
 
-  custom_error_response {
-    error_code            = 403
-    response_code         = 404
-    response_page_path    = "/404.html"
-    error_caching_min_ttl = 10
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
   }
 
   custom_error_response {
@@ -233,7 +280,7 @@ resource "aws_lambda_function" "migrate" {
   function_name = "${var.name}-migrate"
   role          = aws_iam_role.lambda.arn
   architectures = ["arm64"]
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
   handler       = "migrate.handler"
   memory_size   = 1024
   timeout       = 300

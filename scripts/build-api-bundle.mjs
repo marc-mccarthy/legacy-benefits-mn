@@ -41,7 +41,7 @@ const result = await build({
   outfile: join(outDir, "index.mjs"),
   bundle: true,
   platform: "node",
-  target: "node22",
+  target: "node24",
   format: "esm",
   external: EXTERNAL,
   sourcemap: false,

@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Full 40-character commit SHA to redeploy
+        type: string
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-deploy
@@ -11,25 +16,76 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   MAX_PACKAGE_BYTES: 209715200
 
 jobs:
-  build:
+  quality:
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/legacybenefitsmn
+      PAYLOAD_SECRET: ci-secret-not-used-in-production
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      BUSINESS_NAME: CI Test Agency
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
+
+      - name: Require commit on main
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
+            echo "::error::$(git rev-parse HEAD) is not an ancestor of main; refusing to deploy" >&2
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:coverage
+
+  build:
+    needs: quality
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
     outputs:
       key: ${{ steps.pack.outputs.key }}
     steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          node-version: 22
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
+
+      - name: Require commit on main
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
+            echo "::error::$(git rev-parse HEAD) is not an ancestor of main; refusing to deploy" >&2
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -52,7 +108,7 @@ jobs:
         id: pack
         run: |
           set -euo pipefail
-          key="${GITHUB_SHA::12}"
+          key="$(git rev-parse --short=12 HEAD)"
 
           node scripts/build-api-bundle.mjs
 
@@ -113,34 +169,54 @@ jobs:
 
           (cd mig && zip -qry "../$key-migrate.zip" .)
 
-      - uses: aws-actions/configure-aws-credentials@v6
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          name: release
+          path: |
+            ${{ steps.pack.outputs.key }}.zip
+            ${{ steps.pack.outputs.key }}-migrate.zip
+          if-no-files-found: error
+          retention-days: 1
 
-      - name: Upload
-        env:
-          BUCKET: ${{ vars.ASSETS_BUCKET }}
-          KEY: ${{ steps.pack.outputs.key }}
-        run: |
-          set -euo pipefail
-          aws s3 cp "$KEY.zip" "s3://$BUCKET/releases/$KEY.zip"
-          aws s3 cp "$KEY-migrate.zip" "s3://$BUCKET/releases/$KEY-migrate.zip"
-          aws s3 sync out/ "s3://$BUCKET/" --delete --exclude 'releases/*' --exclude 'media/*' --exclude 'video/*'
-          aws s3 sync public/media "s3://$BUCKET/media"
-          aws s3 sync public/video "s3://$BUCKET/video"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: site
+          path: |
+            out
+            public/media
+            public/video
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
 
   deploy:
     needs: build
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      id-token: write
     env:
       BUCKET: ${{ vars.ASSETS_BUCKET }}
       KEY: ${{ needs.build.outputs.key }}
     steps:
-      - uses: aws-actions/configure-aws-credentials@v6
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: site
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: release
+
+      - name: Upload release
+        run: |
+          set -euo pipefail
+          aws s3 cp "$KEY.zip" "s3://$BUCKET/releases/$KEY.zip"
+          aws s3 cp "$KEY-migrate.zip" "s3://$BUCKET/releases/$KEY-migrate.zip"
 
       - name: Migrate
         env:
@@ -151,8 +227,8 @@ jobs:
             --s3-bucket "$BUCKET" --s3-key "releases/$KEY-migrate.zip" >/dev/null
           aws lambda wait function-updated-v2 --function-name "$FN"
 
-          code=$(aws lambda invoke --function-name "$FN" \
-            --cli-binary-format raw-in-base64-out \
+          code=$(AWS_MAX_ATTEMPTS=1 aws lambda invoke --function-name "$FN" \
+            --cli-binary-format raw-in-base64-out --cli-read-timeout 330 \
             --query FunctionError --output text response.json)
 
           cat response.json
@@ -170,6 +246,15 @@ jobs:
           aws lambda update-function-code --function-name "$FN" \
             --s3-bucket "$BUCKET" --s3-key "releases/$KEY.zip" >/dev/null
           aws lambda wait function-updated-v2 --function-name "$FN"
+
+      - name: Sync static site
+        run: |
+          set -euo pipefail
+          aws s3 sync out/_next/static "s3://$BUCKET/_next/static" --cache-control 'public,max-age=31536000,immutable'
+          aws s3 sync out/ "s3://$BUCKET/" --delete --exclude 'releases/*' --exclude 'media/*' --exclude 'video/*' --exclude '_next/static/*' \
+            --cache-control 'public,max-age=0,s-maxage=86400,must-revalidate'
+          aws s3 sync public/media "s3://$BUCKET/media"
+          aws s3 sync public/video "s3://$BUCKET/video"
 
       - name: Invalidate
         env:
@@ -208,3 +293,20 @@ jobs:
           fi
 
           echo "serving: $SITE"
+
+      - name: Verify signed POST
+        env:
+          SITE: ${{ vars.SITE_URL }}
+        run: |
+          set -euo pipefail
+
+          body='{}'
+          hash=$(printf '%s' "$body" | sha256sum | cut -d' ' -f1)
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X POST \
+            -H 'Content-Type: application/json' \
+            -H "x-amz-content-sha256: $hash" \
+            --data-binary "$body" "$SITE/api/do-not-contact" || echo 000)
+          if [ "$code" != "400" ] && [ "$code" != "422" ]; then
+            echo "::error::POST $SITE/api/do-not-contact returned $code, expected 400 or 422"
+            exit 1
+          fi

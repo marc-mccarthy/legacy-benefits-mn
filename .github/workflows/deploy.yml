@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_REGION: us-east-1
   MAX_PACKAGE_BYTES: 209715200
 
 jobs:
@@ -66,6 +66,7 @@ jobs:
       contents: read
     outputs:
       key: ${{ steps.pack.outputs.key }}
+      site_url: ${{ steps.build.outputs.site_url }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -90,19 +91,21 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50
+
       - name: Build
+        id: build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
-          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
-          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
-          NEXT_PUBLIC_GTM_ID: ${{ vars.NEXT_PUBLIC_GTM_ID }}
-          NEXT_PUBLIC_CALENDLY_URL: ${{ vars.NEXT_PUBLIC_CALENDLY_URL }}
-          NEXT_PUBLIC_MEDIA_HOST: ${{ vars.NEXT_PUBLIC_MEDIA_HOST }}
-          BUSINESS_NAME: ${{ vars.BUSINESS_NAME }}
-          BUSINESS_PHONE: ${{ vars.BUSINESS_PHONE }}
-          BUSINESS_EMAIL: ${{ vars.BUSINESS_EMAIL }}
-          BUSINESS_ADDRESS: ${{ vars.BUSINESS_ADDRESS }}
-        run: pnpm build
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          set -euo pipefail
+          op run --no-masking --env-file=infra/build.env -- env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '
+            set -euo pipefail
+            test -n "$DOMAIN_NAME"
+            export NEXT_PUBLIC_SITE_URL="https://$DOMAIN_NAME"
+            echo "site_url=$NEXT_PUBLIC_SITE_URL" >>"$GITHUB_OUTPUT"
+            exec pnpm build'
 
       - name: Pack API
         id: pack
@@ -189,19 +192,98 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  deploy:
+  terraform:
     needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "0"
+    outputs:
+      region: ${{ steps.out.outputs.region }}
+      site_url: ${{ steps.out.outputs.site_url }}
+      assets_bucket: ${{ steps.out.outputs.assets_bucket }}
+      cloudfront_distribution_id: ${{ steps.out.outputs.cloudfront_distribution_id }}
+      lambda_function_name: ${{ steps.out.outputs.lambda_function_name }}
+      migrate_function_name: ${{ steps.out.outputs.migrate_function_name }}
+      deploy_role_arn: ${{ steps.out.outputs.deploy_role_arn }}
+      business_name: ${{ steps.out.outputs.business_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_version: "1.16.1"
+          terraform_wrapper: false
+
+      - uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+        with:
+          role-to-assume: arn:aws:iam::150701180133:role/legacybenefitsgroup-github-terraform
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 7200
+
+      - run: terraform -chdir=infra init
+
+      - name: Plan
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          set -euo pipefail
+          grep '^TF_VAR_' infra/terraform.env >"$RUNNER_TEMP/tf.env"
+          op run --no-masking --env-file="$RUNNER_TEMP/tf.env" -- env -u OP_SERVICE_ACCOUNT_TOKEN \
+            terraform -chdir=infra plan -lock-timeout=10m -out="$RUNNER_TEMP/tfplan"
+
+      - name: Plan summary
+        run: |
+          {
+            echo '```'
+            terraform -chdir=infra show -no-color "$RUNNER_TEMP/tfplan"
+            echo '```'
+          } >>"$GITHUB_STEP_SUMMARY"
+
+      - name: Guard
+        run: |
+          set -euo pipefail
+          terraform -chdir=infra show -json "$RUNNER_TEMP/tfplan" | scripts/plan-guard.sh infra/destroy-allowlist.txt
+
+      - name: Apply
+        run: terraform -chdir=infra apply -lock-timeout=10m "$RUNNER_TEMP/tfplan"
+
+      - name: Outputs
+        id: out
+        run: |
+          set -euo pipefail
+          terraform -chdir=infra output -json >"$RUNNER_TEMP/out.json"
+          for k in region site_url assets_bucket cloudfront_distribution_id lambda_function_name migrate_function_name deploy_role_arn business_name; do
+            v=$(jq -er --arg k "$k" '.[$k].value' "$RUNNER_TEMP/out.json")
+            test -n "$v"
+            echo "$k=$v" >>"$GITHUB_OUTPUT"
+          done
+
+  deploy:
+    needs: [build, terraform]
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
       id-token: write
     env:
-      BUCKET: ${{ vars.ASSETS_BUCKET }}
+      BUCKET: ${{ needs.terraform.outputs.assets_bucket }}
       KEY: ${{ needs.build.outputs.key }}
     steps:
+      - name: Check site URL
+        env:
+          BUILT: ${{ needs.build.outputs.site_url }}
+          APPLIED: ${{ needs.terraform.outputs.site_url }}
+        run: test "$BUILT" = "$APPLIED"
+
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ needs.terraform.outputs.deploy_role_arn }}
           aws-region: ${{ env.AWS_REGION }}
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -220,7 +302,7 @@ jobs:
 
       - name: Migrate
         env:
-          FN: ${{ vars.MIGRATE_FUNCTION_NAME }}
+          FN: ${{ needs.terraform.outputs.migrate_function_name }}
         run: |
           set -euo pipefail
           aws lambda update-function-code --function-name "$FN" \
@@ -240,7 +322,7 @@ jobs:
 
       - name: Update function
         env:
-          FN: ${{ vars.LAMBDA_FUNCTION_NAME }}
+          FN: ${{ needs.terraform.outputs.lambda_function_name }}
         run: |
           set -euo pipefail
           aws lambda update-function-code --function-name "$FN" \
@@ -253,20 +335,20 @@ jobs:
           aws s3 sync out/_next/static "s3://$BUCKET/_next/static" --cache-control 'public,max-age=31536000,immutable'
           aws s3 sync out/ "s3://$BUCKET/" --delete --exclude 'releases/*' --exclude 'media/*' --exclude 'video/*' --exclude '_next/static/*' \
             --cache-control 'public,max-age=0,s-maxage=86400,must-revalidate'
-          aws s3 sync public/media "s3://$BUCKET/media"
-          aws s3 sync public/video "s3://$BUCKET/video"
+          aws s3 sync public/media "s3://$BUCKET/media" --delete
+          aws s3 sync public/video "s3://$BUCKET/video" --delete
 
       - name: Invalidate
         env:
-          DIST: ${{ vars.CLOUDFRONT_ID }}
+          DIST: ${{ needs.terraform.outputs.cloudfront_distribution_id }}
         run: |
           aws cloudfront create-invalidation --distribution-id "$DIST" \
             --paths '/*' >/dev/null
 
       - name: Verify serving
         env:
-          SITE: ${{ vars.SITE_URL }}
-          BUSINESS_NAME: ${{ vars.BUSINESS_NAME }}
+          SITE: ${{ needs.terraform.outputs.site_url }}
+          BUSINESS_NAME: ${{ needs.terraform.outputs.business_name }}
         run: |
           set -euo pipefail
 
@@ -296,7 +378,7 @@ jobs:
 
       - name: Verify signed POST
         env:
-          SITE: ${{ vars.SITE_URL }}
+          SITE: ${{ needs.terraform.outputs.site_url }}
         run: |
           set -euo pipefail
 

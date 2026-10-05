@@ -133,6 +133,9 @@ jobs:
       - name: Format check
         run: terraform fmt -check -recursive infra
 
+      - name: Plan guard test
+        run: bash scripts/plan-guard.test.sh
+
       - name: Init and validate
         run: |
           terraform -chdir=infra init -backend=false -input=false

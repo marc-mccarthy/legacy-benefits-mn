@@ -19,6 +19,16 @@ resource "aws_route53_zone" "this" {
   name = var.domain_name
 }
 
+resource "terraform_data" "name_servers" {
+  count = local.use_domain ? 1 : 0
+
+  triggers_replace = aws_route53_zone.this[0].name_servers
+
+  provisioner "local-exec" {
+    command = "echo 'Set these nameservers for ${var.domain_name} at Squarespace: ${join(" ", aws_route53_zone.this[0].name_servers)}'"
+  }
+}
+
 resource "aws_acm_certificate" "this" {
   count = local.use_domain ? 1 : 0
 

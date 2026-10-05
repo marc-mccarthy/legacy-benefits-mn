@@ -6,6 +6,19 @@ const alias = {
   "@tests": fileURLToPath(new URL("./tests", import.meta.url)),
 };
 
+const domTests = [
+  "tests/components/blocks/render-blocks.test.tsx",
+  "tests/components/motion/lit-words.test.tsx",
+  "tests/components/motion/magnetic.test.tsx",
+  "tests/components/motion/page-transition.test.tsx",
+  "tests/components/motion/three-stage.test.tsx",
+  "tests/components/motion/use-visual-effect-lifecycle.test.tsx",
+  "tests/components/sections/lake-sequence.test.tsx",
+  "tests/components/sections/plain-motion.test.tsx",
+  "tests/components/sections/signal-portrait.test.tsx",
+  "tests/lib/effects-pause.test.ts",
+];
+
 export default defineConfig({
   test: {
     projects: [
@@ -15,7 +28,15 @@ export default defineConfig({
           name: "unit",
           environment: "node",
           include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
-          exclude: ["**/*.int.test.ts", "**/node_modules/**"],
+          exclude: ["**/*.int.test.ts", "**/node_modules/**", ...domTests],
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: "unit-dom",
+          environment: "jsdom",
+          include: domTests,
         },
       },
       {

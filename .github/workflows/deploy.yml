@@ -27,9 +27,6 @@ jobs:
 
       - uses: pnpm/action-setup@v6
 
-      # Node 22 to match the Lambda nodejs22.x runtime. Native modules are
-      # ABI-bound to the major that built them, and sharp ships prebuilt arm64
-      # binaries — hence the arm64 runner.
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -37,9 +34,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # A NEXT_PUBLIC_ value is baked into the bundle at build time, so it is
-      # published by definition — vars, never secrets. The BUSINESS_* four are
-      # read through env() by src/lib/business.ts during prerender.
       - name: Build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
@@ -54,10 +48,6 @@ jobs:
           BUSINESS_ADDRESS: ${{ vars.BUSINESS_ADDRESS }}
         run: pnpm build
 
-      # esbuild inlines every runtime dependency into one file, so the package
-      # is index.mjs plus a generated package.json and carries no node_modules.
-      # Zipping from inside the directory puts index.mjs at the archive root,
-      # which is what lets the runtime resolve the "index.handler" entry point.
       - name: Pack API
         id: pack
         run: |
@@ -79,17 +69,10 @@ jobs:
 
           (cd api-bundle && zip -qry "../$key.zip" .)
 
-          # An index.mjs one directory down would upload and update the function
-          # cleanly, then fail to resolve on first invoke.
           unzip -Z1 "$key.zip" | grep -qx 'index.mjs'
 
           echo "key=$key" >>"$GITHUB_OUTPUT"
 
-      # The handler calls drizzle-orm's migrator directly, so the package needs
-      # only those two runtime dependencies rather than the workspace tree. The
-      # versions come out of package.json so they cannot drift from the app's.
-      # --node-linker=hoisted writes real directories instead of links into
-      # pnpm's content-addressed store, which Lambda cannot follow.
       - name: Pack migrate
         run: |
           set -euo pipefail
@@ -111,9 +94,6 @@ jobs:
             }, null, 2) + "\n");
           '
 
-          # --ignore-workspace: pnpm-workspace.yaml at the repo root would
-          # otherwise capture mig/. --no-frozen-lockfile: CI=true makes frozen
-          # the default, and this directory has no lockfile by design.
           (cd mig && pnpm install --node-linker=hoisted --ignore-workspace --no-frozen-lockfile)
 
           cp -R drizzle mig/drizzle
@@ -138,8 +118,6 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Both zips now measure well under the 50MB direct-upload limit, but the
-      # S3 path works for any size and needs no branch on it.
       - name: Upload
         env:
           BUCKET: ${{ vars.ASSETS_BUCKET }}
@@ -148,12 +126,7 @@ jobs:
           set -euo pipefail
           aws s3 cp "$KEY.zip" "s3://$BUCKET/releases/$KEY.zip"
           aws s3 cp "$KEY-migrate.zip" "s3://$BUCKET/releases/$KEY-migrate.zip"
-
-          # out/ carries _next/static and a copy of public/, so the excludes
-          # keep this sync off the two prefixes the dedicated syncs below own,
-          # and off the zips uploaded seconds ago.
           aws s3 sync out/ "s3://$BUCKET/" --delete --exclude 'releases/*' --exclude 'media/*' --exclude 'video/*'
-
           aws s3 sync public/media "s3://$BUCKET/media"
           aws s3 sync public/video "s3://$BUCKET/video"
 
@@ -183,8 +156,7 @@ jobs:
             --query FunctionError --output text response.json)
 
           cat response.json
-          # A failed migration can return a payload rather than throwing, so
-          # FunctionError alone is not sufficient.
+
           if [ "$code" != "None" ] || grep -qiE '"(errorType|errorMessage)"' response.json; then
             echo "::error::migrations failed"
             exit 1
@@ -203,14 +175,9 @@ jobs:
         env:
           DIST: ${{ vars.CLOUDFRONT_ID }}
         run: |
-          # Never a wildcard broad enough to cover the fingerprinted asset
-          # prefix: that would evict the objects this same deploy just
-          # uploaded. Each wildcard counts as one path.
           aws cloudfront create-invalidation --distribution-id "$DIST" \
             --paths '/*' >/dev/null
 
-      # Nothing above proves the site serves. Aurora resumes from 0 ACU in
-      # ~15s and the first request also pays a Lambda cold start.
       - name: Verify serving
         env:
           SITE: ${{ vars.SITE_URL }}
@@ -218,8 +185,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # /api/health checks Postgres and returns 503 when it is unreachable,
-          # so a 200 proves the function is up and the database is live.
           healthy=""
           for i in $(seq 1 30); do
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$SITE/api/health" || echo 000)
@@ -232,9 +197,6 @@ jobs:
             exit 1
           fi
 
-          # A healthy function says nothing about the pages, which are served
-          # from S3 by a different origin. Assert a rendered string rather than
-          # a status, so an empty or placeholder page fails here.
           code=$(curl -sS -o home.html -w '%{http_code}' --max-time 20 "$SITE/" || echo 000)
           if [ "$code" != "200" ]; then
             echo "::error::$SITE/ returned $code"

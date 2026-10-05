@@ -103,9 +103,6 @@ variable "turnstile_site_key" {
   type = string
 }
 
-# The private half of the Turnstile pair. Reaches the Lambda environment only —
-# never a GitHub Actions variable, which is readable by anyone who can read the
-# repository's settings.
 variable "turnstile_secret" {
   type      = string
   sensitive = true
@@ -123,10 +120,17 @@ variable "lead_notification_email" {
   type = string
 }
 
-# The GitHub provider needs a token CI does not have: Actions' default
-# GITHUB_TOKEN cannot write repository variables, and the permissions block has
-# no `administration` or `variables` key to grant. So the variables are created
-# by the local bootstrap apply and CI leaves them alone.
+variable "ses_from_address" {
+  description = "From address for lead emails sent through SES. Must be on domain_name; empty turns SES off. Use a real Google Workspace mailbox so replies are delivered."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.ses_from_address == "" || var.domain_name == "" || (endswith(lower(var.ses_from_address), "@${lower(var.domain_name)}") && can(regex("^[^@\\s]+@[^@\\s]+$", var.ses_from_address)))
+    error_message = "ses_from_address must be empty or one address on domain_name, e.g. nbest@<domain_name>. It is ignored while domain_name is empty."
+  }
+}
+
 variable "manage_github_variables" {
   type    = bool
   default = false

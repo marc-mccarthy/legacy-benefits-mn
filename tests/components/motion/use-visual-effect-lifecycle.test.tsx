@@ -1,5 +1,3 @@
-// @vitest-environment jsdom
-
 import { useRef } from "react";
 import { cleanup, render, act, screen } from "@testing-library/react";
 import { renderToString } from "react-dom/server";

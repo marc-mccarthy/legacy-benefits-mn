@@ -103,13 +103,8 @@ jobs:
           pnpm drizzle:migrate
 
       - run: pnpm exec playwright install --with-deps chromium
-
-      # scripts/serve-e2e.mjs serves out/ and mounts api-bundle/index.mjs as the
-      # API, because `next start` cannot serve an `output: "export"` build.
-      # Neither directory exists until these two run.
       - run: pnpm build
       - run: node scripts/build-api-bundle.mjs
-
       - run: pnpm test:e2e
 
       - uses: actions/upload-artifact@v4
@@ -135,20 +130,12 @@ jobs:
       - name: Format check
         run: terraform fmt -check -recursive infra
 
-      # `init` must precede `validate`: validation resolves provider installations
-      # and otherwise fails on the missing install rather than on the
-      # configuration. `-backend=false` because `infra/` declares no backend
-      # block, and without the flag `init` configures the local one. `-input=false`
-      # because a runner has nobody to answer a prompt.
       - name: Init and validate
         run: |
           terraform -chdir=infra init -backend=false -input=false
           terraform -chdir=infra validate
 
-      # `exit-code: "0"` reports findings without failing the job.
       - name: Scan infra for misconfiguration
-        # Releases before v0.33.1 pin aquasecurity/setup-trivy by tag, and the
-        # tags they name have since been deleted, so they fail to resolve.
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config

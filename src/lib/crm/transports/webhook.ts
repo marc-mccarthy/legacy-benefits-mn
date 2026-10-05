@@ -1,14 +1,5 @@
 import type { CrmLead, CrmSendResult, CrmTransport } from "../types";
 
-/**
- * Posts to the inbound webhook URL generated in MedicarePRO under
- * Settings -> Integrations. That URL is displayed exactly once and cannot be
- * retrieved afterwards, so it is read from SSM Parameter Store as a
- * SecureString rather than from the repo.
- *
- * MedicarePRO publishes no schema for the endpoint, so the field names in
- * `toPayload` are a guess mapped from the lead shape.
- */
 export class WebhookTransport implements CrmTransport {
   readonly name = "webhook";
 
@@ -51,8 +42,6 @@ export class WebhookTransport implements CrmTransport {
 
       if (res.ok) return { ok: true, reference: idempotencyKey };
 
-      // 4xx (except 408/429) means the request itself is wrong — retrying it
-      // unchanged will fail forever, so surface it instead of looping.
       const retryable =
         res.status >= 500 || res.status === 408 || res.status === 429;
       return {

@@ -1,5 +1,3 @@
-// @vitest-environment jsdom
-
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
 import { LitWords } from "@/components/motion/lit-words";

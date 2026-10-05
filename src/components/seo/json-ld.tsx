@@ -2,7 +2,6 @@ export function JsonLd({ data }: { data: object }) {
   return (
     <script
       type="application/ld+json"
-      // Built server-side from our own content, never user input.
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
     />
   );

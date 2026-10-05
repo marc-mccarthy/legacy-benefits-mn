@@ -2,6 +2,8 @@
 
 Date: 2026-10-04. Branch: feat/visual-refresh.
 
+Merged 2026-10-04: this file now also carries the former infra/ vet remaining-work list, retired by this merge (terraform style-guide and registry vet of `infra/`, updated after the Route 53 build). The review text below was written before the Route 53 build and is kept as written. Lines starting "Status 2026-10-04" or "Superseded 2026-10-04" are newer and win over the text they follow. Vet items are cited as "vet #n" (numbering of the old file, 1-19). New findings without a review ID carry `NEW-DNS-xx` or `NEW-OPS-xx` labels. See "Status since review", "Route 53 DNS (added 2026-10-04)", "Remaining work index" and "Open contradictions".
+
 ## Scope and method
 
 Read-only review of `infra/*.tf`, `infra/scripts/`, `.github/workflows/{ci,deploy}.yml`, `.gitignore`, `next.config.ts` and the form and security code the infra serves. Not opened: state, plan, tfvars, terraform.env, apply/build/dev logs, bootstrap zip.
@@ -23,6 +25,8 @@ Tool results (Terraform expert, scratch copy):
 | hashicorp/archive   | ~> 2.7     | 2.8.1 (no constraints line) | 2.8.1  |
 
 `required_version ~> 1.16`; CI pins 1.16.1. No modules.
+
+Status 2026-10-04: installed state records Terraform 1.16.1; latest release reported 1.16.5. `terraform` is on PATH in this session (an agent's claim that it was not was wrong). Still no modules: the Route 53 build is flat files.
 
 ## Summary
 
@@ -63,6 +67,33 @@ Total: 0 Critical, 4 High, 14 Medium, 13 Low.
 
 Disagreements, resolved by the lead's rulings where one exists: TF-01 (AWS: Medium; ruled High), AWS-04 (AWS cross-check: Medium; ruled High), TF-08 (Terraform: Medium; AWS: Low; kept Medium), TF-10 (Terraform: Medium; AWS: Low; kept Medium), AWS-06 / TF-15 (AWS: Medium; Terraform: Low; kept Medium, the higher-risk reading).
 
+### Status since review (2026-10-04)
+
+The summary table above is the review as written. Current status, measured 2026-10-04 unless marked otherwise:
+
+| ID                     | Status                                                                                                 | Vet item     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ | ------------ |
+| TF-01                  | Withdrawn by owner ruling: `infra/terraform.env` holds only `op://` references and need not be ignored | #1           |
+| TF-04 / AWS-01         | Open, re-vetted; lead ruled B, owner has not decided                                                   | #8           |
+| AWS-02 / LEAD-NOTIF    | Implemented in `infra/*.tf` 2026-10-04 (IPv6 egress + SES); not applied, plan only                     | #7           |
+| TF-02                  | Open; vet re-raises the owner-removed Aurora settings                                                  | #9           |
+| TF-05 / AWS-05         | Untracking done (committed in fbe52b2); `.gitignore` lines still missing                               | #1, #3, Done |
+| TF-06 / AWS-07         | Open                                                                                                   | #10, #19     |
+| TF-07                  | Open; stale `tfplan`, tfvars and backup no longer on disk; leftover lock-info file                     | #2, #3, #10  |
+| TF-08 / AWS-17         | Open                                                                                                   | #15          |
+| TF-09                  | Implemented (github.tf:8-34, committed in fbe52b2)                                                     | diff notes   |
+| TF-11                  | Stale `acm_certificate_arn` mention removed; rest open                                                 | #5, #17      |
+| TF-12, TF-18           | Open; new DNS variables and outputs have descriptions                                                  | #17          |
+| TF-13                  | Done: compute.tf:5 `output_path = "${path.root}/.terraform/bootstrap.zip"`                             | Done         |
+| TF-14                  | `terraform.tfvars.example` deleted in fbe52b2; restore is open                                         | #11          |
+| TF-17                  | Open                                                                                                   | #16          |
+| AWS-18                 | Open; script kept by owner ruling, still dead                                                          | #14          |
+| NEW-DNS-00             | Done: Route 53 zone, ACM certificate, aliases (infra/dns.tf)                                           | Done         |
+| NEW-DNS-01..06         | See "Route 53 DNS (added 2026-10-04)"; 04 and 06 done, 05 done at registry, DNS cache wait open        | #6, #12, #13 |
+| NEW-OPS-01, NEW-OPS-02 | See "Remaining work index"                                                                             | #4, #18      |
+
+All other IDs: no change recorded since the review.
+
 ## High
 
 ### TF-01: `infra/terraform.env` not gitignored
@@ -77,6 +108,7 @@ infra/terraform.env
 ```
 
 - Agreed: Terraform expert (High); AWS expert (Medium, file untracked so nothing exposed yet). Ruled High because one careless `git add` is irreversible here.
+- Superseded 2026-10-04 (owner ruling): `infra/terraform.env` contains only `op://` references, so it does not need to be gitignored. The earlier note that it should be ignored (here and in vet #1) is withdrawn. Measured: the file is now tracked (committed in fbe52b2); all 20 `TF_VAR_` lines are `op://` references to 1Password item "legacy-benefits-mn-infra", plus 3 comment lines. The `.gitignore` work that remains is under TF-05. Line numbers moved: `.env`, `.env*.local`, `!.env.example` are now .gitignore:48-50 (the old :37 entry was removed in fbe52b2).
 
 ### TF-04 / AWS-01 / AGY-05, AGY-06: Function URL auth does not match the permissions
 
@@ -109,6 +141,7 @@ resource "aws_lambda_permission" "public_invoke" {
 
 - Alternative, option A (CloudFront-only access): add `aws_cloudfront_origin_access_control` with `origin_access_control_origin_type = "lambda"`, `signing_behavior = "always"`, `signing_protocol = "sigv4"`; attach it to the lambda origin; set `authorization_type = "AWS_IAM"`. Catch: POST/PUT through an OAC needs the viewer to send `x-amz-content-sha256` (SHA-256 of the body), so add `crypto.subtle.digest` to the fetches at contact-form.tsx:45, soa-form.tsx:36 and dnc-form.tsx:39. Any POST without the header fails. Choose A only if the owner wants CloudFront-only access.
 - Agreed: AWS (recommended A), Terraform (recommended B), AGY partial (mismatch real; "anyone can bypass" holds only if a public permission exists outside Terraform). Lead ruled B.
+- Status 2026-10-04 (vet #8, Medium, open): `compute.tf:59-63`, `iam.tf:53-72`. `authorization_type = "NONE"` makes the URL callable without CloudFront, and the auto-added public permissions are not removed on destroy. The two `AWS_IAM` CloudFront permissions do nothing: no `origin_access_control_origin_type = "lambda"` OAC exists. Options: add a Lambda OAC, switch to `AWS_IAM` and set `origin_access_control_id` on the origin (POST/PUT bodies then need `x-amz-content-sha256`, so forms change); or delete the two dead permissions and accept the public URL. The lead's ruling (B) stands; the owner has not decided.
 
 ### AWS-04 / AGY-14 (cache half): No Cache-Control, and `--delete` removes old hashed chunks
 
@@ -148,6 +181,7 @@ Merge with TF-08 (`ignore_changes = [engine_version]`) in the same `lifecycle` b
 
 - Lineage: `prevent_destroy` never existed (`git log --all -S prevent_destroy` finds none), so this is not a re-add. The other protections in the original TF-02 were removed by the owner; see Owner decisions.
 - Agreed: Terraform (High), AWS (High), AGY-03.
+- Status 2026-10-04 (vet #9, Medium, open): Aurora safety, `main.tf:123-145`. Missing: `storage_encrypted = true`, `deletion_protection = true`, `skip_final_snapshot = false` with `final_snapshot_identifier`, `backup_retention_period = 7`. Currently `skip_final_snapshot = true` and `apply_immediately`. Encryption forces replacement, so set it now while state is empty. These settings are the owner-removed items in "Owner decisions"; see Open contradictions C2.
 
 ## Medium
 
@@ -159,6 +193,15 @@ Merge with TF-08 (`ignore_changes = [engine_version]`) in the same `lifecycle` b
 - Risk: with the secret set, every lead, SOA and DNC submit hangs until the connect timeout (about 10 s), then gets 403. With it blank, the server-side bot check is off by design; only the honeypot (leads.ts:31) remains.
 - Fix within repo rules: keep the secret blank (documented path). Any egress change is an owner decision (see Owner decisions).
 - Agreed: AWS (High), Terraform (High if set, Medium if blank). Ruled Medium.
+- Status 2026-10-04: `terraform.tfvars.example` (cited above for :73-74) was deleted in fbe52b2; see TF-14.
+- Status 2026-10-04 (vet #7, High, open): Email and Turnstile cannot work. `compute.tf:13-51`, `main.tf:68-76`, `iam.tf:22-45`.
+  - The Lambda is in a VPC whose only exit is an S3 gateway endpoint. No NAT.
+  - The app calls SESv2 (`src/lib/email/index.ts:3,39`) and Turnstile verify (`src/lib/security/turnstile.ts:3`). Both need the internet.
+  - The role has no `ses:SendEmail`.
+  - Effect: `LEAD_NOTIFICATION_EMAILS` never delivers. Any non-empty `turnstile_secret` breaks every form submit.
+  - Options listed by the vet, each adds cost or a service: (a) SES interface endpoint plus `ses:SendEmail` scoped to the identity, and drop Turnstile; (b) NAT gateway; (c) leave both blank and document it.
+  - The vet's options do not mention the owner-approved route ("Approved change: IPv6 egress + SES" below). Measured then: no `aws_egress_only_internet_gateway` or `aws_sesv2_email_identity` existed in `infra/*.tf`, so that approved change was not implemented. See Open contradictions C1.
+  - Status 2026-10-04 (later): the approved route is now implemented in `infra/*.tf` (egress-only gateway, `::/0` route, IPv6 security-group rule, `ipv6_allowed_for_dual_stack`, SES identity in `infra/ses.tf`, scoped IAM, `ses_from_address` variable). Read-only plans only; nothing is applied. Still open for AWS-02: `turnstile_secret` is empty in 1Password, and `src/lib/security/turnstile.ts:29` (`if (!secret) return true;`) then skips verification, so forms are accepted with no bot check (an empty secret does not reject forms). Runtime IPv6 reachability from Lambda is UNVERIFIED until one test submit after deploy.
 
 ### AWS-03 / AGY-09: Distribution-wide 403 to 404 mapping hides API errors
 
@@ -200,6 +243,10 @@ infra/.*.log
 infra/.bootstrap.zip
 ```
 
+- Status 2026-10-04, done: `git rm --cached` on `infra/.apply.log`, `.build.log`, `.build2.log`, `.build3.log`, `.dev.log`, `.bootstrap.zip` (files stayed on disk at the time); the removal is committed in fbe52b2. They remain in git history from `5f6e3e1`.
+- Status 2026-10-04, open (vet #1, `.gitignore` gaps): the six files are not ignored, and a stray `prod.tfvars` would be committed (only `terraform.tfvars` and `*.auto.tfvars` are ignored, .gitignore:66-67). Add `infra/.*.log`, `infra/.bootstrap.zip`, `*.tfvars` (keep the `!terraform.tfvars.example` negation, .gitignore:71). The existing rule at .gitignore:79 already covers `tfplan`. `infra/terraform.env` is not added (owner ruling, see TF-01).
+- Status 2026-10-04 (vet #3, leftover on-disk files): the vet recorded `infra/.apply.log` (73 KB, account-ID ARNs), the other logs and the old `infra/.bootstrap.zip` as still on disk until the owner deletes them. Measured at merge time: none of them is on disk any more. Who removed them is not known.
+
 ### TF-06 / AWS-07 / AGY-07 / AGY-12: Secrets in Lambda env readable by the deploy role
 
 - Severity: Medium. Verified (config).
@@ -222,12 +269,17 @@ statement {
 
 Dropping `GetFunctionConfiguration` is safe because the workflow never calls it. Moving secrets to SSM or Secrets Manager is an owner decision (see Owner decisions).
 
+- Status 2026-10-04 (vet #19, Low, open): least privilege. `iam.tf:113-118`: the deploy role has `lambda:UpdateFunctionConfiguration`, which lets CI rewrite environment variables including secrets. Drop it if CI only updates code.
+- Status 2026-10-04 (vet #10, Medium, open): secrets in plaintext. `compute.tf:34,277`, `main.tf:108-130`. The DB password, `PAYLOAD_SECRET` and the Turnstile secret sit in Lambda environment variables, local state and plan files. No remote backend. Acceptable at this scale. Long term: RDS-managed master password plus Secrets Manager (new service, needs owner OK; see Owner decisions). At minimum, back up state somewhere private (TF-07).
+
 ### TF-07: Local state hygiene
 
 - Severity: Medium. Verified via `ls -la` (contents not read); size anomaly inferred.
 - Evidence: terraform.tfstate, terraform.tfstate.backup, terraform.tfvars, tfplan are mode 644 (only terraform.env is 600). tfplan (Sep 20) predates 5f6e3e1, so it is stale; plans hold secrets in cleartext. State holds generated passwords and tokens in plaintext, with no locking and a single laptop copy. tfstate is 23,627 B (Oct 1 13:27) against .backup at 142,502 B (Oct 1 13:16): the last write shrank state about 6x, consistent with a destroy or partial apply.
 - Fix: `chmod 600 infra/terraform.tfstate* infra/terraform.tfvars`; encrypted copy outside the repo via `op document create infra/terraform.tfstate --vault <v> --title lbmn-tfstate` (then `op document edit` after each apply); owner deletes the stale tfplan (untracked, git cannot recover it). Owner runs `terraform state list | wc -l` to check the anomaly.
 - Lineage: a remote backend was removed in efdeeba; do not re-add (see Owner decisions).
+- Status 2026-10-04 (vet #2): the vet recorded a stale `infra/tfplan` (Sep 20, untracked, holds the DB password and `PAYLOAD_SECRET` in cleartext; git cannot recover it; owner deletes with `rm infra/tfplan`). Measured at merge time: `infra/tfplan`, `infra/terraform.tfvars` and `infra/terraform.tfstate.backup` are no longer on disk; who removed them is not known. `infra/terraform.tfstate` is now 1,222 B (Oct 4 12:50) and mode 644; local state holds 0 resources. The size-anomaly evidence above therefore describes an earlier state file. See Open contradictions C3.
+- Status 2026-10-04 (vet #3, not verified): `infra/.terraform.tfstate.lock.info` (Oct 4 16:44, mode 600) is present. No terraform process was running, so it looks like a leftover.
 
 ### TF-08 / AWS-17: Pinned Aurora minor version will drift
 
@@ -235,6 +287,7 @@ Dropping `GetFunctionConfiguration` is safe because the workflow never calls it.
 - Location: infra/main.tf:127, 152. `engine_version = "16.8"`; `auto_minor_version_upgrade` defaults true.
 - Risk: after AWS upgrades the minor version, the next plan tries to downgrade and the apply errors. Inferred from provider behaviour.
 - Fix: add `ignore_changes = [engine_version]` to the cluster `lifecycle` block (shared with TF-02) and delete main.tf:152.
+- Status 2026-10-04 (vet #15, Low in the vet, open): `engine_version = "16.8"` (`main.tf:127`) while auto minor upgrades are on. Set `auto_minor_version_upgrade = false` or `ignore_changes = [engine_version]`.
 
 ### TF-09: GitHub variables `for_each` breaks a fresh apply
 
@@ -269,6 +322,8 @@ github_variables = merge(
 ```
 
 and `for_each = var.manage_github_variables ? local.github_variables : {}`.
+
+- Status 2026-10-04, implemented (vet working-tree diff note, now committed in fbe52b2): `github.tf` splits computed values (`github_computed_variables`, github.tf:8-17) from input values (`github_input_variables`, github.tf:19-28) and applies the `!= ""` filter only to inputs (github.tf:32-34). Correct. The old filter would break `for_each` keys on a fresh apply. Three explanatory comments were removed.
 
 ### TF-10 / AGY-19: CI infra gates do not gate
 
@@ -361,7 +416,7 @@ If the managed origin request policy does not forward that header, use a custom 
 
 - Severity: Medium (raised from Low). Verified.
 - Location: deploy.yml:12-14, 38-55, 136-158, 172-191.
-- Risk: `pnpm install` and `next build` run third-party code in a job that can mint the OIDC token (pnpm 10.8.1 blocks dependency install scripts by default, which mitigates part of this). If migration fails, the new static site is already in S3, and uncached pages serve new HTML against the old API with no invalidation.
+- Risk: `pnpm install` and `next build` run third-party code in a job that can mint the OIDC token (pnpm the new static site is already in S3, and uncached pages serve new HTML against the old API with no invalidation.
 - Fix: build with no `id-token`, pass `out/` and the zips as an artifact, and run the S3 sync in the deploy job after the function update.
 
 ## Low
@@ -370,14 +425,23 @@ If the managed origin request policy does not forward that header, use a custom 
 - AWS-13 / AGY-18: actions pinned by tag (ci.yml:41,43,44,131,152,156; deploy.yml:26,28,33,136,167), CI has no `permissions:` block (mitigated: repo `default_workflow_permissions` is `read`). Fix: pin full commit SHAs; add `permissions: { contents: read }` to ci.yml.
 - AWS-16: `http_version = "http2and3"` (compute.tf:133-138), free.
 - AWS-18: infra/scripts/preflight-cutover.sh:81 reads `route53_zone_id`, which outputs.tf no longer has (dns module removed in 5f6e3e1). Dead script; do not re-add the output.
+  - Superseded in part 2026-10-04: the owner re-added Route 53 as flat IaC (infra/dns.tf, no module; see "Route 53 DNS (added 2026-10-04)"). outputs.tf still has no `route53_zone_id`; it now has `name_servers` (outputs.tf:41-44) and `acm_validation_records` (outputs.tf:46-51). The script still reads `route53_zone_id` at :81, so it is still dead.
+  - Status 2026-10-04 (vet #14, Low, open; owner ruling): `infra/scripts/preflight-cutover.sh` stays. It is dead: it reads the removed `route53_zone_id` output (`:81`) and nothing calls it. Either leave it dead or rewrite it against the current config (no `route53_zone_id`; `use_domain` now exists again as a local, main.tf:31).
 - AGY-02: no `aws:SecureTransport` Deny in the bucket policy (main.tf:168-184). Only CloudFront OAC and HTTPS SDK callers exist and public access is blocked.
-- TF-11: 0 of 21 variables have `description`; add validation for `region`, `acm_certificate_arn` (must be us-east-1), `lambda_memory_mb` (<= 10240), email and domain formats.
+- TF-11: 0 of 21 variables have `description`; add validation for `region`, `lambda_memory_mb` (<= 10240), email and domain formats.
+  - Status 2026-10-04 (vet #5, done): the stale `acm_certificate_arn` mention was removed from this entry; the "0 of 21 variables" count was left as written. Measured now: variables.tf has 20 variables (`acm_certificate_arn` removed, `dns_extra_records` added); only `dns_extra_records` has a `description` (variables.tf:64-65). `domain_name` (variables.tf:59-62) still has no validation.
 - TF-12: outputs.tf:1-39 has no `description`. No secret leaks through outputs.
+  - Status 2026-10-04: outputs.tf:1-39 is unchanged. The two new outputs, `name_servers` and `acm_validation_records` (outputs.tf:41-51), have descriptions.
 - TF-13: compute.tf:5 `output_path = "${path.module}/.bootstrap.zip"` regenerates inside the repo. Fix: `"${path.module}/.terraform/bootstrap.zip"`.
+  - Status 2026-10-04, done: compute.tf:5 is `output_path = "${path.root}/.terraform/bootstrap.zip"` (`path.root` equals `path.module` in this single root module). The old `infra/.bootstrap.zip` was untracked under TF-05.
 - TF-14: terraform.tfvars.example:41 says "Default true"; variables.tf:122-124 default is `false`. With false nothing writes `AWS_REGION` or `AWS_DEPLOY_ROLE_ARN`.
+  - Status 2026-10-04 (vet #11, Medium, open): `terraform.tfvars.example` was deleted (in fbe52b2). It was the only documentation of the inputs. Restore it; plain `git restore infra/terraform.tfvars.example` (the vet's command) no longer works because the deletion is committed, so use `git restore --source=fbe52b2^ infra/terraform.tfvars.example`. Fix its stale lines: `manage_github_variables` is documented as true but `variables.tf` defaults it to false (now variables.tf:130-133); it must also drop `acm_certificate_arn` and document `dns_extra_records`. The file is mostly comments (20 of 88 lines are example assignments), so it conflicts with the no-comments rule. Decide whether the rule applies to it (see NEW-OPS-02 and Open contradictions C6).
 - TF-17: aws locked 6.65.0 (latest 6.67.0, within constraint). The archive block has no `constraints` line though main.tf:7 declares `~> 2.7`. Fix: `terraform -chdir=infra providers lock -platform=darwin_arm64 -platform=linux_amd64 -platform=linux_arm64`.
+  - Status 2026-10-04 (vet #16, Low, open): latest aws 6.67.0, random 3.9.1, archive 2.8.1, github 6.13.0. The lock has aws 6.65.0, and the `archive` entry has no `constraints` line. Run `terraform init -upgrade` when ready. The Route 53 build was written and checked against aws 6.65.0 (provider source cited in NEW-DNS-00).
 - TF-18: `this` naming throughout; terraform and provider blocks not split into terraform.tf / providers.tf; iam.tf:19 hard-coded partition; iam.tf:23-29 log statement redundant with AWSLambdaVPCAccessExecutionRole; deploy.yml:243 `grep -qF ""` always passes if `BUSINESS_NAME` is empty; GitHub provider token needs classic `repo` (github.tf:5), prefer a fine-grained PAT with Variables: write on this repo only.
+  - Status 2026-10-04 (vet #17, Low, open, style guide): add `description` to every pre-existing variable and output (the new ones have them); move `required_version` and `required_providers` from `main.tf` to `terraform.tf`; prefer `main` over `this` for resource names; sort variables alphabetically. The new infra/dns.tf also uses `this`.
 - LEAD-NOTIF (inert config): `lead_notification_email` is wired to `LEAD_NOTIFICATION_EMAILS` (compute.tf:48) but the Lambda has no `SES_FROM_ADDRESS`, so src/lib/email/index.ts:27-31 skips every send, and the role has no `ses:SendEmail`. terraform.tfvars.example:23 ("Blank sends no lead notification") implies setting it sends mail. Fix: correct the example text. The SES removal itself is an owner decision.
+  - Status 2026-10-04: the example file is deleted (TF-14), so the text fix moves into its restore. The email side is vet #7, recorded under AWS-02.
 
 ## Site refresh readiness
 
@@ -418,7 +482,12 @@ All of these were removed in 5f6e3e1 (or efdeeba for the backend). None are in t
 | S3 versioning and encryption config on the site bucket (trivy AWS-0090, AWS-0132)                                                                      | No object rollback; bucket relies on default SSE-S3                                                                                                                           | Versioning and SSE resources; CMK about $1/mo                                                                                                                            |
 | CloudFront `compress = true`                                                                                                                           | HTML, JS, CSS go out uncompressed                                                                                                                                             | One attribute per behavior; not a security item                                                                                                                          |
 | `route53_zone_id` output (AWS-18)                                                                                                                      | preflight-cutover.sh stays dead                                                                                                                                               | Re-add output or delete the script                                                                                                                                       |
-| Remote S3 backend, DynamoDB lock, `modules/` and `envs/` split (efdeeba, 5f6e3e1)                                                                      | Single laptop state copy, no locking (mitigated in TF-07)                                                                                                                     | A state bucket, `use_lockfile`, and restructure                                                                                                                          |
+| Remote S3 backend, DynamoDB lock, `modules/` and `envs/` split (efdeeba, 5f6e3e1)                                                                      | Single laptop state copy, no locking (mitigated in TF-07)                                                                                                                     | A state bucket, `use_lockfile` restructure                                                                                                                               |
+| Superseded 2026-10-04, two rows above:                                                                                                                 |
+
+- SES row, "the dns module stay[s] removed": the owner explicitly re-added Route 53 on 2026-10-04 as flat IaC (infra/dns.tf, no module; registration stays at Squarespace). MAIL FROM and the SNS bounce topics stay removed. See "Route 53 DNS (added 2026-10-04)".
+- `route53_zone_id` output row: still true. The output was not re-added; the script is kept dead by owner ruling (AWS-18, vet #14).
+- Status 2026-10-04: vet #9 and vet #10 re-raise the Aurora rows and the Secrets Manager and remote-backend rows. They stay owner decisions; see Open contradictions C2.
 
 ## Dropped / refuted
 
@@ -446,10 +515,35 @@ All of these were removed in 5f6e3e1 (or efdeeba for the backend). None are in t
 - Disclosure: one grep printed a comment line (no value) from `infra/terraform.tfvars:30`.
 - Disclosure: `git log -p -- infra/` streamed a few lines of the committed apply log into the AWS expert's history greps (resource attribute lines, no values quoted here).
 - Infra `.tf` files contain code comments, contrary to the repo CLAUDE.md. Noted, not actioned.
+  - Status 2026-10-04: still open as NEW-OPS-02 (vet #18).
+- Status 2026-10-04: the apply identity was checked with IAM (NEW-DNS-03). Live DNS for the domain was read (see "Live DNS facts"). Everything else in the previous bullet about live AWS still holds.
 
 ## Approved change: IPv6 egress + SES (owner-approved 2026-10-04)
 
 Decision: re-add outbound internet access and SES sending by the cheapest route, an IPv6 egress-only internet gateway. No NAT, no interface endpoints, no dns module, no Secrets Manager. This overrides the no-re-add rule for these two items only. Resolves AWS-02 and LEAD-NOTIF.
+
+Superseded in part 2026-10-04: "no dns module" still holds (no module), but Route 53 itself was re-added as flat IaC in infra/dns.tf by a later owner decision. Status 2026-10-04 (superseded, newer text below): this change was not implemented in `infra/*.tf` when the review was merged (no egress-only gateway, no SES identity, no `ses_from_address` variable).
+
+Status 2026-10-04 (later, implemented, not applied): the change is now in `infra/*.tf` and passes `terraform fmt -check`, `validate` and read-only plans (no apply run). Differences from the HCL below:
+
+- SES resources live in a new `infra/ses.tf` (locals, identity, DKIM records, IAM), not in `main.tf` / `iam.tf`. Network edits are in `main.tf` (VPC, subnets, egress-only gateway, `::/0` route, `lambda_https_ipv6` rule) and `compute.tf` (`ipv6_allowed_for_dual_stack = true` on the app function only; `variables = merge({...}, local.ses_env)`).
+- `use_ses` is `local.use_domain && var.ses_from_address != ""`. The identity is the domain (`var.domain_name`), not derived from the address.
+- DKIM CNAMEs are Terraform-managed: `aws_route53_record.ses_dkim` with `count = 3` over the identity tokens (TTL 1800). This settles C5. The `ses_dkim_cnames` output was dropped.
+- `ses_from_address` is the business mailbox (a real Workspace mailbox), not `no-reply@`, because the visitor confirmation says "reply to this message" and sets no Reply-To. Its value lives in 1Password field `ses_from_address` (item `xfaph2wkwtqfzbn7pbzlgdjxyi`), referenced by `TF_VAR_ses_from_address` in `infra/terraform.env`. Validation also accepts a set address while `domain_name` is empty (ignored).
+- `ses:SendRawEmail` is still listed; SESv2 `SendEmail` is authorised by `ses:SendEmail` alone, so it grants nothing extra (optional tidy: drop it).
+- No `ses:FromAddress` IAM condition; scope is the single identity ARN as approved.
+- With `domain_name` empty the IPv6 egress resources are still created (so Turnstile works on the CloudFront URL path) but no Route 53, ACM, SES, DKIM or SES IAM resources are.
+
+Facts verified 2026-10-04 (AWS and provider docs, local SDK, DNS over HTTPS):
+
+- Is IPv6 egress free? Yes of fixed charges. The egress-only gateway has no hourly charge (AWS VPC docs); only internet data out is billed at EC2 rates (about $0.09/GB, effectively $0.00 for form posts and plain-text mail).
+- Is SES free? No. SES is $0.10 per 1,000 emails a la carte ($0.16 per 1,000 on the Essentials plan; which plan the account is on is UNVERIFIED). The "free tier" is now a $200 credit programme for new accounts, not 3,000 free emails. At 2 emails per lead and 100 leads a month: about $0.02 to $0.03. Total added cost at low volume: under $0.10 a month. A NAT gateway would be about $33 a month and is not needed.
+- Does the account have SES? Yes, in us-east-1 (the Terraform region). `get-account` shows sending enabled, `ProductionAccessEnabled` false (sandbox: 200 messages per 24 h, 1 per second) and a previous production-access request for a different website DENIED. One unrelated domain identity exists; none for `legacybenefitsmn.com`. The owner notification will work in the sandbox once the new domain identity verifies, because its one recipient is on `legacybenefitsmn.com`. The visitor confirmation fails until production access is granted (logged and swallowed, `src/lib/email/index.ts:52-55`).
+- Dual-stack endpoint: the installed SDK (`@aws-sdk/client-sesv2` 3.1127.0) resolves `email.us-east-1.amazonaws.com` with `AWS_USE_DUALSTACK_ENDPOINT` unset and `email.us-east-1.api.aws` with it `true` (ran offline). `email.us-east-1.api.aws` and `challenges.cloudflare.com` have AAAA records; `hooks.zapier.com` and `email.us-east-1.amazonaws.com` do not.
+- Provider: `vpc_config.ipv6_allowed_for_dual_stack` exists in aws 6.65.0 (default false).
+- DKIM verification needs only the three CNAMEs; no MX, SPF or MAIL FROM change, so Google Workspace mail is untouched and DMARC passes through DKIM alignment. "Easy DKIM always returns exactly three tokens" is inferred from AWS docs.
+- Dual-stack SES and DKIM records can be created in one apply alongside `dns.tf`: UNVERIFIED beyond the dependency graph (DKIM records depend on the zone and identity, not on certificate validation).
+- A fresh Gemini review objected to the per-resource `region` argument, the dual-stack env var and an SES interface endpoint. Each was checked and rejected (`validate` passes; AWS lists `email.us-east-1.api.aws`; an endpoint would cost money and is not needed).
 
 Checked: the HCL below was applied to a scratch copy of `infra/*.tf` (plus the lock file). `terraform fmt -check` exit 0; `terraform validate`: "Success! The configuration is valid." No plan was run.
 
@@ -577,6 +671,7 @@ With `ses_from_address` empty, Terraform creates no identity and no policy, and 
 
 - What was removed (`git show 5f6e3e1^:infra/modules/email/*`): `aws_ses_domain_identity` (v1 API), a Route 53 TXT verification record plus `aws_ses_domain_identity_verification`, `aws_ses_domain_dkim` with three Route 53 CNAMEs, `aws_ses_domain_mail_from` (`mail.<domain>`) with MX and SPF records, and an SNS topic for bounce and complaint notifications. The IAM grant was `ses:SendEmail`/`ses:SendRawEmail` on `identity/*` (modules/app/main.tf:336-339). `SES_FROM_ADDRESS` defaulted to `no-reply@<domain>`.
 - Smallest re-add: one `aws_sesv2_email_identity` for the domain. With SES v2 a domain verifies through Easy DKIM, so no TXT record is needed. Route 53 is not managed anywhere in `infra/*.tf` (the only `zone` match is `aws_availability_zones`), so the owner adds the three CNAMEs from the `ses_dkim_cnames` output at their DNS host by hand. MAIL FROM, the SNS topics and the dns module are not re-added. The default MAIL FROM is an amazonses.com subdomain; DMARC still passes through DKIM alignment on the From domain.
+  - Superseded 2026-10-04: Route 53 is now managed in infra/dns.tf when `domain_name` is set. The three SES DKIM CNAMEs could then go into `dns_extra_records` (its validation, variables.tf:74-79, only blocks A, AAAA and CNAME at the apex and `www`) instead of being added by hand. Not decided; see Open contradictions C5.
 - IAM: send rights only, scoped to the identity ARN. No configuration set is used, so no configuration-set ARN is needed.
 - Env names the code reads: `SES_FROM_ADDRESS` (index.ts:27, wired above); `LEAD_NOTIFICATION_EMAILS` (index.ts:82, already wired at compute.tf:48); `BUSINESS_NAME` and `BUSINESS_PHONE` (index.ts:116-117, already wired); `AWS_REGION` (index.ts:9, set by Lambda itself). `SES_FROM_ADDRESS` must be on the verified domain.
 - Sandbox: new SES accounts can send only to verified addresses. Until the owner requests production access (free, manual, from the SES console), the visitor confirmation email (leads.ts:63) fails, and the failure is logged and swallowed (index.ts:52-55). The owner notification works only if each `LEAD_NOTIFICATION_EMAILS` address is verified in the SES console. Unverified: some reports say that in the sandbox IAM also checks the recipient identity ARN. If CloudWatch shows AccessDenied naming a recipient identity, that is the cause, and production access removes it.
@@ -609,6 +704,10 @@ The egress-only IGW has no hourly charge. Internet data out is about $0.09/GB (f
 4. Apply B (SES): set `ses_from_address = "no-reply@<domain>"`. Expected: `Plan: 2 to add, 1 to change, 0 to destroy` (`aws_sesv2_email_identity.sender[0]`, `aws_iam_role_policy.lambda_ses[0]`; the Lambda env gains `SES_FROM_ADDRESS` and `AWS_USE_DUALSTACK_ENDPOINT`).
 5. Add the three CNAMEs from `terraform output ses_dkim_cnames` at the DNS host. Wait for the identity to show Verified. Verify the notification recipients, or request production access.
 
+Superseded in part 2026-10-04: "the DNS host" is Route 53 once the Route 53 first apply has run (C5). The expected plan counts in steps 1 and 4 assume an existing deployment; local state now holds 0 resources (C3).
+
+Superseded 2026-10-04 (later): apply notes 1 to 5 describe two applies (A network, B SES) and hand-added CNAMEs. The repo now applies everything in one run, with the DKIM CNAMEs in Terraform (C5). Expected plan with the domain set: `Plan: 71 to add, 0 to change, 0 to destroy` (see "First apply: one apply, one manual step"). Notes 2 (dual-stack disruption) and 3 (set `turnstile_secret`, then test one form) still hold in spirit; with an empty state there is no existing function to disrupt.
+
 ## Proposed fix order
 
 1. Repo hygiene, zero AWS: TF-01 gitignore `infra/terraform.env`; TF-05 `git rm --cached` the infra logs and `.bootstrap.zip` and ignore them; TF-13 move the archive `output_path` into `.terraform/`. History purge is the owner's call.
@@ -622,3 +721,166 @@ The egress-only IGW has no hourly charge. Internet data out is about $0.09/GB (f
 9. TF-06 / AGY-12: trim the deploy role (drop `lambda:UpdateFunctionConfiguration`, `GetFunctionConfiguration`); AGY-11 / AWS-08: drop the Lambda role S3 write.
 10. TF-09, TF-08, TF-10 / AGY-19, AWS-14 / AGY-17, TF-15 / AWS-06, then the remaining Mediums (AWS-10, AWS-12).
 11. Lows.
+
+Status 2026-10-04 for this order: step 1 TF-01 is withdrawn (owner ruling); TF-05 untracking and TF-13 are done; the TF-05 `.gitignore` lines remain. Step 2: the stale tfplan is no longer on disk (TF-07). TF-09 from step 10 is implemented. The Route 53 first apply (runbook below) is not placed in this order; where it goes relative to steps 3-5 is Open contradiction C3.
+
+## Route 53 DNS (added 2026-10-04)
+
+Source: terraform skill (`terraform:terraform-style-guide`) and terraform-registry MCP review of `infra/`, 2026-10-04, updated after the Route 53 build, merged here from the former vet remaining-work list.
+
+Current truth: on 2026-10-04 the owner explicitly re-added Route 53 as flat IaC (infra/dns.tf; no module). Registration stays at Squarespace. `domain_name` empty means no DNS resources and the default CloudFront URL. This overrides the old hard limit about re-adding it (owner ruling).
+
+`terraform fmt -check` and `terraform validate` pass. Local state holds 0 resources. Read-only plans (no apply):
+
+- `TF_VAR_domain_name=legacybenefitsmn.com`: Plan 61 to add.
+- `TF_VAR_domain_name` empty: Plan 49 to add, no Route 53 or ACM resources, default `*.cloudfront.net` certificate and URL.
+
+Superseded 2026-10-04 (later), after the IPv6 + SES build and the `domain_name` 1Password field being set (`op run --env-file=infra/terraform.env -- terraform -chdir=infra plan -input=false -lock=false`, no `-out`, rc 0, 0 warnings, 0 errors):
+
+- Domain set (the 1Password field now reads `legacybenefitsmn.com`): `Plan: 71 to add, 0 to change, 0 to destroy.` The delta over 61 is 10: egress-only gateway, `::/0` route, IPv6 security-group rule, SES identity, three DKIM records, SES IAM policy, the `google_verification` extra record, and `terraform_data.name_servers`.
+- Domain empty: `Plan: 52 to add` (49 plus the three IPv6 network resources); no Route 53, ACM, SES, DKIM or `terraform_data` resources.
+- The app function plans `ipv6_allowed_for_dual_stack = true`; the migrate function stays false.
+- An earlier note that `mise exec -- terraform` fails here (mise tries to install postgres) was worked around with the installed 1.16.1 binary.
+
+### NEW-DNS-00: Route 53 build (done)
+
+- [x] Route 53 hosted zone, us-east-1 ACM certificate (per-resource `region` argument, aws provider 6.65.0 locked) with DNS validation, `aws_acm_certificate_validation`, alias A/AAAA for apex and `www`, CloudFront aliases and viewer certificate: `infra/dns.tf`, `compute.tf`, `variables.tf`, `outputs.tf`. Flat files, no module.
+- [x] `acm_certificate_arn` variable removed (Terraform creates the certificate); `TF_VAR_acm_certificate_arn` line removed from `infra/terraform.env`.
+- [x] `dns_extra_records` variable (map of `{name, type, ttl, records}`, carry-over records) stored in 1Password field `op://Development/xfaph2wkwtqfzbn7pbzlgdjxyi/dns_extra_records` (item "legacy-benefits-mn-infra"), referenced from `infra/terraform.env`. Holds `mx` (five Google ASPMX), `apex_txt` (SPF `v=spf1 include:_spf.google.com ~all`) and `dkim_google` (3 chunks of 201/201/8 characters). TTL 14400 (stated once for all three entries in the original work-list; only the MX TTL is confirmed under Live DNS facts). Checked against live DNS.
+  - Status 2026-10-04 (later): now four keys. Added `google_verification`: CNAME `isqbop7e6zek` to `gv-g4wgakmz3yjmin.dv.googlehosted.com`, TTL 14400, the Google Workspace domain-verification record. Source: the Squarespace DNS screenshots, confirmed live over DoH. All custom records show 4 hours (14400) on screen. The screenshot cuts the Google DKIM value off after `AAOCAQ...`, so the full 410-character value came from live DNS (stored joined with the three characters `" "`, equal to live). Verified by independent re-reads of all 8 screenshots and a plan whose `aws_route53_record.extra` entries show no diff.
+- [x] TXT quoting fixed: the aws provider wraps every TXT/SPF value in quotes itself (`record.go` v6.65.0 `flattenTxtEntry`), so values are stored without outer quotes and long values are joined with the three characters `" "`. The earlier guidance to write `"\"chunk1\" \"chunk2\""` was wrong.
+- [x] Plan-time bug fixed: `aws_route53_record.cert_validation` now uses `for_each = toset(local.site_hostnames)` plus `local.cert_validation` (dns.tf:35-44), not keys derived from unknown certificate attributes.
+- [x] `aws_acm_certificate_validation` create timeout 6h (dns.tf:53-55), so one apply survives the nameserver switch.
+- [x] `compute.tf`: the viewer certificate reads from the Terraform-managed ACM certificate (compute.tf:249-253), and `BUSINESS_ADDRESS` was added to the app Lambda environment (compute.tf:44). Both were in the working-tree diff the vet listed as "not yet reviewed by you"; both are now committed in fbe52b2.
+- Also done in the same session and recorded under their review IDs: TF-05 untracking, TF-13 archive path, TF-11 stale reference (vet #5).
+
+### Decisions recorded
+
+- `infra/scripts/preflight-cutover.sh` stays (owner ruling). It is dead (AWS-18, vet #14).
+- Route 53 hosts DNS and registration stays at Squarespace (owner ruling, overriding the old hard limit about re-adding it).
+- The apex and `www` serve the site. `_domainconnect` (CNAME to `_domainconnect.domains.squarespace.com`, Squarespace's auto-setup service only) is not carried over. No DMARC record exists today and none is added (NEW-DNS-01).
+- `prevent_destroy` on the zone and an `"@"` apex handler were not added (owner has not asked). Use `""` as the apex name in `dns_extra_records`.
+- Owner ruling 2026-10-04: `infra/terraform.env` contains only `op://` references, so it does not need to be gitignored (TF-01 withdrawn).
+
+### Live DNS facts for legacybenefitsmn.com (measured 2026-10-04)
+
+- Authoritative NS: `ns-cloud-a1` to `ns-cloud-a4.googledomains.com`.
+- The apex has no A/AAAA and `www` is NXDOMAIN: no live site on the domain.
+- Google Workspace mail: five legacy ASPMX MX records, TTL 14400; SPF `v=spf1 include:_spf.google.com ~all`; DKIM at `google._domainkey` (2048-bit); no DMARC.
+- DNSSEC is enabled: DS `37879 8 2 9C28ADC646067A8075C0AE69F47FD86D015F91976DEB7D0CF69F2FFA A325E415` at the `.com` parent, TTL 86400.
+  - Superseded 2026-10-04 (later): DNSSEC is now OFF. The Squarespace DNSSEC toggle shows off, and the Verisign RDAP record for the domain shows `delegationSigned: false`, last changed 2026-10-05T01:31:01Z. Google and Cloudflare DoH `DS` queries return NODATA with AD false. Measured 2026-10-05 about 02:15 UTC. Direct `dig` to the gtld servers and the `ns-cloud-a*` servers timed out (port 53 egress is blocked from this host), so the parent-authoritative answer is UNVERIFIED by `dig`; the conclusion rests on RDAP plus recursive NODATA. The old DS had TTL 86400, so a resolver that cached it just before 01:31Z can keep it until about 01:31Z on 2026-10-06. Hours remaining at the 02:15Z measurement: about 23; the guaranteed-clear time is about 02:00 UTC 2026-10-06 (21:00 CDT 2026-10-05). Observed Google and Cloudflare resolvers already show no cached DS; Quad9 and other validating resolvers are unmeasured. Do not switch the Squarespace nameservers before then if zero SERVFAIL risk is wanted.
+- `_domainconnect` CNAME to `_domainconnect.domains.squarespace.com` exists and is not carried over.
+- One more NSEC3 owner hash, `2efu9f34q08060oi6vdekkf5sablv6to`, is unidentified after about 1.1 million candidate names. The owner must read the Squarespace DNS panel (NEW-DNS-06).
+  - Superseded 2026-10-04 (later): the Squarespace DNS screenshots show the custom records are exactly five MX, the SPF TXT, `google._domainkey` TXT and CNAME `isqbop7e6zek` (plus `_domainconnect`). The unidentified hash is most likely the `isqbop7e6zek` verification CNAME (inferred, not hash-checked). It is now carried over.
+- The screenshots also show: nameservers `ns-cloud-a1` to `a4.googledomains.com` with a "USE CUSTOM NAMESERVERS" button, no host records, no forwarding, Workspace connected, domain lock on, renewal 2027-01-19. Every Squarespace domain page carries a banner that the domain is managed by Google Workspace and changes could affect it; the nameserver button is not greyed out.
+
+### Terraform research: why one manual step remains (2026-10-04)
+
+From Terraform and AWS docs:
+
+- Core Terraform already orders zone before its dependents through references.
+- ACM DNS validation needs the validation CNAME publicly resolvable (AWS docs); ACM gives up after 72 hours.
+- No Terraform feature waits for a registrar change: not actions, deferred actions, Stacks (paid HCP), query, check or ephemeral resources.
+- No Squarespace provider or public nameserver API exists. `aws_route53domains_registered_domain` works only for domains registered with Route 53.
+- Therefore a zero-manual single apply is impossible while the domain stays at Squarespace. Recommended run: one `terraform apply` (no `-target`), and one manual Squarespace nameserver paste while it waits in `aws_acm_certificate_validation` (6h timeout; a rerun resumes within ACM's 72 hours).
+- Reusable delegation sets (`aws_route53_delegation_set`) keep nameservers across zone recreation but need a first apply, so they are not recommended unless the zone may be recreated.
+
+### First apply: one apply, one manual step
+
+Superseded 2026-10-04 (later): steps 1 to 3 are done and step 2 is reduced to a wait; steps 4 to 8 are refined by the "Runbook update 2026-10-04" list after step 8. The original steps are kept below as written.
+
+Do these in order. Do not run the apply before steps 1 to 3.
+
+1. **Set the domain.** The `domain_name` field in 1Password is empty right now. Put `legacybenefitsmn.com` in it. With it empty, the apply creates no DNS and the site uses the default CloudFront URL. (A duplicate empty `domain_name` field existed; the owner has since resolved it.)
+2. **Turn DNSSEC off at Squarespace and wait about 24 hours.** The DS record `37879 8 2 9C28ADC6…` (TTL 86400) is published at the `.com` parent. Moving nameservers without removing it makes validating resolvers return SERVFAIL for the whole domain, mail included. Confirm with `dig +short DS legacybenefitsmn.com @1.1.1.1` returning nothing.
+3. **Compare the Squarespace DNS panel to `dns_extra_records`.** One NSEC3 owner hash (`2efu9f34q08060oi6vdekkf5sablv6to`) could not be identified after about 1.1 million candidate names. Add any record the panel lists that is not already carried over.
+4. **Run the apply, no `-target`:** `op run --env-file=infra/terraform.env -- terraform -chdir=infra apply`.
+5. **While it waits on certificate validation,** get the zone nameservers from a second terminal: `aws route53 list-hosted-zones-by-name --dns-name legacybenefitsmn.com`, then `aws route53 get-hosted-zone --id <id> --query DelegationSet.NameServers`. `terraform output` does not work mid-apply.
+6. **Check Route 53 answers first:** `dig @<ns> legacybenefitsmn.com MX`, `TXT`, and `dig @<ns> google._domainkey.legacybenefitsmn.com TXT`.
+7. **Paste the four nameservers** into Squarespace's custom nameserver settings. ACM then validates and the apply finishes (timeout 6h; rerun if it times out, within ACM's 72 hours).
+8. **After propagation:** test mail send and receive, load `https://legacybenefitsmn.com` and `https://www.legacybenefitsmn.com`.
+
+Mail records exist in Route 53 before the nameserver switch, because they do not depend on certificate validation.
+
+Runbook update 2026-10-04 (later). Status of the original steps: 1 done (`domain_name` reads `legacybenefitsmn.com`); 2 done at the registry (DNSSEC off), cache wait open; 3 done (panel read, `google_verification` carried over, NEW-DNS-06). Remaining order:
+
+1. **Before apply (owner, 1Password):** set the `turnstile_secret` field if bot protection is wanted (empty means forms are accepted without verification, `turnstile.ts:29`; it does not block plan or apply). `media_host`, `gtm_id` and `calendly_url` are empty; those features stay off. `ses_from_address` and `TF_VAR_ses_from_address` are already set. `acm_certificate_arn` is an orphan empty 1Password field with no variable; harmless.
+2. **Make sure the sender mailbox exists in Google Workspace** (the `ses_from_address` value is the business mailbox), so visitor replies are not bounced.
+3. **Wait for the DNS cache window:** start the apply no earlier than about 02:00 UTC 2026-10-06 (see Live DNS facts). If port 53 is open on some network, re-check with `dig +norec DS legacybenefitsmn.com @a.gtld-servers.net` (expect an empty answer). If the apply is started earlier and validation times out (6h), rerun the same apply after the switch; ACM allows 72 hours and the zone and records are kept in state.
+4. **Run the apply, no `-target`:** `op run --env-file=infra/terraform.env -- terraform -chdir=infra apply`. Expect `71 to add, 0 to change, 0 to destroy`; stop on any other count. If it reports "state locked", check no terraform process runs, then `terraform -chdir=infra force-unlock <id from the error>` (a leftover `infra/.terraform.tfstate.lock.info` exists; with the local backend the real lock is an OS file lock, so this is most likely harmless, inferred). Terraform binary: 1.16.1; `mise exec -- terraform` fails here, so use the installed binary.
+5. **Copy the four nameservers** printed by `terraform_data.name_servers` ("Set these nameservers ... at Squarespace"), which depends only on the zone and so should print before the validation wait (inferred from the dependency graph, not observed). Fallback: the AWS CLI commands in the original step 5.
+6. **Check Route 53 answers first.** Port 53 is blocked from some networks, so use the API: `aws route53 test-dns-answer --hosted-zone-id <id> --record-name legacybenefitsmn.com --record-type MX` (and `TXT`, `google._domainkey.legacybenefitsmn.com TXT`, `isqbop7e6zek.legacybenefitsmn.com CNAME`), or `dig @<ns> ...` from a network with port 53 open.
+7. **Paste the four nameservers in Squarespace:** Domains, then `legacybenefitsmn.com`, then DNS, then Domain Nameservers (`account.squarespace.com/domains/managed/legacybenefitsmn.com/dns/domain-nameservers`), then "USE CUSTOM NAMESERVERS", and replace `ns-cloud-a1` to `a4.googledomains.com` with the four Route 53 names. Accept the Workspace-managed banner; mail depends only on the MX, SPF, Google DKIM and verification records, all carried over. After the switch the Squarespace DNS Settings panel has no effect. ACM then validates and the apply finishes.
+8. **After propagation:** load `https://legacybenefitsmn.com` and `https://www.legacybenefitsmn.com`; test Google Workspace mail send and receive.
+9. **SES (manual):** `aws sesv2 get-email-identity --email-identity legacybenefitsmn.com` should show `VerificationStatus` SUCCESS (no email click for a domain identity; SES finds the DKIM CNAMEs itself, up to 72 hours). Request SES production access in the SES console (us-east-1), citing `legacybenefitsmn.com`, transactional email only, if visitors must receive the confirmation; a prior request on this account for another site was denied and may be again. This is not doable in Terraform. Until then only the owner notification (on-domain recipient, covered by the domain identity) is delivered. Any future off-domain recipient must be verified in the console while in the sandbox.
+10. **App deploy and test:** deploy the app bundle through CI (the Lambda starts as a 503 placeholder), submit one test lead, and read CloudWatch `/aws/lambda/<name>` for `[email] send failed` or Turnstile errors. If IPv6 connect timeouts appear, add `NODE_OPTIONS=--dns-result-order=ipv6first` to the Lambda environment (Node happy eyeballs is on by default in Node 22; runtime behaviour in Lambda is UNVERIFIED).
+
+The apply blocks on `aws_acm_certificate_validation` (6h timeout) until step 7 is done, and CloudFront and the aliases follow it.
+
+### NEW-DNS findings
+
+- [ ] **NEW-DNS-01 (vet #12, optional): DMARC record.** None exists. A monitoring record `_dmarc` TXT `v=DMARC1; p=none;` can go into `dns_extra_records`. Not added without the owner's say.
+- [ ] **NEW-DNS-02 (vet #13): zone protection.** Recreating the zone issues new nameservers and breaks delegation until Squarespace is updated. `lifecycle { prevent_destroy = true }` on `aws_route53_zone.this` prevents that but also blocks setting `domain_name` back to empty. Owner's call.
+- [x] **NEW-DNS-03 (vet #6, done): apply identity permissions.** Local terraform runs as an IAM user with AdministratorAccess and AmazonS3FullAccess. `iam simulate-principal-policy` returned allowed for all 21 route53, acm and cloudfront actions checked. Permission boundaries and SCPs were not checked. The CI deploy role needs no change. Required actions as listed by the vet: route53:* and ACM RequestCertificate, DescribeCertificate, DeleteCertificate, ListTagsForCertificate, AddTagsToCertificate. Recheck if the apply identity changes.
+- [x] **NEW-DNS-04 (done 2026-10-04): print the nameservers during the blocked apply.** Implemented as `terraform_data.name_servers` (dns.tf:22-30, `count = local.use_domain ? 1 : 0`, `triggers_replace` the zone nameservers). Original text: Add a `terraform_data` resource with a `local-exec` echo of the zone nameservers (`count = local.use_domain ? 1 : 0`, `triggers_replace = aws_route53_zone.this[0].name_servers`) so they print while the apply waits. Caveats: provisioners are a last resort; the output may scroll past; that it runs before the validation wait is an inference, not verified.
+- [ ] **NEW-DNS-05 (owner action, runbook step 2): remove DNSSEC before the switch.** The DS record at the `.com` parent must be gone before the nameserver change.
+  - Status 2026-10-04 (later): DNSSEC removed at the registry (about 01:31Z 2026-10-05). Open only as a cache wait: switch no earlier than about 02:00 UTC 2026-10-06 (see Live DNS facts). Parent-direct `dig` is UNVERIFIED (port 53 blocked).
+- [x] **NEW-DNS-06 (done 2026-10-04, owner action, runbook step 3): read the Squarespace DNS panel** to identify the unknown NSEC3 owner and carry any missing record. Done from the screenshots: the owner is most likely the `isqbop7e6zek` verification CNAME (inferred), now in `dns_extra_records` as `google_verification`. `_domainconnect` stays not carried over. No DMARC, CAA or apex/www A, AAAA or CNAME records exist on screen or live.
+
+## Remaining work index (merged from the vet, 2026-10-04)
+
+Work one item at a time: pick an item, decide, apply, tick it. Each vet item's text now lives in the entry named here.
+
+Housekeeping
+
+- [ ] vet #1 `.gitignore` gaps: TF-05 (the `infra/terraform.env` part is withdrawn, TF-01).
+- [ ] vet #2 stale `infra/tfplan`: TF-07 (not on disk at merge time).
+- [ ] vet #3 leftover on-disk files and `.terraform.tfstate.lock.info`: TF-05 and TF-07.
+- [ ] vet #4 log destination: NEW-OPS-01 below.
+- [x] vet #5 stale doc reference: TF-11 (done).
+- [x] vet #6 apply identity permissions: NEW-DNS-03 (done).
+
+High
+
+- [ ] vet #7 email and Turnstile: AWS-02 (and LEAD-NOTIF). Status 2026-10-04: implemented in `infra/*.tf`, not applied; open items are the apply, SES production access, `turnstile_secret` and one test submit.
+
+Medium
+
+- [ ] vet #8 public Lambda function URL: TF-04 / AWS-01.
+- [ ] vet #9 Aurora safety: TF-02 and Owner decisions.
+- [ ] vet #10 secrets in plaintext: TF-06 and TF-07.
+- [ ] vet #11 `terraform.tfvars.example` deleted: TF-14.
+- [ ] vet #12 optional DMARC: NEW-DNS-01.
+- [x] vet #12-adjacent items closed 2026-10-04: NEW-DNS-04 (nameserver echo) and NEW-DNS-06 (panel read). NEW-DNS-05 stays open as the cache wait.
+- [ ] vet #13 zone protection: NEW-DNS-02.
+
+Low
+
+- [ ] vet #14 `preflight-cutover.sh` stale: AWS-18.
+- [ ] vet #15 `engine_version`: TF-08 / AWS-17.
+- [ ] vet #16 lock file: TF-17.
+- [ ] vet #17 style guide: TF-18 (with TF-11, TF-12).
+- [ ] vet #18 comments rule: NEW-OPS-02 below.
+- [ ] vet #19 least privilege: TF-06.
+
+New items without a review ID:
+
+- [ ] **NEW-OPS-01 (vet #4): log destination.** Nothing in the repo writes the logs; they came from shell redirects. If logs are wanted: `mkdir -p infra/logs`, `terraform apply 2>&1 | tee infra/logs/apply.log`, add `infra/logs/` to `.gitignore`.
+- [ ] **NEW-OPS-02 (vet #18): comments rule.** `.tf` files still carry comments (`main.tf:43,66,135`, `iam.tf:16,53,63,94`, `compute.tf`, `variables.tf:98,118`), and `infra/terraform.env` still has comment lines (3, terraform.env:1-3). Some hold real reasons (403 mapping, the Oct-2025 InvokeFunction requirement, a dependency cycle). Decide whether the repo no-comments rule applies to `.tf` and `terraform.env`. Measured 2026-10-04: the `variables.tf` comment blocks are now at variables.tf:106-108 and :126-129 (line numbers moved with the DNS variables).
+
+## Open contradictions
+
+Not resolved in this merge; each needs an owner ruling.
+
+- **C1. Egress route for email and Turnstile.** Vet #7 offers (a) SES interface endpoint, (b) NAT, (c) leave blank. This file records an owner-approved IPv6 egress-only gateway + SES change (2026-10-04) that none of those options names, and that change is not in `infra/*.tf`. Which route stands?
+  - Status 2026-10-04 (later): resolved in favour of the owner-approved route, now implemented in `infra/*.tf` (not applied).
+- **C2. Aurora safety settings and secrets.** Vet #9 recommends `storage_encrypted`, `deletion_protection`, final snapshot and 7-day retention now, while state is empty. "Owner decisions" lists the same settings as owner-removed and not recommended (re-adds), and the repo CLAUDE.md hard limit forbids re-adding deleted things without the owner. Vet #10's Secrets Manager suggestion has the same conflict. The vet's new fact (no data to lose while state is empty) does not by itself override the owner's removal.
+- **C3. Is anything deployed?** The vet reads "Local state holds 0 resources" as "nothing is deployed". This file's TF-04 cites a green "Verify serving" step, TF-07 recorded a 142 KB state backup, and the approved change's apply notes expect in-place updates (`3 to add, 4 to change`). Local state now holds 0 resources (terraform.tfstate 1,222 B) and the plans show 61 or 49 to add; that proves Terraform tracks nothing, not that AWS holds nothing. If resources from the lost state still exist, the first apply can collide with them or leave orphans. The apex having no A/AAAA shows only that the domain does not point at a site. Someone with AWS access should list existing resources before the first apply.
+  - Status 2026-10-04 (later, read-only AWS checks): clean slate. Local state holds 0 resources and the account holds none of the Terraform-named resources (Lambda, CloudFront, S3, RDS, IAM, EC2, logs, Secrets Manager, EventBridge, ACM, Route 53); `GetRole` for the Lambda role returns NoSuchEntity. The account holds only unrelated resources for another domain (a Route 53 zone, an SES identity, a mail VPC, two roles, a state bucket and one unrelated Lambda). No `AlreadyExists` collision is expected and there is no existing hosted zone for `legacybenefitsmn.com`. One IAM list call timed out once and returned empty on retry. Whether anything was deployed earlier and since destroyed is not known.
+- **C4. `acm_validation_records` output.** Its description (outputs.tf:47) says the CNAMEs are for "adding at the current DNS host before the nameserver switch". The runbook switches nameservers mid-apply instead and notes `terraform output` does not work mid-apply. Keep the output for a pre-validation path, or reword or drop it?
+- **C5. SES DKIM CNAMEs.** The approved SES change says to add them by hand at the DNS host. With Route 53 managed, they could go into `dns_extra_records`. Not decided.
+  - Status 2026-10-04 (later): resolved by implementation. `aws_route53_record.ses_dkim` (`count = 3`) creates them from the identity tokens in `infra/ses.tf`.
+- **C6. Restoring `terraform.tfvars.example`.** Vet #11 says restore it. The repo CLAUDE.md lists "re-adding anything that was deleted" as a hard limit, and the file is mostly comments (20 of 88 lines are example assignments), against the no-comments rule. The owner must rule on both.
+- **C7. AWS-02 status and severity.** The AWS-02 heading and the summary-table row still say "(resolved by approved change)", while this file elsewhere says the approved IPv6 egress + SES change is not implemented in `infra/*.tf`. The vet rates the issue High; the summary table says Medium. The owner rules on the status and the severity.
+  - Status 2026-10-04 (later): the implementation now exists in `infra/*.tf`, so the "resolved" wording is correct for the code; it is not applied. Severity is still unruled.
+- **C8. Lock file order.** TF-17's fix (`terraform providers lock` for several platforms) and the lock-file item's fix (`terraform init -upgrade`, which moves aws from 6.65.0 to 6.67.0) conflict, and the upgrade would outdate the provider-source line numbers checked against 6.65.0. The owner chooses the order: upgrade first, then lock all platforms.

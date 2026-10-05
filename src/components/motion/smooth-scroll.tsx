@@ -6,8 +6,6 @@ import Lenis from "lenis";
 let instance: Lenis | undefined;
 let paused = false;
 
-// Lenis scrolls from its own rAF loop, which an `overflow: hidden` lock does
-// not hold; pausing the loop is what lets a modal own the scroll position.
 export function pauseSmoothScroll() {
   paused = true;
   instance?.stop();

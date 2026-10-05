@@ -1,14 +1,5 @@
 import type { CrmLead, CrmSendResult, CrmTransport } from "../types";
 
-/**
- * Fallback path: post to a Zapier catch-hook whose Zap runs the MedicarePRO
- * "Add Lead" action (MPCRM Zapier app, version 1), authenticated in Zapier
- * with the API key issued by support@medicareprocrm.com.
- *
- * Slower and less direct than the webhook transport, but it works without a
- * generated CRM webhook URL, which is useful if that URL is ever lost — it
- * cannot be re-displayed once dismissed.
- */
 export class ZapierTransport implements CrmTransport {
   readonly name = "zapier";
 

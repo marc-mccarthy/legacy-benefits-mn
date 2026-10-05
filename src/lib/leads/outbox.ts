@@ -2,13 +2,10 @@ import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { getCrmTransport, type CrmLead } from "@/lib/crm";
 
-/** Stop retrying after this many attempts and raise the alarm instead. */
 export const MAX_ATTEMPTS = 8;
 
-/** How long a claimed row is leased before another worker may retry it. */
 const LEASE_MS = 5 * 60_000;
 
-/** 1m, 2m, 4m … capped at 1h. */
 export function backoffMs(attempt: number): number {
   return Math.min(60_000 * 2 ** (attempt - 1), 3_600_000);
 }
@@ -27,15 +24,6 @@ type ClaimedRow = {
   attempts: number;
 };
 
-/**
- * Drains due outbox rows.
- *
- * Claiming is a single UPDATE ... FOR UPDATE SKIP LOCKED that both increments
- * the attempt count and pushes next_attempt_at out by a lease. That makes the
- * claim durable past the statement — a plain SELECT ... FOR UPDATE would drop
- * its locks the moment the implicit transaction committed, letting an
- * overlapping tick deliver the same lead twice.
- */
 export async function drainOutbox(limit = 25): Promise<DrainResult> {
   const transport = getCrmTransport();
   const result: DrainResult = { claimed: 0, sent: 0, retrying: 0, failed: 0 };
@@ -88,7 +76,6 @@ export async function drainOutbox(limit = 25): Promise<DrainResult> {
   return result;
 }
 
-/** Rows that need a human — the CloudWatch alarm metric. */
 export async function countFailed(): Promise<number> {
   const res = await db.execute<{ count: string }>(
     sql`SELECT count(*)::text AS count FROM crm_outbox WHERE status = 'failed'`,

@@ -2,22 +2,11 @@ import { env } from "@/lib/env";
 
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
-/**
- * Verifies a Cloudflare Turnstile token. With no secret configured (local dev)
- * verification is skipped rather than failing closed, so the form is testable
- * without Cloudflare credentials.
- *
- * A secret that is present but whitespace-only throws rather than taking
- * either branch: skipping would disable verification, and sending a blank
- * secret makes Cloudflare 403 every submission, which reads like Cloudflare
- * being flaky rather than a config error.
- */
 export async function verifyTurnstile(
   token: string | undefined,
   ip?: string,
 ): Promise<boolean> {
   const configured = process.env["TURNSTILE_SECRET"];
-  // env() trims, so a real key pasted with a trailing newline still works.
   const secret = env("TURNSTILE_SECRET");
 
   if (secret === undefined && configured !== undefined && configured !== "") {

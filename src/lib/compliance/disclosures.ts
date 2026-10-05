@@ -1,13 +1,5 @@
-/**
- * Consent and SOA rows store `DISCLOSURE_VERSION`, not the text, so editing a
- * string in place changes what every past row resolves to. Bump the version and
- * add the new wording instead.
- */
-
 export const DISCLOSURE_VERSION = "2026-09-01.1";
 
-// Counts are passed in, from `site.compliance`, rather than written into the
-// literal, so one agent's appointments do not end up baked into the string.
 export function tpmoDisclaimer(orgCount?: number, planCount?: number): string {
   const scope =
     orgCount && planCount
@@ -29,7 +21,6 @@ export const GOVERNMENT_DISCLAIMER =
 export const ENROLLMENT_DISCLAIMER =
   "Enrollment in a plan depends on the plan's contract renewal with Medicare. Plan availability, benefits, premiums, and cost sharing vary by plan and by county.";
 
-// Rendered with the caller named, and stored verbatim beside the lead.
 export function tcpaConsentText(businessName: string, phone?: string): string {
   return [
     `By checking this box and submitting this form, I give my prior express written consent for ${businessName}`,

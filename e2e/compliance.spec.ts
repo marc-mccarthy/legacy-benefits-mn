@@ -1,10 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-/**
- * These assertions encode regulatory requirements, not preferences. If one
- * fails, the site is not fit to publish — treat it as a release blocker.
- */
-
 const PAGES = ["/", "/services", "/learn", "/events", "/contact"];
 
 test.describe("Medicare-required disclosures", () => {
@@ -14,8 +9,6 @@ test.describe("Medicare-required disclosures", () => {
     }) => {
       await page.goto(path);
 
-      // Some pages repeat the TPMO disclaimer next to the content as well as
-      // in the global footer, so assert at least one visible instance.
       await expect(
         page
           .getByText("We do not offer every plan available in your area")
@@ -32,9 +25,6 @@ test.describe("Medicare-required disclosures", () => {
     test(`no disclosure is set below 16px on ${path}`, async ({ page }) => {
       await page.goto(path);
 
-      // Medicare sets the floor at 12 point, which is the 16px asserted below.
-      // A floor, not a style preference: `text-sm` (14px ≈ 10.5pt) shipped on
-      // four pages because the rule lived in a comment rather than in a test.
       const undersized = await page.evaluate(() =>
         [...document.querySelectorAll("[data-compliance]")]
           .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 16)
@@ -80,8 +70,6 @@ test.describe("Scope of Appointment", () => {
   }) => {
     await page.goto("/scope-of-appointment");
 
-    // Medicare requires the beneficiary to pick specific product types, so a
-    // single blanket "Medicare" checkbox would not be compliant.
     await expect(
       page.getByRole("checkbox", { name: /Medicare Advantage \(Part C\)/ }),
     ).toBeVisible();
@@ -124,15 +112,6 @@ test.describe("cookie consent", () => {
   test("is never server-rendered, so its buttons are always live", async ({
     page,
   }) => {
-    // The banner's visibility depends on localStorage and Global Privacy
-    // Control, neither of which the server can see. Emitting it server-side
-    // meant every visitor who had already chosen — and everyone sending GPC —
-    // got markup React then dropped from the client tree but left behind in the
-    // DOM: a banner at full opacity with no event handlers, where neither
-    // button did anything. Nothing about it looked broken.
-    //
-    // Asserting on the raw HTML rather than on the rendered page, because the
-    // symptom only exists before hydration.
     const html = await (await page.request.get("/")).text();
     expect(html).not.toContain("Cookie choices");
   });
@@ -148,8 +127,6 @@ test.describe("cookie consent", () => {
 
     await page.reload();
 
-    // Hidden is not enough: the orphaned-node bug left a *visible* banner that
-    // simply had no handlers, so assert it is absent from the DOM entirely.
     await expect(
       page.getByRole("dialog", { name: "Cookie choices" }),
     ).toHaveCount(0);
@@ -164,7 +141,6 @@ test.describe("opt-out", () => {
     await expect(
       page.getByRole("heading", { name: /Stop contact/ }),
     ).toBeVisible();
-    // No Turnstile, no login: a stop request must not be gated.
     await expect(
       page.getByRole("button", { name: /Submit request/ }),
     ).toBeVisible();

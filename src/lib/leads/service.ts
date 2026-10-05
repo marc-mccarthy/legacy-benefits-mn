@@ -20,25 +20,15 @@ function retentionDate(): Date {
   return d;
 }
 
-/**
- * Writes the lead and its outbox entry in a single transaction. Delivery to
- * MedicarePRO happens later, out of band — the visitor's request never waits
- * on the CRM, and a CRM outage cannot cost a lead.
- *
- * The consent text is regenerated server-side rather than read from the
- * request body, so the stored copy is not submitter-controlled.
- */
 export async function captureLead(
   input: LeadInput,
   meta: {
     ip?: string;
     userAgent?: string;
-    /** Business identity, resolved by the caller via `getBusinessIdentity`. */
     business?: { name?: string; phone?: string };
   } = {},
 ): Promise<{ leadId: number; suppressed: boolean }> {
   const ipHash = meta.ip ? hashIp(meta.ip) : null;
-  // Someone who previously revoked contact is never auto-pushed to the CRM.
   const suppressed = await isSuppressed(input.email, input.phone);
   const businessName =
     meta.business?.name ?? process.env["BUSINESS_NAME"] ?? "this agency";

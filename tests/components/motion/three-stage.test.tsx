@@ -1,5 +1,3 @@
-// @vitest-environment jsdom
-
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";

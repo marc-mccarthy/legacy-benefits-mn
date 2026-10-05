@@ -1,18 +1,4 @@
 #!/usr/bin/env bash
-#
-# Run this immediately before pasting nameservers into the registrar.
-#
-#   bash infra/scripts/preflight-cutover.sh legacybenefitsmn.com [terraform-dir]
-#
-# Why a script and not a Terraform check: the apply is not the dangerous step.
-# It creates a zone nothing points at, and can be run and re-run all day. The
-# dangerous step is a human changing the delegation at the registrar, which
-# Terraform never performs and never observes. A check block would therefore
-# fire when nothing is at risk and stay silent at the only moment that matters.
-#
-# Exits non-zero if the cutover would break something. Read the output either
-# way — the warnings are the part a green exit code cannot express.
-
 set -euo pipefail
 
 DOMAIN="${1:-}"
@@ -39,12 +25,8 @@ TLD="${DOMAIN##*.}"
 TLD_NS="$(dig +short NS "${TLD}." | sort | head -1)"
 [[ -n "$TLD_NS" ]] || { echo "could not find a nameserver for .${TLD}" >&2; exit 2; }
 
-# ---------------------------------------------------------------------------
 head2 "1. DNSSEC — is a DS record still published for ${DOMAIN}?"
 
-# Queried at the TLD servers rather than a recursive resolver on purpose: the
-# registry is the source of truth, and a cached negative from a resolver would
-# be a false pass on the one check that can take the domain down.
 DS="$(dig +noall +answer +norecurse DS "$DOMAIN" @"$TLD_NS" | awk '{$1=$1};1')"
 
 if [[ -n "$DS" ]]; then
@@ -65,7 +47,6 @@ else
   pass "no DS published — the delegation can move without breaking validation"
 fi
 
-# ---------------------------------------------------------------------------
 head2 "2. Delegation — where does ${DOMAIN} point today?"
 
 OLD_NS="$(dig +noall +authority +norecurse NS "$DOMAIN" @"$TLD_NS" |
@@ -95,12 +76,8 @@ printf '        %s\n' $NEW_NS
 RESOLVER="$(echo "$NEW_NS" | head -1)"
 OLD_RESOLVER="$(echo "$OLD_NS" | head -1)"
 
-# ---------------------------------------------------------------------------
 head2 "3. Does the new zone answer everything the old one does?"
 
-# The rule: anything the CURRENT nameservers answer must be answered
-# identically by Route 53. Records that exist only in the new zone (CloudFront
-# aliases, ACM validation, SES) are expected and not a problem.
 compare() {
   local name="$1" type="$2" old new
   old="$(dig +short "$type" "$name" @"$OLD_RESOLVER" 2>/dev/null | sort | tr '\n' ' ')"
@@ -119,9 +96,6 @@ compare() {
   fi
 }
 
-# Every record set Terraform actually created, so nothing depends on this
-# script's idea of what a zone contains. Aliases are skipped: they resolve to
-# CloudFront addresses that have no counterpart in the old zone.
 RECORD_SETS="$(aws route53 list-resource-record-sets --hosted-zone-id "$ZONE_ID" \
   --query "ResourceRecordSets[?Type!='NS' && Type!='SOA'].[Name,Type]" \
   --output text)"
@@ -136,7 +110,6 @@ else
   done <<<"$RECORD_SETS"
 fi
 
-# ---------------------------------------------------------------------------
 head2 "4. Mail — the records whose loss is silent"
 
 MX="$(dig +short MX "$DOMAIN" @"$RESOLVER" | sort | tr '\n' ' ')"
@@ -155,12 +128,8 @@ else
   warn "no DKIM at selector google — mail will keep flowing while failing authentication"
 fi
 
-# ---------------------------------------------------------------------------
 head2 "5. Records nothing can enumerate for you"
 
-# dig only finds names already known, and Route 53 does not answer AXFR. A
-# forgotten verification record breaks whatever depended on it, silently, and
-# nobody notices for weeks. Probe the usual suspects and say so plainly.
 if [[ -n "$OLD_RESOLVER" ]]; then
   for n in mail calendar drive sites groups start docs autodiscover ftp blog shop \
     m api dev staging www _domainconnect _acme-challenge em \
@@ -175,7 +144,6 @@ fi
 warn "this probe only finds names it already knows. Confirm against a full export of the old zone:"
 printf '        gcloud dns record-sets export zone.txt --zone=ZONE --zone-file-format\n'
 
-# ---------------------------------------------------------------------------
 head2 "Result"
 
 if [[ "$FAILED" -gt 0 ]]; then

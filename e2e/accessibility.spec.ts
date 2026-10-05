@@ -30,9 +30,6 @@ for (const preference of MOTION_PREFERENCES) {
 
         const results = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-          // The lit copy is an aria-hidden duplicate painted over a
-          // full-opacity base word; axe scores it alone and cannot see the
-          // composite the eye gets.
           .exclude("[data-lit-word]")
           .analyze();
 
@@ -55,10 +52,6 @@ test("every page has exactly one h1", async ({ page }) => {
   }
 });
 
-// Reveal drives opacity from 0 to 1, and axe scores the blended mid-fade
-// colour rather than the resting one. Pinning the end state makes that
-// deterministic; the scroll pass still runs so viewport-triggered content and
-// the consent dialog are present when axe looks.
 async function settleReveals(page: Page) {
   await page.addStyleTag({
     content:

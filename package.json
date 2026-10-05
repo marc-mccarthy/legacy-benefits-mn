@@ -1,5 +1,5 @@
 {
-  "name": "nates-website",
+  "name": "legacy-benefits-mn",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,10 +12,10 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:unit": "vitest run --project unit",
+    "test:unit": "vitest run --project 'unit*'",
     "test:integration": "sh scripts/with-env.sh vitest run --project integration",
-    "test:coverage": "vitest run --project unit --coverage",
-    "test:watch": "vitest --project unit",
+    "test:coverage": "vitest run --project 'unit*' --coverage",
+    "test:watch": "vitest --project 'unit*'",
     "test:e2e": "sh scripts/with-env.sh playwright test",
     "drizzle:generate": "drizzle-kit generate",
     "drizzle:migrate": "sh scripts/with-env.sh drizzle-kit migrate",
@@ -91,5 +91,5 @@
     "typescript": "^5",
     "vitest": "5.0.0"
   },
-  "packageManager": "pnpm@10.8.1"
+  "packageManager": "pnpm@12.9.1"
 }

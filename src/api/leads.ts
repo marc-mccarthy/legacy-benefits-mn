@@ -27,7 +27,6 @@ export async function POST(req: Request) {
   const input = parsed.data;
   const ip = clientIp(req);
 
-  // Honeypot hit: accept silently so the bot learns nothing.
   if (input.company) return Response.json({ ok: true }, { status: 202 });
 
   if (!(await verifyTurnstile(input.turnstileToken, ip))) {
@@ -45,9 +44,6 @@ export async function POST(req: Request) {
     business,
   });
 
-  // Notify the agency and acknowledge to the visitor. The lead is already
-  // committed, so email failures are logged and swallowed rather than turning
-  // a saved lead into an error page.
   const summary = {
     name: input.name,
     email: input.email,
@@ -59,14 +55,8 @@ export async function POST(req: Request) {
   };
   await Promise.allSettled([
     sendLeadNotification(summary, business),
-    // A suppressed contact asked not to hear from us; do not email them.
     suppressed ? Promise.resolve() : sendLeadConfirmation(summary, business),
   ]);
 
-  // Delivery to MedicarePRO is deliberately not awaited here — it is queued in
-  // the same transaction as the lead and drained by /api/jobs/outbox. A
-  // suppressed submission is stored but never queued; the visitor still gets a
-  // success response, since telling them they are on a suppression list would
-  // leak information about other people's records.
   return Response.json({ ok: true, leadId, suppressed }, { status: 201 });
 }

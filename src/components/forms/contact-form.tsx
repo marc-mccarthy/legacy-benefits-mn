@@ -78,8 +78,6 @@ export function ContactForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
-      {/* Honeypot. Hidden from sight and from screen readers, but a bot
-          filling every input will trip it. */}
       <div aria-hidden className="hidden">
         <label htmlFor="company">Company</label>
         <input

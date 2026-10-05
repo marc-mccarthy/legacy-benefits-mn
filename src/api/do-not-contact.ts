@@ -2,7 +2,6 @@ import { recordDncRequest } from "@/lib/compliance/dnc";
 import { dncInputSchema } from "@/lib/compliance/dnc-schema";
 import { clientIp } from "@/lib/security/request";
 
-// No Turnstile and no identity check on this route, unlike the lead form.
 export async function POST(req: Request) {
   let json: unknown;
   try {

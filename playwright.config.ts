@@ -27,8 +27,6 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // `next start` cannot serve an `output: "export"` build, so the suite runs
-    // against the exported files and the API bundle the Lambda ships.
     command: "node scripts/serve-e2e.mjs",
     url: baseURL,
     reuseExistingServer: !process.env.CI,

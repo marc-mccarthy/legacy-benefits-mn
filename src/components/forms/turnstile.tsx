@@ -27,16 +27,6 @@ const SCRIPT_ID = "cf-turnstile-script";
 const SCRIPT_SRC =
   "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
-/**
- * Cloudflare Turnstile widget.
- *
- * Renders nothing when no site key is configured, which is what keeps local
- * development and CI working without Cloudflare credentials. The server side
- * mirrors this: with no secret set, verification is skipped.
- *
- * Explicit rendering (rather than the automatic `cf-turnstile` class) so the
- * widget can be torn down cleanly on unmount and re-rendered on navigation.
- */
 export function Turnstile({
   siteKey,
   onToken,
@@ -49,8 +39,6 @@ export function Turnstile({
   const onTokenRef = useRef(onToken);
   const id = useId();
 
-  // Kept in a ref so the widget is not torn down and re-rendered every time
-  // the parent passes a new callback identity.
   useEffect(() => {
     onTokenRef.current = onToken;
   }, [onToken]);
@@ -66,8 +54,6 @@ export function Turnstile({
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
         callback: (token) => onTokenRef.current(token),
-        // An expired token must be cleared, or the form would submit a stale
-        // one and be rejected by the server.
         "expired-callback": () => onTokenRef.current(""),
         "error-callback": () => onTokenRef.current(""),
       });

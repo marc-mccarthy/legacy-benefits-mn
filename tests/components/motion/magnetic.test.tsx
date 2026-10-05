@@ -1,5 +1,3 @@
-// @vitest-environment jsdom
-
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 import { Button } from "@/components/ui/button";

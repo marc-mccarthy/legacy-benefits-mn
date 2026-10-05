@@ -33,7 +33,6 @@ const ROUTES: Record<string, Record<string, Handler>> = {
 
 const NOT_FOUND = '{"error":"Not found"}';
 
-/** Trailing slashes aside, the path is matched exactly — no prefix routing. */
 function normalise(path: string): string {
   if (path.length > 1 && path.endsWith("/")) return path.slice(0, -1);
   return path;

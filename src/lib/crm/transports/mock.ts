@@ -1,9 +1,5 @@
 import type { CrmLead, CrmSendResult, CrmTransport } from "../types";
 
-/**
- * Development and test transport. Records what it was asked to send so tests
- * can assert on it, and never touches the network.
- */
 export class MockTransport implements CrmTransport {
   readonly name = "mock";
   readonly sent: Array<{ lead: CrmLead; idempotencyKey: string }> = [];

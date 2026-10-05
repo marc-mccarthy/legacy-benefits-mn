@@ -8,7 +8,8 @@ import {
 } from "motion/react";
 import { useRef } from "react";
 
-import { DURATION_REVEAL, EASE_ENTER } from "@/lib/motion";
+import { useEffectsPaused } from "@/lib/effects-pause";
+import { DURATION_REVEAL, EASE_MOVE } from "@/lib/motion";
 
 type LitWordsProps = {
   children: string;
@@ -16,7 +17,8 @@ type LitWordsProps = {
 };
 
 export function LitWords({ children, className }: LitWordsProps) {
-  const reduced = useReducedMotion();
+  const paused = useEffectsPaused();
+  const reduced = useReducedMotion() || paused;
   const ref = useRef<HTMLParagraphElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -66,12 +68,13 @@ function Word({
 
   return (
     <span className="relative inline-block">
-      <span className="text-muted">{word}</span>
+      <span className="text-unlit">{word}</span>
       <motion.span
         aria-hidden
+        data-lit-word
         className="text-on-surface absolute inset-0"
         style={reduced ? { opacity: 1 } : { opacity }}
-        transition={{ duration: DURATION_REVEAL / 1000, ease: EASE_ENTER }}
+        transition={{ duration: DURATION_REVEAL / 1000, ease: EASE_MOVE }}
       >
         {word}
       </motion.span>

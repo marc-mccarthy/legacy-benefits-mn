@@ -28,6 +28,7 @@ const TYPES = {
   ".ico": "image/x-icon",
   ".mp4": "video/mp4",
   ".woff2": "font/woff2",
+  ".ics": "text/calendar; charset=utf-8",
 };
 
 if (!existsSync(outDir)) {
@@ -42,10 +43,7 @@ if (existsSync(bundle)) {
   ({ handler: apiHandler } = await import(bundle));
 }
 
-/** Resolves a request path to a file in `out/`, or null. */
 function resolveFile(pathname) {
-  // `normalize` collapses `..` before the prefix check, so a traversal cannot
-  // address a file outside out/.
   const candidate = resolve(
     join(outDir, normalize(decodeURIComponent(pathname))),
   );
@@ -61,12 +59,36 @@ function resolveFile(pathname) {
   return null;
 }
 
-function sendFile(res, path, status = 200) {
-  res.writeHead(status, {
-    "content-type": TYPES[extname(path)] ?? "application/octet-stream",
-    "content-length": statSync(path).size,
+function sendFile(res, path, status = 200, range) {
+  const size = statSync(path).size;
+  const type = TYPES[extname(path)] ?? "application/octet-stream";
+  const match = status === 200 && /^bytes=(\d*)-(\d*)$/.exec(range ?? "");
+  if (!match || (!match[1] && !match[2])) {
+    res.writeHead(status, {
+      "content-type": type,
+      "content-length": size,
+      "accept-ranges": "bytes",
+    });
+    createReadStream(path).pipe(res);
+    return;
+  }
+  const start = match[1]
+    ? Number(match[1])
+    : Math.max(0, size - Number(match[2]));
+  const end =
+    match[1] && match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+  if (start > end || start >= size) {
+    res.writeHead(416, { "content-range": `bytes */${size}` });
+    res.end();
+    return;
+  }
+  res.writeHead(206, {
+    "content-type": type,
+    "content-length": end - start + 1,
+    "content-range": `bytes ${start}-${end}/${size}`,
+    "accept-ranges": "bytes",
   });
-  createReadStream(path).pipe(res);
+  createReadStream(path, { start, end }).pipe(res);
 }
 
 async function readBody(req) {
@@ -85,31 +107,38 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    const body = await readBody(req);
-    const result = await apiHandler({
-      rawPath: url.pathname,
-      rawQueryString: url.search.replace(/^\?/, ""),
-      headers: Object.fromEntries(
-        Object.entries(req.headers).map(([key, value]) => [
-          key,
-          Array.isArray(value) ? value.join(", ") : (value ?? ""),
-        ]),
-      ),
-      body: body.length ? body.toString("utf8") : undefined,
-      isBase64Encoded: false,
-      requestContext: {
-        http: { method: req.method ?? "GET", path: url.pathname },
-      },
-    });
+    try {
+      const body = await readBody(req);
+      const result = await apiHandler({
+        rawPath: url.pathname,
+        rawQueryString: url.search.replace(/^\?/, ""),
+        headers: Object.fromEntries(
+          Object.entries(req.headers).map(([key, value]) => [
+            key,
+            Array.isArray(value) ? value.join(", ") : (value ?? ""),
+          ]),
+        ),
+        body: body.length ? body.toString("utf8") : undefined,
+        isBase64Encoded: false,
+        requestContext: {
+          http: { method: req.method ?? "GET", path: url.pathname },
+        },
+      });
 
-    res.writeHead(result.statusCode, result.headers);
-    res.end(result.body);
+      res.writeHead(result.statusCode, result.headers);
+      res.end(result.body);
+    } catch (error) {
+      console.error(error);
+      if (!res.headersSent)
+        res.writeHead(500, { "content-type": "application/json" });
+      res.end('{"error":"api handler failed"}');
+    }
     return;
   }
 
   const file = resolveFile(url.pathname);
   if (file) {
-    sendFile(res, file);
+    sendFile(res, file, 200, req.headers.range);
     return;
   }
 

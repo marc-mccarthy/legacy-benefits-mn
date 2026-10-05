@@ -11,11 +11,12 @@ import {
   LearningGrid,
   type ArticleItem,
 } from "@/components/sections/learning-grid";
+import { LakeSequence } from "@/components/sections/lake-sequence";
+import { NoiseStage } from "@/components/sections/noise-stage";
+import { SignalPortrait } from "@/components/sections/signal-portrait";
 import { RichTextSection } from "@/components/sections/rich-text";
-import {
-  ServiceGrid,
-  type ServiceItem,
-} from "@/components/sections/service-grid";
+import type { ServiceItem } from "@/components/sections/service-grid";
+import { ServiceRail } from "@/components/sections/service-rail";
 import { StatsBand, type Stat } from "@/components/sections/stats-band";
 import {
   Testimonials,
@@ -39,10 +40,6 @@ type BlockData = {
   phone?: string | null;
 };
 
-/**
- * Maps page blocks onto section components. Collection-backed blocks are handed
- * their data by the route rather than fetching their own.
- */
 export function RenderBlocks({
   blocks,
   data,
@@ -63,14 +60,29 @@ export function RenderBlocks({
             return (
               <Hero
                 key={key}
-                scheme={scheme}
                 heading={block.heading as string}
                 subheading={block.subheading as string | null}
-                poster={block.poster}
-                slides={block.slides}
-                videoSrc="/video/hero-bg.mp4"
                 ctaLabel={block.ctaLabel as string | null}
                 ctaHref={block.ctaHref as string | null}
+              />
+            );
+
+          case "noise":
+            return (
+              <NoiseStage
+                key={key}
+                heading={block.heading as string}
+                body={block.body as string}
+              />
+            );
+
+          case "signal":
+            return (
+              <SignalPortrait
+                key={key}
+                heading={block.heading as string}
+                ctaLabel={block.ctaLabel as string}
+                phone={data.phone}
               />
             );
 
@@ -85,16 +97,31 @@ export function RenderBlocks({
 
           case "serviceGrid":
             return (
-              <ServiceGrid
+              <ServiceRail
                 key={key}
                 scheme={scheme}
                 heading={block.heading as string | null}
                 intro={block.intro as string | null}
-                services={data.services}
+                services={data.services.map(({ id, title, slug, summary }) => ({
+                  id,
+                  title,
+                  slug,
+                  summary,
+                }))}
+              />
+            );
+
+          case "lake":
+            return (
+              <LakeSequence
+                key={key}
+                heading={block.heading as string}
+                body={block.body as string}
               />
             );
 
           case "eventCarousel":
+            if (data.events.length === 0) return null;
             return (
               <Section
                 key={key}
@@ -126,8 +153,6 @@ export function RenderBlocks({
             return (
               <Testimonials
                 key={key}
-                // Passed raw, not coerced: the band's own dark default has to
-                // survive an unset value, which `?? "light"` would overwrite.
                 scheme={block.scheme as Scheme | undefined}
                 heading={block.heading as string | null}
                 items={data.testimonials}

@@ -1,18 +1,28 @@
 import { faq } from "./faq";
-import { media } from "./media";
+import { site } from "./site";
 import type { PageBlock } from "./types";
 
 export const homeBlocks: PageBlock[] = [
   {
     blockType: "hero",
     scheme: "dark",
-    heading: "Medicare decisions.",
+    heading: "Medicare, decoded.",
     subheading:
-      "Independent, licensed guidance on Medicare Advantage, Supplement, and Part D — from people who answer the phone when you call back.",
-    poster: media["pages.poster"] ?? null,
-    slides: [media["pages.slides"], media["pages.image"]].filter(Boolean),
+      "Independent, licensed guidance on Medicare Advantage, Supplement, and Part D, from Nate Best, the same person every time you call.",
     ctaLabel: "Talk to a licensed agent",
     ctaHref: "/contact",
+  },
+  {
+    blockType: "noise",
+    scheme: "black",
+    heading: `${site.compliance.orgCount} carriers. ${site.compliance.planCount} plans. One deadline.`,
+    body: "Medicare comes at you from every direction. Nate's job is to turn it into one clear answer you can act on.",
+  },
+  {
+    blockType: "signal",
+    scheme: "dark",
+    heading: "You talk to Nate. Every time.",
+    ctaLabel: "Request a call back",
   },
   {
     blockType: "serviceGrid",
@@ -22,8 +32,10 @@ export const homeBlocks: PageBlock[] = [
       "We compare what is actually available to you, across the carriers we represent, against the doctors and prescriptions you already have.",
   },
   {
-    blockType: "stats",
-    scheme: "dark",
+    blockType: "lake",
+    scheme: "black",
+    heading: "Every season of Medicare, one call away.",
+    body: "Turning 65, changing plans, or checking in every fall. Nate is here for each part of the year.",
   },
   {
     blockType: "eventCarousel",
@@ -31,15 +43,19 @@ export const homeBlocks: PageBlock[] = [
     heading: "Free workshops near you",
   },
   {
+    blockType: "learningGrid",
+    scheme: "light",
+    heading: "Learning Center",
+    intro: "Straight answers to the questions we get asked most.",
+  },
+  {
     blockType: "testimonials",
     scheme: "dark",
     heading: "What clients say",
   },
   {
-    blockType: "learningGrid",
-    scheme: "light",
-    heading: "Learning Center",
-    intro: "Straight answers to the questions we get asked most.",
+    blockType: "stats",
+    scheme: "dark",
   },
   {
     blockType: "carrierStrip",
@@ -54,7 +70,7 @@ export const homeBlocks: PageBlock[] = [
   },
   {
     blockType: "ctaBand",
-    scheme: "dark",
+    scheme: "black",
     heading: "Not sure where to start?",
     body: "Tell us a little about your situation and a licensed agent will walk you through the options. No cost, no obligation.",
     ctaLabel: "Request a call",

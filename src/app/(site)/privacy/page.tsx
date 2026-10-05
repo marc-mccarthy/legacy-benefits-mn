@@ -14,7 +14,7 @@ export default function PrivacyPage() {
     <Section>
       <Container>
         <Prose className="space-y-6">
-          <h1 className="font-display text-(length:--text-display-page)">
+          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
             Privacy Policy
           </h1>
 
@@ -48,14 +48,14 @@ export default function PrivacyPage() {
             are retained for {RECORD_RETENTION_YEARS} years as required by the
             Centers for Medicare &amp; Medicaid Services. Suppression records —
             requests not to be contacted — are kept indefinitely, because we
-            need them to keep honouring your request.
+            need them to keep honoring your request.
           </p>
 
           <h2 className="font-display text-(length:--text-display-lg)">
             Who we share it with
           </h2>
           <p className="leading-relaxed">
-            Your enquiry is stored in our customer relationship management
+            Your inquiry is stored in our customer relationship management
             system so a licensed agent can follow up. We do not sell your
             personal information. Analytics on this site are configured to
             exclude the contents of forms.

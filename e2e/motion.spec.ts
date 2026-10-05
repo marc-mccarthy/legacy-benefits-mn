@@ -1,31 +1,28 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import {
   builtCss,
   lastTransitionAnimations,
   recordViewTransitions,
   transitionCount,
 } from "./support/browser";
+import {
+  brightestBackground,
+  contrast,
+  darkestBackground,
+  HIDE_CHROME,
+} from "./support/contrast";
 
-/**
- * The failure this guards against was observed on one of the reference sites:
- * scroll-reveal animations left whole sections blank in any context where the
- * reveal never fired. On a site whose audience skews older and more likely to
- * enable reduced motion, invisible content is a functional outage.
- */
+import { testimonials as authoredTestimonials } from "../src/content/testimonials";
+
+const EFFECTS_PAUSE = "[data-effects-pause]";
 
 test.describe("scroll reveal", () => {
   test("content becomes visible when scrolled into view", async ({ page }) => {
     await page.goto("/");
 
-    // Each heading is scrolled to the centre and asserted individually below.
-    // A `scrollIntoViewIfNeeded` preamble here used to duplicate that and was
-    // the one flaky step: it ran during hydration and could act on a node
-    // Motion had already re-rendered.
     for (const name of ["How we help", "Learning center"]) {
       const target = page.getByRole("heading", { name });
-      // Centre it deliberately: scrollIntoViewIfNeeded treats a sliver at the
-      // viewport edge as "already visible" and does not scroll, which would
-      // leave the element short of the reveal's trigger on small viewports.
+
       await target.evaluate((el) =>
         el.scrollIntoView({
           block: "center",
@@ -50,8 +47,6 @@ test.describe("scroll reveal", () => {
   test("with reduced motion, no content is hidden anywhere on the page", async ({
     browser,
   }) => {
-    // Own context, so this holds in every project rather than only the one
-    // configured with reduced motion.
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
@@ -63,7 +58,6 @@ test.describe("scroll reveal", () => {
     );
     expect(allVisible).toBe(true);
 
-    // Section content must be reachable without any scrolling behaviour.
     await expect(
       page.getByRole("heading", { name: "How we help" }),
     ).toBeAttached();
@@ -76,7 +70,6 @@ test.describe("scroll reveal", () => {
     const page = await context.newPage();
     await page.goto("/");
 
-    // The noscript style must neutralise the server-rendered opacity: 0.
     await expect(
       page.getByRole("heading", { name: "How we help" }),
     ).toBeVisible();
@@ -86,11 +79,6 @@ test.describe("scroll reveal", () => {
   });
 
   test("nothing prints blank", async ({ page }) => {
-    // The third door into the same failure, after reduced-motion and noscript.
-    // Reveals are served at opacity 0 and only animate in on scroll, so hitting
-    // Print without first scrolling to the bottom used to put 13 of 13 sections
-    // on paper as blank space. This audience prints — a plan comparison for the
-    // kitchen table, a Scope of Appointment for a meeting.
     await page.goto("/");
     await page.emulateMedia({ media: "print" });
 
@@ -102,8 +90,6 @@ test.describe("scroll reveal", () => {
     );
     expect(invisible).toBe(0);
 
-    // The disclosures are the reason the page is worth printing at all, so they
-    // must survive print styling even though the navigation does not.
     const kept = await page.evaluate(() => ({
       disclosures: [...document.querySelectorAll("[data-compliance]")].every(
         (el) => getComputedStyle(el).display !== "none",
@@ -113,168 +99,16 @@ test.describe("scroll reveal", () => {
           .display === "none",
     }));
     expect(kept).toEqual({ disclosures: true, mainNavHidden: true });
-
-    // The hero's cross-fade frames are <img> elements, so zeroing backgrounds
-    // does not stop them printing — three full-bleed photographs on page one.
-    const heroMotion = page.locator("[data-hero-motion]");
-    if (await heroMotion.count()) {
-      await expect(heroMotion).toBeHidden();
-    }
   });
 });
 
-/**
- * The hero cross-fade. Every assertion here is about the motion NOT running:
- * the still photograph is the hero, and the moving version is an addition that
- * has to remove itself cleanly in each of the contexts below.
- */
-test.describe("hero motion", () => {
-  // Exact text, not `has-text`. `has-text` is substring matching, and the
-  // closing band's point field names its own control "Pause background field"
-  // — which contains this string. The two controls are deliberately named
-  // differently so that a count of zero for one is not satisfied by the other,
-  // and a substring locator throws that distinction away: it resolved to 2
-  // elements here and failed in strict mode, which reads as "the hero control
-  // is missing" when both are present and correct.
-  const pauseButton = "button:text-is('Pause background')";
+test.describe("night close", () => {
+  const CLOSE = "main [data-night-close]";
+  const PHONE = `${CLOSE} a[href^="tel:"]`;
+  const STARS = `${CLOSE} [data-close-stars]`;
+  const STAGE = '[data-three-stage="signal-close"]';
+  const ANY_STAGE = "canvas[data-three-stage]";
 
-  test("cross-fades, and the pause control stops it", async ({ page }) => {
-    await page.goto("/");
-
-    const layer = page.locator("[data-hero-motion]");
-    // The layer only exists after hydration — it is deliberately absent from
-    // the server render, so counting immediately after goto() always finds
-    // zero and silently skips the whole test. Wait for it first, and treat a
-    // real absence (a hero with no slides authored, which is a still hero by
-    // design) as the only reason to skip.
-    const present = await layer
-      .waitFor({ state: "attached", timeout: 10_000 })
-      .then(() => true)
-      .catch(() => false);
-    test.skip(!present, "home hero has no slides authored; nothing to pause");
-
-    // The tab must be foregrounded for the timer to run at all, which is
-    // itself one of the guarantees: no animation in a background tab.
-    await expect(layer).toHaveAttribute("data-running", "true");
-
-    const pause = page.locator(pauseButton);
-    await expect(pause).toBeVisible();
-    await pause.click();
-
-    await expect(
-      page.locator("button:has-text('Play background')"),
-    ).toHaveAttribute("aria-pressed", "true");
-    await expect(layer).toHaveAttribute("data-running", "false");
-
-    // Sampled rather than waited out: the dwell between photographs is nine
-    // seconds and must not become this test's runtime. A frozen transform and
-    // a frozen slide index are what "paused" means.
-    const sample = () =>
-      page.evaluate(() => {
-        const root = document.querySelector("[data-hero-motion]")!;
-        const frame = root.querySelector(
-          '[data-hero-frame][data-active="true"]',
-        );
-        return {
-          slide: root.getAttribute("data-slide"),
-          transform: frame ? getComputedStyle(frame).transform : null,
-          playState: frame ? getComputedStyle(frame).animationPlayState : null,
-        };
-      });
-
-    // Two animation frames between the pause landing and the first sample.
-    // Without them this compares a transform read mid-commit against one read
-    // 1200ms later and fails on a difference of 4e-5 —
-    // `matrix(1.00007…)` against `matrix(1.00011…)` — which is one frame of a
-    // 22-second drift across 6% of scale, not a running animation. The
-    // assertion that matters is the one below it: `animationPlayState` reports
-    // `paused`, and a paused animation that had kept running would drift by a
-    // great deal more than the fifth decimal place over 1200ms.
-    await page.evaluate(
-      () =>
-        new Promise((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(resolve)),
-        ),
-    );
-
-    const before = await sample();
-    await page.waitForTimeout(1200);
-    expect(await sample()).toEqual(before);
-    expect(before.playState).toBe("paused");
-  });
-
-  test("with reduced motion there is no moving layer and no control", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({ reducedMotion: "reduce" });
-    const page = await context.newPage();
-    await page.goto("/");
-
-    // The photograph and the copy are untouched; only the motion is absent,
-    // and with it the control — nobody is offered a button that does nothing.
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.locator("[data-hero-motion]")).toHaveCount(0);
-    await expect(page.locator(pauseButton)).toHaveCount(0);
-
-    await context.close();
-  });
-
-  test("without JavaScript the hero is the still photograph", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const page = await context.newPage();
-    await page.goto("/");
-
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.locator("[data-hero-motion]")).toHaveCount(0);
-    await expect(page.locator(pauseButton)).toHaveCount(0);
-
-    await context.close();
-  });
-});
-
-/**
- * The particle field, and the reason this block is written the way it is.
- *
- * Every other assertion about this component is an assertion that it is
- * ABSENT: zero canvases under reduced motion, zero with JavaScript disabled,
- * zero in the server HTML, zero pause controls when the browser refuses a 2D
- * context, hidden on paper. Thirteen criteria were counted against this
- * feature and twelve of them pass if the component is never built, because an
- * absence assertion is satisfied by absence. The one that fails is "the file
- * exists", and an empty file passes that.
- *
- * So the positive assertions below are not extra coverage. They are the half
- * that makes the other half mean anything, and there are three of them: the
- * field is there exactly once, its control is there and carries a label a
- * person can read, and THE PIXELS ACTUALLY MOVE. A canvas that renders one
- * frame and stops satisfies every presence check ever written about it and is
- * not a particle field.
- *
- * There is deliberately no `test.skip` anywhere in this block.
- * `e2e/motion.spec.ts` is the file the spec points at as the shape a new
- * motion test should take, and the shape it teaches is a skip on an attach
- * wait — correct for the hero, whose comment above records the bug of counting
- * before hydration, and whose absence is a real authored state (a poster with
- * no slides is a still hero by design). The particle field has no such state:
- * exactly one instance exists, unconditionally, in the closing band. A timeout
- * waiting for it is a failure and must be reported as one.
- *
- * Each test opens its own context with an explicit motion preference, because
- * this file also runs under the `reduced-motion` project in
- * `playwright.config.ts`. A test that relied on the default `page` fixture
- * would assert the field is present in two projects and absent in the third,
- * and would have to be written to tolerate both — which is another way of
- * spelling "passes either way".
- */
-test.describe("particle field", () => {
-  const FIELD = "[data-particle-field]";
-  const CANVAS = "[data-particle-field] canvas";
-  const PAUSE = "button:has-text('Pause background field')";
-  const PLAY = "button:has-text('Play background field')";
-
-  /** A context with motion explicitly enabled, whatever project is running. */
   const withMotion = async (browser: import("@playwright/test").Browser) => {
     const context = await browser.newContext({
       reducedMotion: "no-preference",
@@ -283,138 +117,309 @@ test.describe("particle field", () => {
     return { context, page };
   };
 
-  /**
-   * Bring the field on screen and wait until it is genuinely running.
-   *
-   * Two gates have to be satisfied before a single pixel moves, and both are
-   * requirements rather than implementation details: an `IntersectionObserver`
-   * so the loop stops once the reader has scrolled past the band, and a
-   * `visibilitychange` listener so it stops in a background tab. The field
-   * sits at the foot of the page, so a test that samples it straight after
-   * `goto()` samples a component that is correctly doing nothing.
-   */
-  const settled = async (page: import("@playwright/test").Page) => {
-    const root = page.locator(FIELD);
-    await root.waitFor({ state: "attached", timeout: 15_000 });
-    await root.scrollIntoViewIfNeeded();
-    await expect(root).toHaveAttribute("data-running", "true");
-    return root;
+  const toClose = async (page: Page) => {
+    const centre = () =>
+      page.locator(CLOSE).evaluate((el) =>
+        el.scrollIntoView({
+          block: "center",
+          behavior: "instant" as ScrollBehavior,
+        }),
+      );
+    await centre();
+    await page.evaluate(
+      () =>
+        new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(r)),
+        ),
+    );
+    await centre();
   };
 
-  // §9.2 item 1 — SC-2, FR-63.
-  test("item 1: renders zero canvases and zero pause controls under reduced motion", async ({
+  const staticStars = async (page: Page) => {
+    await expect(page.locator(STARS)).toBeVisible();
+    await expect(page.locator(`${STARS} circle`)).toHaveCount(40);
+  };
+
+  test("the phone number is set at headline size in gold, with a full tap target", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await toClose(page);
+
+    const phone = page.locator(PHONE);
+    await expect(phone).toBeVisible();
+    const size = await phone.evaluate((el) =>
+      parseFloat(getComputedStyle(el).fontSize),
+    );
+    expect(size).toBeGreaterThanOrEqual(48);
+    await expect(phone).toHaveCSS("color", "rgb(255, 192, 0)");
+    await expect(page.locator(CLOSE)).toHaveAttribute("data-scheme", "black");
+
+    const box = await phone.boundingBox();
+    expect(box, "the phone link has no box").not.toBeNull();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  });
+
+  test("the phone link shows a focus ring when reached by keyboard", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const phone = page.locator(PHONE);
+    await phone.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(phone).toBeFocused();
+    const outline = await phone.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { style: style.outlineStyle, width: style.outlineWidth };
+    });
+    expect(outline.style).not.toBe("none");
+    expect(parseFloat(outline.width)).toBeGreaterThanOrEqual(2);
+  });
+
+  test("with reduced motion: static stars and the phone, zero canvas", async ({
     browser,
   }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
+    await toClose(page);
+    await page.waitForTimeout(1000);
 
-    // Absence, not stillness. A paused canvas would satisfy a "nothing is
-    // moving" check and would still be a moving layer offered to someone who
-    // asked the operating system for none.
-    await expect(page.locator(CANVAS)).toHaveCount(0);
-    await expect(page.locator(FIELD)).toHaveCount(0);
-    await expect(page.locator(PAUSE)).toHaveCount(0);
-    await expect(page.locator(PLAY)).toHaveCount(0);
-
-    // The band itself is untouched: the effect is additive and its absence
-    // must not take the closing call to action with it.
-    await expect(
-      page.locator("main section").last().getByRole("heading", { level: 2 }),
-    ).toBeVisible();
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await staticStars(page);
+    await expect(page.locator(PHONE)).toBeVisible();
 
     await context.close();
   });
 
-  // §9.2 item 2 — SC-3, FR-64.
-  test("item 2: renders zero canvases with JavaScript disabled", async ({
+  test("with JavaScript disabled: static stars and the phone, zero canvas", async ({
     browser,
   }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/");
 
-    // With no client code running this is also the server HTML, which is what
-    // makes the same assertion cover the pre-hydration render: there is no
-    // instant between paint and hydration at which a canvas exists.
-    await expect(page.locator(CANVAS)).toHaveCount(0);
-    await expect(page.locator(FIELD)).toHaveCount(0);
-    await expect(page.locator(PAUSE)).toHaveCount(0);
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await staticStars(page);
+    await expect(page.locator(PHONE)).toBeVisible();
 
     await context.close();
   });
 
-  // §9.2 item 3 — SC-4, FR-65.
-  test("item 3: the root is hidden under print, by the rule that names it", async ({
+  test("without WebGL: the static stars stay", async ({ browser }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    await context.addInitScript(() => {
+      const original = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (
+        this: HTMLCanvasElement,
+        ...args: unknown[]
+      ) {
+        if (String(args[0]).startsWith("webgl")) return null;
+        return (
+          original as unknown as (
+            this: HTMLCanvasElement,
+            ...rest: unknown[]
+          ) => unknown
+        ).apply(this, args);
+      } as typeof HTMLCanvasElement.prototype.getContext;
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await toClose(page);
+    await page.waitForTimeout(1500);
+
+    await expect(page.locator(STAGE)).toHaveCount(0);
+    await staticStars(page);
+
+    await context.close();
+  });
+
+  test("the star field mounts and replaces the static stars", async ({
     browser,
   }) => {
     const { context, page } = await withMotion(browser);
     await page.goto("/");
-    const root = await settled(page);
+    await toClose(page);
 
-    // The order here is the whole test. Playwright reports an element that is
-    // not in the document as hidden, so asserting "hidden under print" against
-    // a page that never rendered the field passes. Prove it is there first.
-    await expect(root).toHaveCount(1);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator(ANY_STAGE)).toHaveCount(1);
+    await expect(page.locator(STARS)).toBeHidden();
+    await expect(page.locator(PHONE)).toBeVisible();
 
-    // And prove which rule is doing the work. The print block carries a
-    // blanket rule hiding anything marked as print-hidden, which predates this
-    // work and exists for the pause control. If the root carried that marker
-    // too, this criterion would pass on the blanket rule while the rule that
-    // names the field by selector was never written — and the floor would
-    // disappear the day someone removed the marker for an unrelated reason,
-    // with every gate green.
-    await expect(root).not.toHaveAttribute("data-print-hide", /.*/);
+    await context.close();
+  });
+
+  test("scrolling the whole page never shows two stages at once", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      ...testInfo.project.use,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await context.addInitScript(() => {
+      const w = window as unknown as { maxStages: number; seen: string[] };
+      w.maxStages = 0;
+      w.seen = [];
+      const sample = () => {
+        const stages = document.querySelectorAll<HTMLCanvasElement>("canvas");
+        w.maxStages = Math.max(w.maxStages, stages.length);
+        for (const stage of stages) {
+          const key = stage.dataset.threeStage ?? "";
+          if (!w.seen.includes(key)) w.seen.push(key);
+        }
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    });
+    await page.goto("/");
+    await expect(page.locator('[data-three-stage="signal-hero"]')).toHaveCount(
+      1,
+      { timeout: 15_000 },
+    );
+
+    const { height, viewport } = await page.evaluate(() => ({
+      height: document.documentElement.scrollHeight,
+      viewport: window.innerHeight,
+    }));
+    const stops: number[] = [];
+    for (let y = 0; y <= height - viewport; y += viewport / 2) stops.push(y);
+    stops.push(height - viewport);
+    for (const y of [...stops, ...[...stops].reverse()]) {
+      await page.evaluate((top) => window.scrollTo(0, top), y);
+      await page.waitForTimeout(80);
+    }
+
+    const record = await page.evaluate(() => {
+      const w = window as unknown as { maxStages: number; seen: string[] };
+      return { maxStages: w.maxStages, seen: [...w.seen].sort() };
+    });
+    expect(record.maxStages).toBeLessThanOrEqual(1);
+    if (!testInfo.project.use.isMobile) {
+      expect(record.seen).toEqual(["glass", "signal-close", "signal-hero"]);
+    } else {
+      expect(record.seen).not.toContain("glass");
+    }
+
+    await context.close();
+  });
+
+  test("paused while live: the close canvas goes and the static stars return", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await toClose(page);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+
+    await page.locator(EFFECTS_PAUSE).first().click();
+    await expect(page.locator(EFFECTS_PAUSE).first()).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    await expect(page.locator(STAGE)).toHaveCount(0);
+    await staticStars(page);
+
+    await context.close();
+  });
+
+  test("in print with the field mounted: no stars, the phone prints", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await toClose(page);
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
 
     await page.emulateMedia({ media: "print" });
-    await expect(root).toBeHidden();
-    expect(
-      await root.evaluate((el) => getComputedStyle(el).display),
-      "the named selector inside the print block is the only thing that can be hiding this",
-    ).toBe("none");
+    await expect(page.locator(STAGE)).toBeHidden();
+    await expect(page.locator(STARS)).toBeHidden();
+    await expect(page.locator(PHONE)).toBeVisible();
 
     await context.close();
   });
 
-  // §9.2 item 4 — SC-1, FR-62. The first of the three positive assertions.
-  test("item 4: exactly one field exists, and its pause control exists with it", async ({
-    browser,
-  }) => {
+  const hideCopy = (page: Page) =>
+    page.addStyleTag({
+      content: `${CLOSE} h2, ${CLOSE} p, ${CLOSE} a { visibility: hidden !important; }`,
+    });
+
+  for (const [label, reducedMotion] of [
+    ["the live star field", "no-preference"],
+    ["the static stars", "reduce"],
+  ] as const) {
+    test(`text over ${label} keeps AA contrast in every sampled frame`, async ({
+      browser,
+    }) => {
+      const context = await browser.newContext({ reducedMotion });
+      const page = await context.newPage();
+      await page.goto("/");
+      await toClose(page);
+      if (reducedMotion === "no-preference") {
+        await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+      } else {
+        await expect(page.locator(STARS)).toBeVisible();
+      }
+      await hideCopy(page);
+
+      const copy = { heading: 0, body: 0, phone: 0 };
+      for (let frame = 0; frame < 3; frame += 1) {
+        await page.waitForTimeout(400);
+        copy.heading = Math.max(
+          copy.heading,
+          await brightestBackground(page, `${CLOSE} h2`),
+        );
+        copy.body = Math.max(
+          copy.body,
+          await brightestBackground(page, `${CLOSE} p`),
+        );
+        copy.phone = Math.max(
+          copy.phone,
+          await brightestBackground(page, PHONE),
+        );
+      }
+
+      expect(contrast("#A0A8C0", copy.heading)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast("#A0A8C0", copy.body)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast("#FFC000", copy.phone)).toBeGreaterThanOrEqual(3);
+
+      await context.close();
+    });
+  }
+
+  test("the live star field moves", async ({ browser }) => {
     const { context, page } = await withMotion(browser);
     await page.goto("/");
-    await settled(page);
+    await toClose(page);
+    const stage = page.locator(STAGE);
+    await expect(stage).toHaveCount(1, { timeout: 15_000 });
+    await hideCopy(page);
+    await page.waitForTimeout(300);
 
-    // Exactly one, not "at least one". The requirement is a single instance
-    // site-wide; a second one mounted in the hero would look like a richer
-    // effect and would double the frame cost on the machines least able to
-    // pay it.
-    await expect(page.locator(FIELD)).toHaveCount(1);
-    await expect(page.locator(CANVAS)).toHaveCount(1);
-
-    // If and only if: a control for motion that is not running is a button
-    // that does nothing, and a running effect with no control fails WCAG
-    // 2.2.2 outright.
-    await expect(page.locator(PAUSE)).toHaveCount(1);
-    await expect(page.locator(PAUSE)).toBeVisible();
+    const before = await stage.screenshot();
+    await page.waitForTimeout(500);
+    const after = await stage.screenshot();
+    expect(after.equals(before), "two frames 500ms apart are identical").toBe(
+      false,
+    );
 
     await context.close();
   });
+});
 
-  // §9.2 item 5 — SC-1, FR-62.
-  test("item 5: the pause control is reachable by keyboard", async ({
-    browser,
-  }) => {
-    const { context, page } = await withMotion(browser);
+test.describe("effects pause control", () => {
+  test("is reachable by keyboard and toggles", async ({ browser }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
     await page.goto("/");
-    await settled(page);
 
-    // Walked rather than focused programmatically. `locator.focus()` proves
-    // the element can hold focus, which is not the question: an element can be
-    // focusable and still be unreachable, because it sits inside a container
-    // marked hidden from assistive technology, or carries a negative tab
-    // index, or is painted over. The canvas root beside this control IS marked
-    // hidden from assistive technology, deliberately, so the distinction is
-    // live in this exact component.
     const stops: string[] = [];
     let reached = false;
     for (let i = 0; i < 250 && !reached; i += 1) {
@@ -427,7 +432,7 @@ test.describe("particle field", () => {
           .slice(0, 40);
       });
       stops.push(label);
-      reached = label.includes("Pause background field");
+      reached = label.includes("Pause animations");
     }
 
     expect(
@@ -435,30 +440,28 @@ test.describe("particle field", () => {
       `never reached the control in 250 tab stops; visited: ${stops.join(" | ")}`,
     ).toBe(true);
 
-    // And operable from there, not merely reachable.
     await page.keyboard.press("Enter");
-    await expect(page.locator(PLAY)).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(EFFECTS_PAUSE)).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
 
     await context.close();
   });
 
-  // §9.2 item 6 — SC-1, §7.5 item 5. The second positive assertion.
-  test("item 6: the pause control carries a visible text label, not an icon alone", async ({
+  test("carries a visible text label, not an icon alone", async ({
     browser,
   }) => {
-    const { context, page } = await withMotion(browser);
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
     await page.goto("/");
-    await settled(page);
 
-    const control = page.locator(PAUSE);
-    await expect(control).toHaveText(/Pause background field/);
+    const control = page.locator(EFFECTS_PAUSE);
+    await expect(control).toHaveCount(1);
+    await expect(control).toHaveText(/Pause animations/);
 
-    // The string is checked for being *rendered*, not merely present. A label
-    // supplied only to assistive technology is clipped to a one-pixel box, and
-    // both an icon-only button and a properly labelled one would satisfy a
-    // text assertion — one of them by carrying the words where nobody can read
-    // them. Two glyphs differing by a triangle are a poor distinction for the
-    // eyes this site is built for.
     const box = await control.boundingBox();
     expect(box, "the control has no box at all").not.toBeNull();
     expect(
@@ -466,185 +469,241 @@ test.describe("particle field", () => {
       "the control is narrow enough to be icon-only: the words are not being painted",
     ).toBeGreaterThan(100);
 
-    // Distinct from the hero's control, and that matters rather than being
-    // tidy: the hero's strings are asserted at a count of zero under reduced
-    // motion, and a shared string would let that assertion pass with the wrong
-    // component on screen.
-    //
-    // `text-is`, not `has-text`. This assertion is the one that proves the two
-    // names are distinct, so matching it by substring defeats its own purpose:
-    // "Pause background field" contains "Pause background", so `has-text`
-    // returns both controls and the count is 2. Exact matching is what makes
-    // the claim in the paragraph above actually checked.
-    await expect(
-      page.locator("button:text-is('Pause background')"),
-    ).toHaveCount(1);
-
-    await context.close();
-  });
-
-  // §9.2 item 7 — SC-1, FR-62. The third positive assertion, and the one that
-  // distinguishes a particle field from a picture of one.
-  test("item 7: the motion runs, and pressing the control freezes it", async ({
-    browser,
-  }) => {
-    const { context, page } = await withMotion(browser);
-    await page.goto("/");
-    const root = await settled(page);
-
-    const frame = () =>
-      page.evaluate(() => {
-        const canvas = document.querySelector<HTMLCanvasElement>(
-          "[data-particle-field] canvas",
-        );
-        return canvas ? canvas.toDataURL() : null;
-      });
-
-    // Sampled rather than waited out, and sampled as pixels rather than as
-    // attributes. `data-running="true"` is a claim the component makes about
-    // itself; two different images 300ms apart are the claim being true. At 6
-    // to 14 pixels per second a point moves between 1.8 and 4.2 pixels in that
-    // window, which is more than the radius of the points being drawn.
-    const before = await frame();
-    expect(before, "no canvas to sample").not.toBeNull();
-    await page.waitForTimeout(300);
-    const after = await frame();
-    expect(
-      after,
-      "two frames 300ms apart are byte-identical: the canvas is static",
-    ).not.toBe(before);
-
-    await page.locator(PAUSE).click();
-    await expect(root).toHaveAttribute("data-running", "false");
-    await expect(root).toHaveAttribute("data-paused", "true");
-    await expect(page.locator(PLAY)).toHaveAttribute("aria-pressed", "true");
-
-    // One frame may already be in flight when the click lands, so the first
-    // sample is taken after the state has settled rather than immediately.
-    await page.waitForTimeout(100);
-    const frozen = await frame();
-    await page.waitForTimeout(300);
-    expect(await frame(), "the field kept moving after it was paused").toBe(
-      frozen,
-    );
-
-    await context.close();
-  });
-
-  // §9.2 item 8 — SC-29, FR-56.
-  test("item 8: renders nothing and throws nothing when the 2D context is null", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({
-      reducedMotion: "no-preference",
-    });
-    await context.addInitScript(() => {
-      const original = HTMLCanvasElement.prototype.getContext;
-      // Exactly the browser's own behaviour under memory pressure or with
-      // canvas disabled: the call succeeds and hands back nothing.
-      HTMLCanvasElement.prototype.getContext = function (
-        this: HTMLCanvasElement,
-        ...args: unknown[]
-      ) {
-        if (args[0] === "2d") return null;
-        return (
-          original as unknown as (
-            this: HTMLCanvasElement,
-            ...rest: unknown[]
-          ) => unknown
-        ).apply(this, args);
-      } as typeof HTMLCanvasElement.prototype.getContext;
-    });
-
-    const page = await context.newPage();
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto("/");
-
-    // No control, because there is no motion for it to control — and the
-    // control must never exist for an instant and then be removed, which is
-    // what a probe run inside an effect rather than before the first render
-    // would produce.
-    await expect(page.locator(PAUSE)).toHaveCount(0);
-    await expect(page.locator(CANVAS)).toHaveCount(0);
-
-    // The band underneath is untouched. This is the test of whether the effect
-    // was ever load-bearing: a heading, a sentence and a button on navy.
-    await expect(
-      page.locator("main section").last().getByRole("heading", { level: 2 }),
-    ).toBeVisible();
-
-    expect(errors, `uncaught errors: ${errors.join(" | ")}`).toEqual([]);
-
-    await context.close();
-  });
-
-  /**
-   * The 80-point cap, which is a performance limit with no acceptance
-   * criterion attached to it.
-   *
-   * The limit says to read the count off the component's own density
-   * calculation at a 2560px-wide viewport, and that wording is load-bearing: a
-   * test that recomputes the formula it is checking passes whatever the
-   * component does. The component publishes its own answer in the DOM so the
-   * number can be read rather than re-derived.
-   *
-   * The cap matters on exactly the machines least able to pay for it. Uncapped,
-   * a 2560x900 band asks for 106 points — the same effect, three times the
-   * per-frame cost, and a density that reads as noise rather than as a sky.
-   */
-  test("the point count is capped at 80 on a very wide viewport", async ({
-    browser,
-  }) => {
-    const { context, page } = await withMotion(browser);
-    await page.setViewportSize({ width: 2560, height: 1440 });
-    await page.goto("/");
-    const root = await settled(page);
-
-    const points = Number(await root.getAttribute("data-points"));
-    expect(
-      points,
-      "the field reported no points at all, so the cap is not what is holding this down",
-    ).toBeGreaterThan(0);
-    expect(
-      points,
-      `the density calculation returned ${points} points at 2560px wide`,
-    ).toBeLessThanOrEqual(80);
-
     await context.close();
   });
 });
 
-/**
- * Page transitions.
- *
- * The same disease as the block above, in a sharper form. Every
- * `::view-transition-*` pseudo-element exists only while a transition is
- * running, so a site with no page transitions at all satisfies "the header's
- * group does not animate", "the durations are zero under reduced motion" and
- * "there are no directional slide keyframes" — the last one vacuously, over an
- * empty rule set.
- *
- * So the first assertion in this block is that a transition happens, and
- * everything else is conditioned on that having been observed. It also catches
- * a specific design risk rather than a hypothetical one: the transition
- * boundary is mounted in a layout, and the shipped Next guide says in as many
- * words that enter and exit never fire from a layout. The keyed boundary is
- * what defeats that, and this is the assertion that would notice if it stopped
- * working.
- */
-test.describe("view transitions", () => {
-  /** A navigation that changes the path, so the boundary's key changes. */
-  const navigate = async (page: import("@playwright/test").Page) => {
-    await page
-      .locator("header[data-site-header]")
-      .getByRole("link", { name: "Services" })
-      .first()
-      .click();
-    await page.waitForURL("**/services");
+test.describe("hero signal field", () => {
+  const HERO = "main [data-hero]";
+  const STAGE = "[data-hero-stage]";
+  const CANVAS = '[data-three-stage="signal-hero"]';
+  const PORTRAIT = `${HERO} img[alt*="Nate Best"]`;
+
+  const portraitShown = async (page: Page) => {
+    const portrait = page.locator(PORTRAIT);
+    await expect(portrait).toBeVisible();
+    await expect(portrait).toHaveCSS("opacity", "1");
+    await expect
+      .poll(() =>
+        portrait.evaluate((img: HTMLImageElement) => img.naturalWidth),
+      )
+      .toBeGreaterThan(0);
   };
 
-  // §9.2 items 9 — SC-2, FR-48.
+  const heroHeightInViewports = (page: Page) =>
+    page
+      .locator(HERO)
+      .evaluate((el) => el.getBoundingClientRect().height / window.innerHeight);
+
+  const withMotion = async (browser: import("@playwright/test").Browser) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    return { context, page: await context.newPage() };
+  };
+
+  test("with JavaScript disabled: the headline and Nate's photo, no canvas, one screen tall", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/");
+
+    await expect(page.locator(`${HERO} h1`)).toHaveText("Medicare, decoded.");
+    await portraitShown(page);
+    await expect(page.locator(CANVAS)).toHaveCount(0);
+    expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
+
+    await context.close();
+  });
+
+  test("with reduced motion: Nate's photo stays, no canvas ever mounts, one screen tall", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("/");
+
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(3000);
+    await expect(page.locator(CANVAS)).toHaveCount(0);
+    await portraitShown(page);
+    expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
+
+    await context.close();
+  });
+
+  test("on load, without scrolling, the field converges into Nate's photo and stays alive as gold dust", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
+
+    const canvas = page.locator(CANVAS);
+    await canvas.waitFor({ state: "attached", timeout: 15_000 });
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "false");
+    await expect(page.locator(PORTRAIT)).toHaveCSS("opacity", "0");
+
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true", {
+      timeout: 6000,
+    });
+    await expect(canvas).toHaveCount(1);
+    await expect(canvas).toHaveCSS("opacity", "1");
+    await portraitShown(page);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+    const before = await canvas.screenshot();
+    await page.waitForTimeout(600);
+    expect(
+      before.equals(await canvas.screenshot()),
+      "the dust halo keeps moving after the reveal",
+    ).toBe(false);
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect(canvas).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(canvas).toHaveCount(1, { timeout: 15_000 });
+    expect(
+      await page
+        .locator(PORTRAIT)
+        .evaluate((img) => getComputedStyle(img).opacity),
+      "returning to the hero never hides Nate's photo again",
+    ).toBe("1");
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true");
+    await portraitShown(page);
+
+    await context.close();
+  });
+
+  test("in print with the field mounted: Nate's photo shows, one page tall", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await page.locator(CANVAS).waitFor({ state: "attached", timeout: 15_000 });
+
+    await page.emulateMedia({ media: "print" });
+    await expect(page.locator(CANVAS)).toBeHidden();
+    await portraitShown(page);
+    expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
+
+    await context.close();
+  });
+
+  test("paused before load: no canvas until the visitor resumes", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await context.addInitScript(() =>
+      sessionStorage.setItem("effects-paused", "true"),
+    );
+    await page.goto("/");
+
+    const pause = page.locator(EFFECTS_PAUSE).first();
+    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(3000);
+    await expect(page.locator(CANVAS)).toHaveCount(0);
+    await portraitShown(page);
+
+    await pause.click();
+    await expect(page.locator(CANVAS)).toHaveCount(1, { timeout: 15_000 });
+
+    await context.close();
+  });
+
+  test("paused while live: the hero canvas goes and Nate's photo returns", async ({
+    browser,
+  }) => {
+    const { context, page } = await withMotion(browser);
+    await page.goto("/");
+    await expect(page.locator(CANVAS)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator(PORTRAIT)).toHaveCSS("opacity", "0");
+
+    await page.locator(EFFECTS_PAUSE).first().click();
+
+    await expect(page.locator(CANVAS)).toHaveCount(0);
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "false");
+    await expect(page.locator(EFFECTS_PAUSE).first()).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await portraitShown(page);
+
+    await context.close();
+  });
+
+  test("the largest contentful paint is hero copy or Nate's portrait", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const lcp = await page.evaluate(
+      () =>
+        new Promise<string>((resolve) => {
+          new PerformanceObserver((list) => {
+            const entries = list.getEntries() as (PerformanceEntry & {
+              element: Element | null;
+            })[];
+            const element = entries.at(-1)?.element;
+            resolve(
+              element
+                ? `${element.tagName}|${element.closest("[data-hero]") ? "hero" : "elsewhere"}`
+                : "none",
+            );
+          }).observe({ type: "largest-contentful-paint", buffered: true });
+        }),
+    );
+
+    expect(["H1|hero", "P|hero", "IMG|hero"]).toContain(lcp);
+  });
+
+  test("on a phone, the call to action sits above the fold under the announcement bar", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "a phone-only fold check");
+    const { site } = await import("../src/content/site");
+    const { announcementIsLive } = await import("../src/lib/announcement");
+    test.skip(
+      !announcementIsLive(site.announcement),
+      "the announcement window is closed",
+    );
+
+    await page.goto("/");
+    await expect(
+      page.getByRole("button", { name: "Dismiss announcement" }),
+    ).toBeVisible();
+
+    const cta = page
+      .locator(HERO)
+      .getByRole("link", { name: "Talk to a licensed agent" });
+    await expect(cta).toBeVisible();
+    const fold = await cta.evaluate((el) => ({
+      top: el.getBoundingClientRect().top,
+      bottom: el.getBoundingClientRect().bottom,
+      height: document.documentElement.clientHeight,
+    }));
+    expect(fold.top).toBeGreaterThanOrEqual(0);
+    expect(fold.bottom).toBeLessThanOrEqual(fold.height);
+  });
+});
+
+test.describe("view transitions", () => {
+  const navigate = async (
+    page: import("@playwright/test").Page,
+    name = "Services",
+    path = "services",
+  ) => {
+    await page
+      .locator("header[data-site-header]")
+      .getByRole("link", { name, exact: true })
+      .first()
+      .click();
+    await page.waitForURL(`**/${path}`);
+  };
+
   test("item 9: the three view-transition pseudo-elements animate for 0s under reduced motion", async ({
     browser,
   }) => {
@@ -656,10 +715,6 @@ test.describe("view transitions", () => {
 
     await navigate(page);
 
-    // Without this the rest of the test is an assertion about nothing. The
-    // reduced-motion rule is written for pseudo-elements the existing global
-    // block's universal selector does not reach; if the transition never
-    // starts, neither the rule nor its absence is observable.
     expect(
       await transitionCount(page),
       "no view transition started, so nothing below was measured",
@@ -677,7 +732,6 @@ test.describe("view transitions", () => {
     await context.close();
   });
 
-  // §9.2 item 10 — SC-18, FR-47.
   test("item 10: the site header is a named participant and does not animate", async ({
     browser,
   }) => {
@@ -689,11 +743,6 @@ test.describe("view transitions", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
 
-    // Half of this criterion is free unless the header is named. "No group
-    // called site-header animates" is true of a site where nothing is called
-    // site-header, which is the state this codebase was in before the
-    // rebuild — so the name is asserted first, as a computed value rather
-    // than by reading the component.
     expect(
       await page
         .locator("header[data-site-header]")
@@ -713,8 +762,6 @@ test.describe("view transitions", () => {
       `the header animated during the crossfade: ${JSON.stringify(moving)}`,
     ).toEqual([]);
 
-    // And the page content did move, so this is not passing because the whole
-    // transition was inert.
     const content = animations.filter(
       (entry) => !entry.pseudo.includes("site-header") && entry.durationMs > 0,
     );
@@ -726,21 +773,6 @@ test.describe("view transitions", () => {
     await context.close();
   });
 
-  /**
-   * FR-45's timings, which no acceptance criterion reads.
-   *
-   * The criteria written about the crossfade are "zero directional slide
-   * keyframes" and the four header rules. Both are satisfied by a crossfade
-   * running at the wrong speed, by one running at the user agent's default,
-   * and by one where the two halves overlap — which is the failure the
-   * requirement is actually about, because two versions of the same words at
-   * partial opacity are harder to read than either alone.
-   *
-   * The animation *names* are matched rather than the pseudo-element strings.
-   * React assigns the pseudo-element's name itself, so it is an opaque token
-   * that changes between transitions; the keyframes are named in the
-   * stylesheet and are stable.
-   */
   test("the crossfade runs 180ms out then 240ms in, and the chrome does not animate", async ({
     browser,
   }) => {
@@ -752,7 +784,7 @@ test.describe("view transitions", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
 
-    await navigate(page);
+    await navigate(page, "Contact", "contact");
     expect(await transitionCount(page)).toBeGreaterThan(0);
 
     const animations = await lastTransitionAnimations(page);
@@ -771,17 +803,10 @@ test.describe("view transitions", () => {
     expect(out!.durationMs).toBe(180);
     expect(out!.delayMs).toBe(0);
     expect(into!.durationMs).toBe(240);
-    // Delayed by exactly the exit's duration, so at no instant are two
-    // versions of the page both partly opaque.
+
     expect(into!.delayMs).toBe(180);
     expect(out!.delayMs + out!.durationMs).toBeLessThanOrEqual(into!.delayMs);
 
-    // The root snapshot is everything outside the named boundary — on this
-    // site, the header and the footer. Left alone it runs the user agent's own
-    // 250ms fade, which is longer than either half of the authored crossfade
-    // and overlaps both: a second, slower animation nobody specified, running
-    // underneath the one that was. Measured at 250ms in this run before the
-    // rule that stops it was written.
     const root = animations.filter(
       (entry) => entry.pseudo.includes("(root)") && entry.durationMs > 0,
     );
@@ -793,7 +818,171 @@ test.describe("view transitions", () => {
     await context.close();
   });
 
-  // §9.2 item 11 — SC-18, FR-47.
+  const irisRun = async (
+    page: import("@playwright/test").Page,
+    act: () => Promise<void>,
+  ) => {
+    await page.evaluate(() => {
+      const original = document.startViewTransition.bind(document);
+      document.startViewTransition = (options) => {
+        const transition = original(options);
+        void transition.ready.then(() => {
+          (window as unknown as { __iris: unknown }).__iris = document
+            .getAnimations()
+            .map((animation) => {
+              const effect = animation.effect as KeyframeEffect;
+              return {
+                name: (animation as CSSAnimation).animationName,
+                pseudo: effect.pseudoElement ?? "",
+                duration: effect.getComputedTiming().duration,
+                clip: effect.getKeyframes().map((frame) => frame.clipPath),
+              };
+            });
+        });
+        return transition;
+      };
+    });
+    await act();
+    await page.waitForFunction(
+      () => (window as unknown as { __iris?: unknown }).__iris !== undefined,
+    );
+    return page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __iris: {
+              name: string;
+              duration: number;
+              clip: (string | number | null | undefined)[];
+            }[];
+          }
+        ).__iris,
+    );
+  };
+
+  const freshHome = async (browser: import("@playwright/test").Browser) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await recordViewTransitions(page);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    return { context, page };
+  };
+
+  test("the iris opens from the click point over 450ms", async ({
+    browser,
+  }) => {
+    const { context, page } = await freshHome(browser);
+    const link = page
+      .locator("header[data-site-header]")
+      .getByRole("link", { name: "Services", exact: true })
+      .first();
+    const box = (await link.boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+
+    const run = await irisRun(page, () => link.click());
+    const iris = run.find((entry) => entry.name === "page-iris");
+    expect(iris, JSON.stringify(run)).toBeDefined();
+    expect(iris!.duration).toBe(450);
+    const first = String(iris!.clip[0]);
+    const match = /circle\(0px at ([\d.]+)px ([\d.]+)px\)/.exec(first);
+    expect(match, first).not.toBeNull();
+    expect(Math.abs(Number(match![1]) - x)).toBeLessThan(2);
+    expect(Math.abs(Number(match![2]) - y)).toBeLessThan(2);
+
+    await context.close();
+  });
+
+  test("keyboard activation opens the iris from the viewport centre", async ({
+    browser,
+  }) => {
+    const { context, page } = await freshHome(browser);
+    const link = page
+      .locator("header[data-site-header]")
+      .getByRole("link", { name: "Services", exact: true })
+      .first();
+    await link.focus();
+
+    const run = await irisRun(page, () => page.keyboard.press("Enter"));
+    const iris = run.find((entry) => entry.name === "page-iris");
+    expect(iris, JSON.stringify(run)).toBeDefined();
+    expect(String(iris!.clip[0])).toContain("circle(0px at 640px 450px)");
+
+    await context.close();
+  });
+
+  test("a fade-only destination records no clip-path keyframes", async ({
+    browser,
+  }) => {
+    const { context, page } = await freshHome(browser);
+    const link = page
+      .locator("header[data-site-header]")
+      .getByRole("link", { name: "Contact", exact: true })
+      .first();
+
+    const run = await irisRun(page, () => link.click());
+    expect(run.some((entry) => entry.name === "page-iris")).toBe(false);
+    expect(run.flatMap((entry) => entry.clip).filter((clip) => clip)).toEqual(
+      [],
+    );
+
+    await context.close();
+  });
+
+  test("without startViewTransition the click still navigates", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.addInitScript(() => {
+      delete (document as unknown as Record<string, unknown>)
+        .startViewTransition;
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    await navigate(page);
+    expect(errors).toEqual([]);
+
+    await context.close();
+  });
+
+  test("the iris stays at zero duration under reduced motion", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await recordViewTransitions(page);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    await navigate(page);
+    const animations = await lastTransitionAnimations(page);
+    expect(animations.filter((entry) => entry.durationMs > 0)).toEqual([]);
+
+    await context.close();
+  });
+
+  test("the iris never adds a second canvas across forward and back", async ({
+    browser,
+  }) => {
+    const { context, page } = await freshHome(browser);
+    const canvases = () => page.locator("canvas").count();
+    expect(await canvases()).toBeLessThanOrEqual(1);
+    await navigate(page);
+    expect(await canvases()).toBeLessThanOrEqual(1);
+    await page.goBack();
+    await page.waitForURL("**/");
+    expect(await canvases()).toBeLessThanOrEqual(1);
+
+    await context.close();
+  });
+
   test("item 11: the transition overlay never swallows a click", async ({
     browser,
   }) => {
@@ -805,23 +994,12 @@ test.describe("view transitions", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
 
-    // The binding half, and the one that can fail. A view-transition
-    // pseudo-element never becomes an event target, so no click test can
-    // observe the declaration directly — but the rule can be lost on the way
-    // to the browser, which is the failure that actually happens: Tailwind
-    // minifies through Lightning CSS and a pseudo-element it does not
-    // recognise is dropped with no error. Reading the served bytes is what
-    // notices.
     const css = await builtCss(page);
     expect(
       /::view-transition\s*\{[^}]*pointer-events\s*:\s*none/.test(css),
       "the rule is not in the stylesheet the browser loaded",
     ).toBe(true);
 
-    // The regression guard beside it: with the transition in flight, the top
-    // task on this site is still hittable. This would also catch a real
-    // element overlay, which is the shape a future "fix" is most likely to
-    // take.
     const phone = page
       .locator('header[data-site-header] a[href^="tel:"]')
       .first();
@@ -832,29 +1010,6 @@ test.describe("view transitions", () => {
     await navigate(page);
     expect(await transitionCount(page)).toBeGreaterThan(0);
 
-    // Sampled during the transition, this assertion fails — and the reason is
-    // worth recording rather than designing around, because it is a real cost
-    // and not a test artefact.
-    //
-    // Measured at the phone link's own centre across one navigation:
-    //   t=0 BODY · t=60 BODY · t=150 BODY · t=300 BODY · t=500 tel:6512601003
-    //
-    // The overlay is not the cause; the `pointer-events: none` rule asserted
-    // above is present and doing its job. The cause is that FR-47 names the
-    // header `site-header` so it will not animate, and the platform lifts any
-    // named element into a snapshot for the duration — a snapshot is painted
-    // in place of the live element and is not hit-tested. So for roughly the
-    // 420ms of a transition the phone number, which is the top task on this
-    // site, does not respond to a click. The visitor clicks again.
-    //
-    // The alternative is not naming the header, which puts it back in the root
-    // snapshot and lets it fade with the page on every navigation — worse, and
-    // the thing FR-47 exists to prevent. The trade is accepted and documented
-    // rather than hidden behind a test that samples after it has passed.
-    //
-    // What this assertion can honestly guarantee is the part a regression
-    // would break: that nothing this work added leaves a real element covering
-    // the header once the transition has finished.
     await page.waitForTimeout(600);
 
     const hit = await page.evaluate(
@@ -875,18 +1030,7 @@ test.describe("view transitions", () => {
   });
 });
 
-/**
- * The shared-element morph.
- *
- * `view-transition-name` is assigned by React only while a transition is
- * running, so in the settled DOM there is nothing to quantify over — which is
- * why "both ends of every pair carry the same configuration" passes on a site
- * where no pair was ever mounted. The component emits a static attribute
- * carrying the derived name for exactly this reason, and it is what the first
- * assertion below reads.
- */
 test.describe("shared-element morph", () => {
-  // §9.2 item 12 — SC-19, FR-50. The fifth positive assertion.
   test("item 12: a card and its destination derive the same morph name", async ({
     browser,
   }) => {
@@ -907,8 +1051,6 @@ test.describe("shared-element morph", () => {
     const name = await cardEnd.getAttribute("data-morph");
     expect(name).toMatch(/^morph-learn-/);
 
-    // Follow the card this end belongs to, rather than guessing a slug: the
-    // pair is only meaningful between an image and the page it travels to.
     const href = await cardEnd.evaluate(
       (el) =>
         el.closest("li")?.querySelector("a")?.getAttribute("href") ?? null,
@@ -918,24 +1060,11 @@ test.describe("shared-element morph", () => {
       "the morph end is not inside a card that links anywhere",
     ).not.toBeNull();
 
-    // Activated rather than navigated to. `page.goto` is a full document load
-    // and starts no view transition at all, so the timings below would have
-    // nothing to read — and the morph is a property of the journey between the
-    // two pages, not of either page on its own.
     await page.locator(`a[href="${href}"]`).first().click();
     await page.waitForURL(`**${href}`);
 
-    // Both ends, same string, derived by one function imported by both files.
-    // A template literal copied into two files owned by two people is the most
-    // likely way for a pair to drift, and a drifted name does not error — the
-    // ends simply never find each other.
     await expect(page.locator(`[data-morph="${name}"]`)).toHaveCount(1);
 
-    // FR-51's timing, which no acceptance criterion reads either. The pair
-    // forming is necessary and not sufficient: a pair that forms and then
-    // snaps has the continuity the effect exists for and none of the
-    // legibility, and the blur is what hides the pixel-level interpolation
-    // artefacts while the image is in flight.
     expect(
       await transitionCount(page),
       "activating the card started no transition, so the pair never travelled",
@@ -960,12 +1089,6 @@ test.describe("shared-element morph", () => {
   });
 });
 
-/**
- * The four contexts every animation on this site has to render visible in:
- * reduced motion, no JavaScript, print, and before hydration. The components
- * added for the motion pass are checked here against the same rules the
- * existing ones already pass.
- */
 test.describe("motion added by the scroll pass", () => {
   test("no-JS: every band is visible and no heading is empty", async ({
     browser,
@@ -1005,7 +1128,7 @@ test.describe("motion added by the scroll pass", () => {
     await context.close();
   });
 
-  test("print: 13 of 13 sections render", async ({ page }) => {
+  test("print: 9 of 9 sections render", async ({ page }) => {
     await page.goto("/");
     await page.emulateMedia({ media: "print" });
 
@@ -1019,9 +1142,6 @@ test.describe("motion added by the scroll pass", () => {
             style.display === "none" ||
             style.visibility === "hidden" ||
             Number(style.opacity) === 0 ||
-            // `content-visibility: auto` must not survive into print: a band
-            // the printer never scrolls into view would otherwise have no
-            // layout at all.
             style.contentVisibility === "hidden" ||
             el.getBoundingClientRect().height === 0
           );
@@ -1056,7 +1176,7 @@ test.describe("motion added by the scroll pass", () => {
         (el) => getComputedStyle(el).clipPath,
       ),
     );
-    // Anything other than the finished frame would be hiding content.
+
     for (const clip of clips) {
       expect(
         clip === "none" || clip.includes("inset(0"),
@@ -1079,7 +1199,6 @@ test.describe("motion added by the scroll pass", () => {
       test.skip(true, "no lit-words paragraph on this route");
     }
 
-    // Every word present as text at first paint, not produced by the effect.
     const text = ((await paragraph.textContent()) ?? "").trim();
     expect(
       text.split(/\s+/).length,
@@ -1089,16 +1208,12 @@ test.describe("motion added by the scroll pass", () => {
     const litColours = await page.evaluate(() => {
       const root = document.querySelector("[data-lit-words]");
       if (!root) return [];
-      const onSurface = getComputedStyle(root)
-        .getPropertyValue("--scheme-on-surface")
-        .trim();
-      return [...root.querySelectorAll("span[aria-hidden]")].map((el) => ({
+      return [...root.querySelectorAll("[data-lit-word]")].map((el) => ({
         opacity: Number(getComputedStyle(el).opacity),
-        onSurface,
       }));
     });
 
-    expect(litColours.length, "no lit layer rendered").toBeGreaterThan(3);
+    expect(litColours.length, "no lit words rendered").toBeGreaterThan(3);
     for (const word of litColours) {
       expect(word.opacity, "a word is not fully lit under reduced motion").toBe(
         1,
@@ -1107,28 +1222,767 @@ test.describe("motion added by the scroll pass", () => {
 
     await context.close();
   });
+});
 
-  test("the hero background does not translate under reduced motion", async ({
-    browser,
-  }) => {
+test.describe("lenis smooth scroll", () => {
+  test("is never constructed with reduced motion", async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
-    await page.evaluate(() => window.scrollTo(0, 600));
-    await page.waitForTimeout(200);
 
-    const transform = await page.evaluate(() => {
-      const el = document.querySelector("[data-hero-parallax]");
-      return el ? getComputedStyle(el).transform : null;
-    });
-
-    expect(
-      transform === null ||
-        transform === "none" ||
-        transform === "matrix(1, 0, 0, 1, 0, 0)",
-      `hero background moved under reduced motion: ${transform}`,
-    ).toBe(true);
+    const lenisVersion = await page.evaluate(
+      () => (window as { lenisVersion?: string }).lenisVersion,
+    );
+    expect(lenisVersion).toBeUndefined();
 
     await context.close();
+  });
+
+  test("is constructed without reduced motion and torn down when the preference changes", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/");
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.classList.contains("lenis"),
+        ),
+      )
+      .toBe(true);
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.classList.contains("lenis"),
+        ),
+      )
+      .toBe(false);
+  });
+});
+
+test.describe("the signal reveal", () => {
+  const PHOTO = "[data-signal-photo]";
+
+  const photoState = (page: Page) =>
+    page.locator(PHOTO).evaluate((el) => {
+      const style = getComputedStyle(el);
+      return {
+        clipPath: style.clipPath,
+        filter: style.filter,
+        transform: style.transform,
+        opacity: style.opacity,
+      };
+    });
+
+  const STILL = {
+    clipPath: "none",
+    filter: "none",
+    transform: "none",
+    opacity: "1",
+  };
+
+  const irisRadius = (clipPath: string) =>
+    Number(/circle\(([\d.]+)%/.exec(clipPath)?.[1] ?? NaN);
+
+  test("reduced motion, JS off and print show the whole colour photo, unclipped", async ({
+    browser,
+  }) => {
+    const reduced = await browser.newContext({ reducedMotion: "reduce" });
+    const reducedPage = await reduced.newPage();
+    await reducedPage.goto("/");
+    await reducedPage.locator(PHOTO).scrollIntoViewIfNeeded();
+    expect(await photoState(reducedPage)).toEqual(STILL);
+    await expect(reducedPage.locator("[data-signal] canvas")).toHaveCount(0);
+    await reduced.close();
+
+    const noJs = await browser.newContext({
+      javaScriptEnabled: false,
+      reducedMotion: "no-preference",
+    });
+    const noJsPage = await noJs.newPage();
+    await noJsPage.goto("/");
+    expect(await photoState(noJsPage)).toEqual(STILL);
+    await noJsPage.emulateMedia({ media: "print" });
+    expect(await photoState(noJsPage)).toEqual(STILL);
+    await expect(noJsPage.locator("[data-signal] canvas")).toHaveCount(0);
+    await noJs.close();
+
+    const printed = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const printedPage = await printed.newPage();
+    await printedPage.goto("/");
+    await printedPage.locator(PHOTO).scrollIntoViewIfNeeded();
+    await printedPage.emulateMedia({ media: "print" });
+    expect(await photoState(printedPage)).toEqual(STILL);
+    await printed.close();
+  });
+
+  test("Pause removes the reveal and leaves the whole colour photo visible", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.locator("[data-effects-pause]").first().click();
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-effects-paused",
+      "",
+    );
+    await page.locator(PHOTO).scrollIntoViewIfNeeded();
+    expect(await photoState(page)).toEqual(STILL);
+    await context.close();
+  });
+
+  test("with motion an iris opens on the photo as the band scrolls in, ending in full colour", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      reducedMotion: "no-preference",
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    const { top, bottom } = await page
+      .locator("[data-signal-frame]")
+      .evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        return {
+          top: box.top + window.scrollY,
+          bottom: box.bottom + window.scrollY,
+        };
+      });
+
+    await page.evaluate((y) => window.scrollTo(0, y), top - 900 * 0.6);
+    await expect
+      .poll(async () => irisRadius((await photoState(page)).clipPath))
+      .toBeGreaterThan(14);
+    const entering = await photoState(page);
+    expect(irisRadius(entering.clipPath)).toBeLessThan(60);
+    expect(entering.transform).not.toBe("none");
+    expect(entering.filter).toContain("saturate");
+
+    await page.evaluate((y) => window.scrollTo(0, y), bottom - 900 * 0.85);
+    await expect
+      .poll(async () => (await photoState(page)).clipPath)
+      .toBe("circle(100% at 48% 35%)");
+    expect((await photoState(page)).filter).toBe("saturate(1) brightness(1)");
+    await context.close();
+  });
+});
+
+test.describe("services glass", () => {
+  const RAIL = 'section[aria-labelledby="services-heading"] ul[data-rail]';
+  const STAGE = 'canvas[data-three-stage="glass"]';
+  const ORBS = `${RAIL} [data-card-still]`;
+
+  const toRail = async (page: Page) => {
+    await page.locator(RAIL).evaluate((el) =>
+      el.scrollIntoView({
+        block: "center",
+        behavior: "instant" as ScrollBehavior,
+      }),
+    );
+  };
+
+  const orbsShow = async (page: Page) => {
+    await expect(page.locator(ORBS)).toHaveCount(3);
+    for (const orb of await page.locator(ORBS).all()) {
+      await expect(orb).toBeVisible();
+    }
+  };
+
+  test("on a desktop the glass canvas mounts once the rail is in view", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await toRail(page);
+
+    await expect(page.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator("canvas[data-three-stage]")).toHaveCount(1);
+    await expect(page.locator(STAGE)).toHaveAttribute("aria-hidden", "true");
+
+    await context.close();
+  });
+
+  test("on a touch phone at 390 no glass canvas is created and the orbs show", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await toRail(page);
+    await page.waitForTimeout(1500);
+
+    await expect(page.locator(STAGE)).toHaveCount(0);
+    await orbsShow(page);
+
+    await context.close();
+  });
+
+  test("when the studio map fails the canvas never mounts and the orbs stay", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.route("**/env/studio-cool-gold.jpg", (route) => route.abort());
+    await page.goto("/");
+    await toRail(page);
+    await page.waitForTimeout(2000);
+
+    await expect(page.locator(STAGE)).toHaveCount(0);
+    await orbsShow(page);
+    expect(
+      errors.filter((message) => !message.startsWith("glass: the studio map")),
+    ).toEqual([]);
+
+    await context.close();
+  });
+
+  test("reduced motion, JavaScript off and print: orbs and zero canvas", async ({
+    browser,
+  }) => {
+    const reduced = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
+      reducedMotion: "reduce",
+    });
+    const page = await reduced.newPage();
+    await page.goto("/");
+    await toRail(page);
+    await page.waitForTimeout(1000);
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await orbsShow(page);
+    await reduced.close();
+
+    const noScript = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
+      javaScriptEnabled: false,
+    });
+    const still = await noScript.newPage();
+    await still.goto("/");
+    await expect(still.locator("canvas")).toHaveCount(0);
+    await orbsShow(still);
+    await noScript.close();
+
+    const printed = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      isMobile: false,
+      hasTouch: false,
+      reducedMotion: "no-preference",
+    });
+    const print = await printed.newPage();
+    await print.goto("/");
+    await toRail(print);
+    await expect(print.locator(STAGE)).toHaveCount(1, { timeout: 15_000 });
+    await print.emulateMedia({ media: "print" });
+    await expect(print.locator(STAGE)).toBeHidden();
+    await orbsShow(print);
+    await printed.close();
+  });
+});
+
+test.describe("minnesota dawn to dusk", () => {
+  const TRACK = "[data-lake-track]";
+  const SCRUB = `${TRACK} video[data-lake-scrub]`;
+  const STILL = `${TRACK} img[data-lake-still]`;
+  const VIDEO = `${TRACK} video`;
+  const DESKTOP = { width: 1440, height: 900 };
+  const PHONE = { width: 390, height: 844 };
+
+  const open = async (
+    browser: import("@playwright/test").Browser,
+    viewport: { width: number; height: number },
+    options: { reducedMotion?: "reduce" | "no-preference"; js?: boolean } = {},
+  ) => {
+    const context = await browser.newContext({
+      viewport,
+      reducedMotion: options.reducedMotion ?? "no-preference",
+      javaScriptEnabled: options.js ?? true,
+      ...(viewport.width < 700 ? { hasTouch: true, isMobile: true } : {}),
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    return { context, page };
+  };
+
+  const toProgress = (page: Page, progress: number) =>
+    page.locator(TRACK).evaluate((el, p) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const travel = el.getBoundingClientRect().height - window.innerHeight;
+      window.scrollTo({ top: top + travel * p, behavior: "instant" });
+    }, progress);
+
+  const scrubFraction = (page: Page) =>
+    page
+      .locator(SCRUB)
+      .evaluate(
+        (el) =>
+          (el as HTMLVideoElement).currentTime /
+          (el as HTMLVideoElement).duration,
+      );
+
+  const settleAt = async (page: Page, progress: number) => {
+    await toProgress(page, progress);
+    await expect
+      .poll(async () => Math.abs((await scrubFraction(page)) - progress), {
+        timeout: 10_000,
+      })
+      .toBeLessThanOrEqual(0.03);
+  };
+
+  const hideCopy = (page: Page) =>
+    page.addStyleTag({
+      content: `${HIDE_CHROME} ${TRACK} h2, ${TRACK} p { visibility: hidden !important; }`,
+    });
+
+  test("reduced motion and JavaScript off show the poster still and zero canvas", async ({
+    browser,
+  }) => {
+    for (const options of [
+      { reducedMotion: "reduce" as const },
+      { js: false },
+    ]) {
+      const { context, page } = await open(browser, DESKTOP, options);
+      await toProgress(page, 0.5);
+      await page.waitForTimeout(1000);
+      await expect(page.locator(STILL)).toBeVisible();
+      await expect(page.locator(`${TRACK} h2`)).toBeVisible();
+      await expect(page.locator(`${TRACK} p`)).toBeVisible();
+      await expect(page.locator(`${TRACK} canvas`)).toHaveCount(0);
+      await expect(page.locator(VIDEO)).toHaveCount(0);
+      await context.close();
+    }
+  });
+
+  test("on a desktop scroll scrubs the lake video from night to dusk", async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, DESKTOP);
+    await toProgress(page, 0.1);
+    await expect(page.locator(SCRUB)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator(SCRUB)).toHaveAttribute("aria-hidden", "true");
+    await expect(page.locator(SCRUB)).toHaveAttribute("preload", "metadata");
+    await expect(page.locator(`${TRACK} canvas`)).toHaveCount(0);
+
+    await settleAt(page, 0.1);
+    const early = await scrubFraction(page);
+    await settleAt(page, 0.9);
+    const late = await scrubFraction(page);
+    expect(late).toBeGreaterThan(early);
+
+    await context.close();
+  });
+
+  test("at 390 the loop plays instead of the scrub", async ({ browser }) => {
+    const { context, page } = await open(browser, PHONE);
+    await toProgress(page, 0.2);
+    await page.waitForTimeout(1500);
+
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await expect(page.locator(VIDEO)).toHaveCount(1);
+    const video = page.locator(VIDEO);
+    expect(await video.evaluate((el) => (el as HTMLVideoElement).muted)).toBe(
+      true,
+    );
+    await expect(video).toHaveAttribute("playsinline", "");
+    await expect(video).toHaveAttribute("poster", /lake-dusk/);
+    await expect(video).toHaveAttribute("preload", "none");
+
+    await context.close();
+  });
+
+  test("under reduced motion no video at either width", async ({ browser }) => {
+    for (const viewport of [DESKTOP, PHONE]) {
+      const { context, page } = await open(browser, viewport, {
+        reducedMotion: "reduce",
+      });
+      await toProgress(page, 0.2);
+      await page.waitForTimeout(1000);
+      await expect(page.locator("video")).toHaveCount(0);
+      await expect(page.locator(STILL)).toBeVisible();
+      await context.close();
+    }
+  });
+
+  test("pressing Pause pauses the loop and the still shows", async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, PHONE);
+    await toProgress(page, 0.2);
+    const video = page.locator(VIDEO);
+    await expect
+      .poll(() => video.evaluate((el) => (el as HTMLVideoElement).paused), {
+        timeout: 15_000,
+      })
+      .toBe(false);
+
+    await page.locator(EFFECTS_PAUSE).first().click();
+
+    await expect
+      .poll(() => video.evaluate((el) => (el as HTMLVideoElement).paused))
+      .toBe(true);
+    await expect(video).toBeHidden();
+    await expect(page.locator(STILL)).toBeVisible();
+
+    await context.close();
+  });
+
+  test("white copy keeps AA over the brightest frame of the desktop scrub", async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, DESKTOP);
+    await toProgress(page, 0);
+    await expect(page.locator(SCRUB)).toHaveCount(1, { timeout: 15_000 });
+    await hideCopy(page);
+
+    const worst = { heading: 0, body: 0 };
+    for (const progress of [0, 0.2, 0.35, 0.45, 0.5, 0.55, 0.65, 0.8, 1]) {
+      await settleAt(page, progress);
+      await page.waitForTimeout(200);
+      worst.heading = Math.max(
+        worst.heading,
+        await brightestBackground(page, `${TRACK} h2`),
+      );
+      worst.body = Math.max(
+        worst.body,
+        await brightestBackground(page, `${TRACK} p`),
+      );
+    }
+
+    expect(contrast("#FFFFFF", worst.heading)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#FFFFFF", worst.body)).toBeGreaterThanOrEqual(4.5);
+
+    await context.close();
+  });
+
+  test("white copy keeps AA over the brightest frame of the phone loop", async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, PHONE);
+    await toProgress(page, 0.2);
+    const video = page.locator(VIDEO);
+    await expect(video).toHaveCount(1);
+    await hideCopy(page);
+
+    const worst = { heading: 0, body: 0 };
+    for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+      await video.evaluate(async (el, f) => {
+        const v = el as HTMLVideoElement;
+        v.pause();
+        if (Number.isNaN(v.duration)) {
+          v.load();
+          await new Promise((r) =>
+            v.addEventListener("loadedmetadata", r, { once: true }),
+          );
+        }
+        const seeked = new Promise((r) =>
+          v.addEventListener("seeked", r, { once: true }),
+        );
+        v.currentTime = Math.min(f * v.duration, v.duration - 0.05);
+        await seeked;
+      }, fraction);
+      await page.waitForTimeout(150);
+      worst.heading = Math.max(
+        worst.heading,
+        await brightestBackground(page, `${TRACK} h2`),
+      );
+      worst.body = Math.max(
+        worst.body,
+        await brightestBackground(page, `${TRACK} p`),
+      );
+    }
+
+    expect(contrast("#FFFFFF", worst.heading)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#FFFFFF", worst.body)).toBeGreaterThanOrEqual(4.5);
+
+    await context.close();
+  });
+});
+
+test.describe("testimonial stack", () => {
+  const BAND = 'section[aria-labelledby="testimonials-heading"]';
+  const ITEMS = `${BAND} [data-quote-stack] > li`;
+
+  const transforms = (page: Page) =>
+    page.locator(ITEMS).evaluateAll((items) =>
+      items.map((item) => ({
+        active: item.getAttribute("data-active-quote") === "true",
+        transform: getComputedStyle(item).transform,
+      })),
+    );
+
+  const quoteOpacities = (page: Page) =>
+    page
+      .locator(
+        `${BAND} blockquote, ${BAND} blockquote span:not([data-lit-word])`,
+      )
+      .evaluateAll((nodes) =>
+        nodes.map((node) => getComputedStyle(node).opacity),
+      );
+
+  test("a sweep keeps at most one active quote, none dimmed, none hidden", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      ...testInfo.project.use,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    const { top, height, viewport } = await page
+      .locator(BAND)
+      .evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        return {
+          top: box.top + scrollY,
+          height: box.height,
+          viewport: innerHeight,
+        };
+      });
+    const steps = 14;
+    for (let step = 0; step <= steps; step++) {
+      await page.evaluate(
+        (y) => window.scrollTo(0, y),
+        top - viewport + ((height + viewport) * step) / steps,
+      );
+      await page.waitForTimeout(120);
+      const active = await page
+        .locator(`${BAND} [data-active-quote="true"]`)
+        .count();
+      expect(active).toBeLessThanOrEqual(1);
+      await expect(page.locator(`${BAND} blockquote`)).toHaveCount(
+        authoredTestimonials.length,
+      );
+      await expect(
+        page.locator(
+          `${BAND} :is(ol, li, blockquote, blockquote *)[aria-hidden]:not([data-lit-word])`,
+        ),
+      ).toHaveCount(0);
+    }
+    await page
+      .locator(BAND)
+      .evaluate((el) =>
+        el.scrollIntoView({ block: "center", behavior: "instant" }),
+      );
+    await page.waitForTimeout(200);
+    await expect(
+      page.locator(`${BAND} [data-active-quote="true"]`),
+    ).toHaveCount(1);
+    await context.close();
+  });
+
+  test("focus-pull is a transform only: the active quote has none, the rest scale to .97", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      ...testInfo.project.use,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page
+      .locator(BAND)
+      .evaluate((el) =>
+        el.scrollIntoView({ block: "center", behavior: "instant" }),
+      );
+    await page.waitForTimeout(700);
+    for (const item of await transforms(page)) {
+      if (item.active) expect(item.transform).toBe("none");
+      else expect(item.transform).toMatch(/^matrix\(0\.97, 0, 0, 0\.97,/);
+    }
+    for (const opacity of await quoteOpacities(page)) expect(opacity).toBe("1");
+
+    await page.locator("[data-effects-pause]").first().click();
+    await page.waitForTimeout(700);
+    for (const item of await transforms(page))
+      expect(item.transform).toBe("none");
+    await context.close();
+  });
+
+  test("reduced motion and print: no transform, no overlap, every quote visible", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      ...testInfo.project.use,
+      reducedMotion: "reduce",
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    for (const media of ["screen", "print"] as const) {
+      await page.emulateMedia({ media, reducedMotion: "reduce" });
+      for (const item of await transforms(page))
+        expect(item.transform).toBe("none");
+      const boxes = await page
+        .locator(ITEMS)
+        .evaluateAll((items) =>
+          items.map((item) => item.getBoundingClientRect()),
+        );
+      for (let i = 1; i < boxes.length; i++) {
+        expect(boxes[i].top).toBeGreaterThanOrEqual(boxes[i - 1].bottom - 1);
+      }
+      for (const opacity of await quoteOpacities(page))
+        expect(opacity).toBe("1");
+    }
+    await page.emulateMedia({ media: "print", reducedMotion: "no-preference" });
+    for (const item of await transforms(page))
+      expect(item.transform).toBe("none");
+    await context.close();
+  });
+
+  test("the home page has two pinned stages, each at most three screens tall", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const stages = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-stage]")].map(
+        (el) => el.getBoundingClientRect().height / innerHeight,
+      ),
+    );
+    expect(stages.length).toBeLessThanOrEqual(2);
+    for (const screens of stages) expect(screens).toBeLessThanOrEqual(3);
+  });
+});
+
+test.describe("night close", () => {
+  const CLOSE = "main [data-night-close]";
+
+  test("has no portrait, so Nate's face never repeats; stars and the big number stay", async ({
+    browser,
+  }, testInfo) => {
+    for (const options of [
+      { reducedMotion: "no-preference" as const },
+      { reducedMotion: "reduce" as const },
+      { javaScriptEnabled: false },
+    ]) {
+      const context = await browser.newContext({
+        ...testInfo.project.use,
+        ...options,
+      });
+      const page = await context.newPage();
+      await page.goto("/");
+      const close = page.locator(CLOSE);
+      await close.scrollIntoViewIfNeeded();
+      for (const media of ["screen", "print"] as const) {
+        await page.emulateMedia({ media });
+        await expect(close.locator("img")).toHaveCount(0);
+        await expect(close.locator('a[href^="tel:"]')).toBeVisible();
+        await expect(
+          page.locator('main img[src*="nate-duotone"]'),
+          "Nate's duotone portrait appears once on the home page",
+        ).toHaveCount(1);
+      }
+      if (options.reducedMotion !== "no-preference") {
+        await page.emulateMedia({ media: "screen" });
+        await expect(close.locator("[data-close-stars]")).toBeVisible();
+      }
+      await context.close();
+    }
+  });
+});
+
+test.describe("film grain", () => {
+  const grain = (page: Page) =>
+    page.evaluate(() => {
+      const style = getComputedStyle(document.body, "::after");
+      return {
+        content: style.content,
+        display: style.display,
+        pointerEvents: style.pointerEvents,
+        blend: style.mixBlendMode,
+        opacity: Number(style.opacity),
+      };
+    });
+
+  test("is a tuned, inert overlay that print removes", async ({ page }) => {
+    await page.goto("/privacy");
+    const style = await grain(page);
+    expect(style.content).not.toBe("none");
+    expect(style.pointerEvents).toBe("none");
+    expect(style.blend).toBe("overlay");
+    expect(style.opacity).toBeGreaterThanOrEqual(0.08);
+    expect(style.opacity).toBeLessThanOrEqual(0.12);
+    await page.emulateMedia({ media: "print" });
+    expect((await grain(page)).display).toBe("none");
+  });
+
+  test("keeps text contrast and a ground-black band under rgb(12, 12, 12)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/privacy");
+    await page.addStyleTag({
+      content: `${HIDE_CHROME} main p:first-of-type { visibility: hidden !important; }`,
+    });
+    const dark = await darkestBackground(page, "main p:first-of-type");
+    expect(contrast("#0A1128", dark)).toBeGreaterThanOrEqual(4.5);
+
+    await page.goto("/");
+    await expect
+      .poll(async () => {
+        const before = await page.evaluate(() => {
+          window.scrollTo(0, document.documentElement.scrollHeight);
+          return document.documentElement.scrollHeight;
+        });
+        await page.waitForTimeout(200);
+        return page.evaluate(
+          (height) => document.documentElement.scrollHeight === height,
+          before,
+        );
+      })
+      .toBe(true);
+    const close = page.locator("main [data-night-close]");
+    await close.scrollIntoViewIfNeeded();
+    await page.addStyleTag({ content: HIDE_CHROME });
+    const shot = await close.screenshot({ scale: "css" });
+    const mean = await page.evaluate(async (png) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = 64;
+      canvas.height = 64;
+      const context = canvas.getContext("2d")!;
+      context.drawImage(image, 0, 0, image.width, 64);
+      const { data } = context.getImageData(0, 0, 64, 64);
+      let total = 0;
+      for (let i = 0; i < data.length; i += 4) total += data[i];
+      return total / (data.length / 4);
+    }, shot.toString("base64"));
+    expect(mean).toBeLessThanOrEqual(12);
+  });
+
+  test("a link under the overlay stays clickable", async ({ page }) => {
+    await page.goto("/");
+    await page.locator('a[href="/contact"]:visible').first().click();
+    await expect(page).toHaveURL(/\/contact/);
   });
 });

@@ -1,52 +1,3 @@
-/**
- * Requirements:
- * - Capture two live reference sites in enough forensic detail that a UI/motion specification can be
- *   written from the artifacts alone, by someone who never opens the sites.
- * - Measure, never describe. Every number in every output file is read from a live page in the run
- *   that wrote it.
- * - Download nothing. No third-party image, video, webfont or script byte is ever written to disk.
- *   Third-party assets are catalogued by URL, intrinsic size, rendered rect and transfer size, and
- *   every entry carries `downloaded: false`. Our own screenshots and our own JSON are the only files
- *   this script creates.
- * - Verify the committed tree without a network or a browser, so a check can run anywhere.
- *
- *   node scripts/capture-reference-site.mjs                      # capture both sites
- *   node scripts/capture-reference-site.mjs --site ethnocare.ca  # capture one site
- *   node scripts/capture-reference-site.mjs --clean              # delete each site dir first
- *   node scripts/capture-reference-site.mjs --check              # verify the committed tree, no network
- *
- * ## The import that will otherwise cost you an hour
- *
- *   import { chromium, devices } from "@playwright/test";
- *
- * `import { chromium } from "playwright"` returns MODULE_NOT_FOUND in this repository. pnpm's strict
- * node_modules layout leaves `playwright` and `playwright-core` inside `node_modules/.pnpm/` only,
- * unhoisted, so the bare specifier does not resolve. `@playwright/test` is a real top-level
- * devDependency and re-exports the entire library API, including `chromium` and `devices`.
- *
- * Using the library API also means `playwright.config.ts` is never read, so its `webServer` — a full
- * `pnpm build && pnpm start` Next.js production build with a 240s timeout — never runs. That is the
- * reason this is a plain `.mjs` under `scripts/` driven by bare `node`, and not a spec under `e2e/`.
- * Do not "fix" either of these back.
- *
- * ## Known failure modes
- *
- * - Under a command sandbox, headless Chrome cannot register a Mach port and dies with
- *   `bootstrap_check_in ... Permission denied (1100)`, which reads like a broken browser install and
- *   is not one. The same sandbox blocks all external network. Capture must run unsandboxed;
- *   `--check` touches neither a browser nor a network and is safe anywhere.
- * - `page.screenshot({ fullPage: true })` silently truncates when `scrollHeight * deviceScaleFactor`
- *   exceeds Chromium's 16384px maximum texture height. The ethnocare home route measured 56821 CSS
- *   px tall in this run, which is 113642 device px at dpr 2 — nearly seven times the ceiling. Tall
- *   routes are therefore captured as overlapping JPEG bands with `banded: true` and explicit offsets.
- * - `response.text()` throws for a body Chromium has already discarded. An unguarded throw inside a
- *   `context.on("response")` listener kills the listener and silently loses the rest of the network
- *   log, so every body read is wrapped and size-capped.
- * - Cross-origin stylesheets throw SecurityError on `.cssRules`. Shopify's CDN and Google Fonts both
- *   do. Each failure is recorded as STYLESHEET_CORS and the sheet is refetched with
- *   `page.request.get()`, which reuses the context's cookies and is not subject to the CSSOM
- *   same-origin rule, then parsed as text in Node.
- */
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -68,20 +19,6 @@ const CLEAN = process.argv.includes("--clean");
 const siteArgIndex = process.argv.indexOf("--site");
 const ONLY_SITE = siteArgIndex === -1 ? null : process.argv[siteArgIndex + 1];
 
-/**
- * Viewports, chosen against the targets' own declared breakpoints rather than against generic
- * device names.
- *
- * ethnocare.ca publishes its entire breakpoint ladder on `window.config.BREAKPOINTS`, read live in
- * the Stage 1 recon of this pass: FROM_TINY 500, FROM_SMALL 700, FROM_MEDIUM 1000, FROM_LARGE 1200,
- * FROM_BIG 1400, FROM_HUGE 1600, FROM_ENORMOUS 1800, FROM_GIGANTIC 2000, FROM_COLOSSAL 2400. The
- * four widths below land one inside each band that matters: 1600 is exactly FROM_HUGE, 1440 sits in
- * the BIG band, 834 in the SMALL band, 390 in the sub-TINY band.
- *
- * Divi's stock ladder on www.andrewrinehart.us is 1405 / 1100 / 980 / 767 / 479, so the same four
- * widths also straddle every Divi boundary: 1600 > 1405, 1440 > 1405 (but a different grid band),
- * 834 lands between 767 and 980, and 390 is below 479.
- */
 const VIEWPORTS = [
   { name: "wide", width: 1600, height: 1000, dpr: 2, isMobile: false },
   { name: "desktop", width: 1440, height: 900, dpr: 2, isMobile: false },
@@ -91,15 +28,6 @@ const VIEWPORTS = [
 
 const FULL_VIEWPORTS = new Set(["desktop", "mobile"]);
 
-/**
- * The durable record of what was captured and why those routes.
- *
- * `sections` is the Stage 1 recon table: each entry names a real component block observed in the
- * live DOM with the MCP browser before this script existed. Selectors are the theme's own BEM block
- * names, which is what makes them stable — ethnocare's markup is machine-generated by Shopify and
- * every id contains a template hash (`shopify-section-template--18961612439871__product-proxy`)
- * that will change the next time the theme is saved. The `c-` classes will not.
- */
 const SITES = {
   "ethnocare.ca": {
     origin: "https://ethnocare.ca",
@@ -118,7 +46,6 @@ const SITES = {
       },
       { slug: "blog-news", path: "/blogs/news" },
     ],
-    // Recon table: section slug -> selector. Confirmed present on the home route in this pass.
     sections: [
       { slug: "section-3d", selector: ".c-section-3d" },
       { slug: "push-products", selector: ".c-push-products" },
@@ -143,18 +70,12 @@ const SITES = {
       productDropdown: "button.c-product-dropdown_toggler",
       signatureEffect: ".c-gradient canvas",
     },
-    // Hover/focus targets whose computed-style delta is worth measuring.
     stateTargets: [
       { slug: "nav-link", selector: "a.c-button.c-header_animate" },
       { slug: "hover-underline", selector: ".u-hover-underline" },
       { slug: "card-cta", selector: ".c-card-cta" },
       { slug: "footer-link", selector: ".c-footer a" },
     ],
-    // Smooth scroll: html carries `lenis lenis-smooth`, and 37 elements carry Locomotive's
-    // `data-scroll*` attribute vocabulary, but there is no [data-scroll-container] and html
-    // overflow computes to `visible` with a real 56820px body height. That combination is
-    // locomotive-scroll v5, which delegates smooth scrolling to Lenis and leaves native document
-    // flow intact. Teardown therefore only has to strip classes, not undo a container transform.
     smoothScroll: "lenis",
     transitions: [
       {
@@ -205,8 +126,6 @@ const SITES = {
     smoothScroll: "none",
     transitions: [],
     effects: { video: true, particles: true, typewriter: true },
-    // Divi Particles ships one static file containing five identical particlesJS() calls, each
-    // guarded on an element id that does not exist in this site's markup. See captureParticles().
     particlesScript:
       "/wp-content/plugins/divi-particles//assets/divi-particles.js?ver=7.0.4",
   },
@@ -216,9 +135,6 @@ const MAX_TEXTURE_PX = 16384;
 const BAND_CSS_PX = 6000;
 const MAX_BANDS = 14;
 const BODY_READ_CAP = 2 * 1024 * 1024;
-// Sections on ethnocare.ca are scroll-driven and enormous — .c-images-sequence measured 16748px on
-// the home route. Past a couple of viewports the extra height is the same sticky element repeated,
-// so the shot is clipped and the scroll-frame sequence carries the motion instead.
 const SECTION_CLIP_PX = 3200;
 
 const sha256File = (path) =>
@@ -231,23 +147,10 @@ function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
-// ---------------------------------------------------------------------------
-// Browser-side probes. Each is a plain function serialised into the page, so it
-// may not close over anything in this module.
-// ---------------------------------------------------------------------------
-
-/**
- * Runs before any of the site's own scripts. Three jobs, all of which are impossible to do after
- * load: neutralise autoplay so a seeked video frame is deterministic, patch IntersectionObserver so
- * the site's own observers can be enumerated (there is no API to list existing ones), and install
- * the class-flip recorder that measures reveal thresholds empirically.
- */
 const INIT_SCRIPT = `
 (() => {
   window.__forensics = { observers: [], reveals: [], classFlips: 0, mediaPlayBlocked: 0 };
 
-  // Autoplay off. A video that has already played four seconds decodes a different frame than one
-  // seeked from cold, which makes the two frames we take per video non-reproducible.
   try {
     const realPlay = HTMLMediaElement.prototype.play;
     window.__realPlay = function () { return realPlay.apply(this, arguments); };
@@ -256,8 +159,6 @@ const INIT_SCRIPT = `
       return Promise.resolve();
     };
   } catch (e) {}
-
-  // IntersectionObserver census. Must be installed before the site constructs any.
   try {
     const Real = window.IntersectionObserver;
     if (Real) {
@@ -277,10 +178,6 @@ const INIT_SCRIPT = `
     }
   } catch (e) {}
 
-  // Empirical reveal detector. Locomotive computes in-view state in its own rAF loop and never
-  // constructs an IntersectionObserver, so the constructor patch above sees nothing for it. This
-  // records the class flip itself, with the scroll position and the element's viewport-relative
-  // top at the instant it fired, which is the number a reveal threshold is written from.
   const REVEAL = /(^|\\s)(is-inview|is-visible|is-active|is-revealed|-lazy-loaded|is-loaded|is-ready|et-animated|et_animated)(\\s|$)/;
   window.__startReveals = () => {
     if (window.__revealObserver) return;
@@ -328,7 +225,6 @@ const INIT_SCRIPT = `
     window.__startReveals();
   }
 
-  // Overlay suppression, seeded before the consent scripts read storage.
   try {
     const seed = {
       'cookie_consent': 'true', 'cookieconsent_status': 'dismiss', 'cc_cookie': '{"level":["necessary"]}',
@@ -340,13 +236,6 @@ const INIT_SCRIPT = `
 })();
 `;
 
-/**
- * Tears smooth scroll down and restores native document flow, then proves it worked.
- *
- * Returns the assertion result rather than throwing, because the caller has to decide between
- * skipping a full-page screenshot and emitting a viewport-height image labelled `fullpage`. The
- * second is the failure this function exists to prevent.
- */
 const TEARDOWN_SMOOTH_SCROLL = `(() => {
   const before = {
     htmlClass: document.documentElement.className,
@@ -354,9 +243,6 @@ const TEARDOWN_SMOOTH_SCROLL = `(() => {
     innerHeight: window.innerHeight
   };
 
-  // 1. Destroy any reachable instance. Neither library exposes one on this run's targets — both are
-  //    bundled as ES modules with no global — so this is best-effort and the DOM work below is what
-  //    actually does the job.
   for (const key of ['__lenis', 'lenis', '__loco', 'locomotive', 'scroll', 'LocomotiveScroll']) {
     try {
       const inst = window[key];
@@ -364,28 +250,23 @@ const TEARDOWN_SMOOTH_SCROLL = `(() => {
     } catch (e) {}
   }
 
-  // 2. Strip the classes that put the document into smooth-scroll mode. destroy() removes listeners
-  //    and leaves these behind.
   for (const c of ['has-scroll-smooth', 'has-scroll-init', 'has-scroll-dragging', 'lenis', 'lenis-smooth', 'lenis-scrolling', 'lenis-stopped']) {
     document.documentElement.classList.remove(c);
     document.body.classList.remove(c);
   }
 
-  // 3. Clear the container's final transform. Locomotive v4 leaves it applied after destroy().
   for (const el of document.querySelectorAll('[data-scroll-container]')) {
     el.style.transform = 'none';
     el.style.height = 'auto';
     el.style.position = 'static';
   }
 
-  // 4. Force document flow back on.
   const force = 'overflow: auto !important; height: auto !important; position: static !important;';
   document.documentElement.setAttribute('style',
     (document.documentElement.getAttribute('style') || '') + ';' + force);
   document.body.setAttribute('style',
     (document.body.getAttribute('style') || '') + ';' + force);
 
-  // 5. Prove it.
   const after = {
     scrollHeight: document.documentElement.scrollHeight,
     innerHeight: window.innerHeight
@@ -398,11 +279,6 @@ const TEARDOWN_SMOOTH_SCROLL = `(() => {
 })()
 `;
 
-/**
- * The freeze stylesheet. Injected only after the motion extract has been taken, because a freeze
- * applied first makes `getComputedStyle` report every transition as `0s` and the extract then
- * faithfully records a page with no motion in it.
- */
 const FREEZE_CSS = `
 *, *::before, *::after {
   animation-duration: 0s !important;
@@ -415,15 +291,6 @@ const FREEZE_CSS = `
 .typed-cursor { opacity: 1 !important; }
 `;
 
-// ---------------------------------------------------------------------------
-// The extractor. One page.evaluate, returning the whole design-system record.
-// ---------------------------------------------------------------------------
-
-// NB: this and TEARDOWN_SMOOTH_SCROLL are both immediately-invoked. `page.evaluate` given a *string*
-// evaluates it as an expression and does not call it, so a bare `() => {...}` string evaluates to a
-// function object, which is unserialisable, and the caller silently receives `undefined`. That
-// presents as `Cannot read properties of undefined` at the first property access on the result and
-// looks nothing like the actual cause. Only a real JS function argument is auto-invoked.
 const EXTRACT = `(async () => {
   const warnings = [];
   const out = { warnings };
@@ -431,7 +298,6 @@ const EXTRACT = `(async () => {
   const norm = (v) => (v == null ? '' : String(v).trim());
   const round = (n, d = 2) => Number(Number(n).toFixed(d));
 
-  // --- colour normalisation -------------------------------------------------
   const toHex = (value) => {
     const v = norm(value);
     if (!v || v === 'none' || v === 'transparent') return null;
@@ -452,7 +318,7 @@ const EXTRACT = `(async () => {
       if (hex.length === 8) { if (parseInt(hex.slice(6), 16) === 0) return null; hex = hex.slice(0, 6); }
       return '#' + hex.toUpperCase();
     }
-    // oklch() / color(srgb ...) and anything else exotic: resolve through the engine.
+
     try {
       const probe = document.createElement('span');
       probe.style.color = v;
@@ -475,7 +341,6 @@ const EXTRACT = `(async () => {
     return round((Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05), 2);
   };
 
-  // --- stylesheet walk ------------------------------------------------------
   const declared = {};
   const mediaTally = {};
   const keyframes = {};
@@ -499,7 +364,7 @@ const EXTRACT = `(async () => {
         try { if (r.cssRules) walkRules(r.cssRules, source); } catch (e) {}
         continue;
       }
-      // CSSSupportsRule and @layer both nest, and real @media rules hide inside them.
+
       if (r.cssRules && (r.constructor.name === 'CSSSupportsRule' || r.constructor.name === 'CSSLayerBlockRule' || r.type === 12)) {
         try { walkRules(r.cssRules, source); } catch (e) {}
         continue;
@@ -543,16 +408,11 @@ const EXTRACT = `(async () => {
   out.stylesheetCors = corsSheets;
   out.ruleCount = ruleCount;
 
-  // --- custom properties: declared intent vs resolved value -----------------
   const rootStyle = getComputedStyle(document.documentElement);
   const resolved = {};
   for (const name of Object.keys(declared)) resolved[name] = rootStyle.getPropertyValue(name).trim();
   out.customProperties = { declared, resolved, count: Object.keys(declared).length };
 
-  // --- typography -----------------------------------------------------------
-  // measureCh through canvas against the element's own computed font shorthand. The
-  // width / (fontSize * 0.5) approximation is wrong by 15-20% on a condensed face, and typographic
-  // measure is a first-class spec number.
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   const chWidth = (cs) => {
@@ -618,9 +478,6 @@ const EXTRACT = `(async () => {
   }
   out.typography = typography;
 
-  // --- font faces -----------------------------------------------------------
-  // document.fonts carries family/weight/style/unicodeRange but not a usable src; the
-  // CSSFontFaceRule carries src but the set is the authority on what actually loaded. Cross-join.
   const loadedFaces = [];
   try {
     document.fonts.forEach((f) => loadedFaces.push({
@@ -646,7 +503,6 @@ const EXTRACT = `(async () => {
   });
   out.fontFaceRuleCount = fontFaceRules.length;
 
-  // --- colours --------------------------------------------------------------
   const PROPS = ['color', 'backgroundColor', 'borderTopColor', 'borderRightColor',
     'borderBottomColor', 'borderLeftColor', 'outlineColor', 'fill', 'stroke'];
   const colorTally = {};
@@ -667,7 +523,7 @@ const EXTRACT = `(async () => {
       const entry = colorTally[hex] || (colorTally[hex] = { hex, frequency: 0, largestAreaPx2: 0, properties: {} });
       entry.frequency++;
       entry.properties[prop] = (entry.properties[prop] || 0) + 1;
-      // Area is only meaningful for a fill of the box, not for a 1px border.
+
       if ((prop === 'backgroundColor' || prop === 'fill') && area > entry.largestAreaPx2) {
         entry.largestAreaPx2 = Math.round(area);
       }
@@ -677,7 +533,7 @@ const EXTRACT = `(async () => {
       const key = bgi.slice(0, 260);
       gradients[key] = (gradients[key] || 0) + 1;
     }
-    // Contrast, only where there is real text on a real background.
+
     if (area > 400 && norm(el.textContent) && el.children.length === 0) {
       const fg = toHex(cs.color);
       let bgEl = el, bg = null;
@@ -710,7 +566,6 @@ const EXTRACT = `(async () => {
   out.contrastPairs = contrastPairs;
   out.elementsWalked = elementsWalked;
 
-  // --- spacing --------------------------------------------------------------
   const pad = {}, gaps = {}, radii = {}, containers = {};
   const bump = (bag, key) => { if (key && key !== '0px') bag[key] = (bag[key] || 0) + 1; };
   const SECTION_SEL = 'section, .c-section-3d, .c-quote, .c-fadein-text, .c-images-sequence, .c-push-products, .c-pre-footer, .c-footer, .et_pb_section, .et_pb_row, [class*="section"]';
@@ -739,10 +594,6 @@ const EXTRACT = `(async () => {
     rootFontSizePx: round(parseFloat(getComputedStyle(document.documentElement).fontSize))
   };
 
-  // --- motion ---------------------------------------------------------------
-  // transition-* are parallel comma-lists of independent length; zip them rather than assuming one
-  // entry each. Group by fingerprint: a raw per-element dump on a Shopify page is tens of thousands
-  // of identical rows.
   const motionTally = {};
   const animTally = {};
   let motionWalked = 0;
@@ -804,7 +655,6 @@ const EXTRACT = `(async () => {
       .map(([condition, count]) => ({ condition, count }))
   };
 
-  // --- breakpoints ----------------------------------------------------------
   const bpTally = {};
   for (const [condition, count] of Object.entries(mediaTally)) {
     for (const m of condition.matchAll(/\\((min|max)-width:\\s*([\\d.]+)(px|em|rem)\\)/g)) {
@@ -819,7 +669,6 @@ const EXTRACT = `(async () => {
   out.mediaConditions = Object.entries(mediaTally).sort((a, b) => b[1] - a[1]).slice(0, 40)
     .map(([condition, ruleCount]) => ({ condition, ruleCount }));
 
-  // --- libraries ------------------------------------------------------------
   const libs = [];
   const seenLib = new Set();
   const addLib = (name, version, detectedVia, extra) => {
@@ -828,7 +677,7 @@ const EXTRACT = `(async () => {
     seenLib.add(key);
     libs.push({ name, version: version || null, detectedVia, ...(extra || {}) });
   };
-  // 1. runtime globals
+
   const GLOBALS = {
     barba: 'Barba.js', Barba: 'Barba.js', gsap: 'GSAP', ScrollTrigger: 'GSAP ScrollTrigger',
     Lenis: 'Lenis', LocomotiveScroll: 'Locomotive Scroll', THREE: 'three.js',
@@ -851,19 +700,19 @@ const EXTRACT = `(async () => {
       }
     } catch (e) {}
   }
-  // GSAP hides behind gsapVersions when bundled as an ES module with no gsap global.
+
   try {
     if (Array.isArray(window.gsapVersions)) {
       addLib('GSAP', window.gsapVersions.join(', '), 'window.gsapVersions');
     }
   } catch (e) {}
-  // Vue 3 SSR/runtime leaves these setters even when the Vue global is absent.
+
   try {
     if ('__VUE_INSTANCE_SETTERS__' in window || '__VUE_SSR_SETTERS__' in window) {
       addLib('Vue 3', null, 'window.__VUE_INSTANCE_SETTERS__');
     }
   } catch (e) {}
-  // 2. DOM fingerprints for libraries bundled with no global at all
+
   const DOM_FINGERPRINTS = [
     ['Lenis', 'html.lenis, html.lenis-smooth', 'html class "lenis"'],
     ['Locomotive Scroll', '[data-scroll-container], [data-scroll-speed], [data-scroll-section]', 'data-scroll* attributes'],
@@ -878,7 +727,7 @@ const EXTRACT = `(async () => {
     try { n = document.querySelectorAll(sel).length; } catch (e) {}
     if (n > 0) addLib(name, null, via, { elementCount: n });
   }
-  // 3. script URLs, including WordPress ?ver= which carries exact plugin versions
+
   for (const s of document.scripts) {
     if (!s.src) continue;
     let u;
@@ -897,21 +746,17 @@ const EXTRACT = `(async () => {
   }
   out.libraries = libs;
 
-  // --- theme config exposed on window --------------------------------------
-  // ethnocare publishes its entire breakpoint ladder here. Worth more than inferring it from CSS.
   try {
     if (window.config && typeof window.config === 'object') {
       out.siteConfig = JSON.parse(JSON.stringify(window.config));
     }
   } catch (e) {}
 
-  // --- observers ------------------------------------------------------------
   out.observersDeclared = (window.__forensics && window.__forensics.observers) || [];
   if (out.observersDeclared.length === 0) {
     warnings.push({ code: 'NO_INTERSECTION_OBSERVERS', detail: 'the site constructed no IntersectionObserver; reveal thresholds must come from revealsObserved' });
   }
 
-  // --- DOM outline ----------------------------------------------------------
   const bgOf = (el) => {
     let cur = el;
     for (let i = 0; i < 8 && cur; i++) {
@@ -921,10 +766,7 @@ const EXTRACT = `(async () => {
     }
     return null;
   };
-  // Named components only. A bare "main > *" also matches the Shopify section wrapper, the article
-  // and the u-anim-page section, each of which is the entire 56000px document; they produce a
-  // nine-megabyte "section" screenshot named 00-div that shows the whole page and names nothing.
-  // A wrapper that spans essentially the whole document is excluded for the same reason.
+
   const OUTLINE_SEL = '.et_pb_section, .c-section-3d, .c-images-sequence, .c-fadein-text, .c-quote, .c-push-products, .c-carousel-circular, .c-specifications, .c-pre-footer, .c-footer, .c-hero, .c-rail, .c-card-cta, .c-tile-page-push, .c-product-switcher, .c-infos-bar, .c-header, main > section:not(.u-anim-page), main > article > section:not(.u-anim-page)';
   const docHeight = document.documentElement.scrollHeight;
   const seenOutline = new Set();
@@ -935,7 +777,7 @@ const EXTRACT = `(async () => {
     if (rect.height < 120) continue;
     const cls = typeof el.className === 'string' ? el.className.trim() : '';
     const block = cls.split(/\\s+/).find((c) => /^(c-|et_pb_section_?\\d*$)/.test(c)) || null;
-    // Unnamed full-document wrapper: not a section, whatever the selector says.
+
     if (!block && rect.height > docHeight * 0.9) continue;
     const selector = el.id ? '#' + el.id : (block ? '.' + block : (el.tagName || '').toLowerCase());
     const key = selector + '@' + Math.round(rect.top + window.scrollY);
@@ -965,7 +807,6 @@ const EXTRACT = `(async () => {
   }
   out.domOutline = outline.sort((a, b) => a.rect.top - b.rect.top).map((o, i) => ({ ...o, index: i }));
 
-  // --- page geometry --------------------------------------------------------
   out.geometry = {
     scrollHeight: document.documentElement.scrollHeight,
     innerHeight: window.innerHeight,
@@ -978,7 +819,6 @@ const EXTRACT = `(async () => {
     title: document.title
   };
 
-  // --- media inventory (URLs only, nothing fetched or stored) --------------
   out.media = {
     images: [...document.querySelectorAll('img')].slice(0, 120).map((img) => {
       const r = img.getBoundingClientRect();
@@ -1041,7 +881,6 @@ const EXTRACT = `(async () => {
     }))
   };
 
-  // --- overlay guard --------------------------------------------------------
   const obstructions = [];
   for (const el of document.querySelectorAll('*')) {
     let cs;
@@ -1066,15 +905,6 @@ const EXTRACT = `(async () => {
 })()
 `;
 
-// ---------------------------------------------------------------------------
-// Node-side helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Least-squares fit of translateY against scrollY. r² above 0.99 means true linear parallax at that
- * ratio and the spec can name the ratio; a poor fit means the motion is eased or clamped and the
- * spec should say so instead of naming a number that is not the one the site uses.
- */
 function fitLinear(points) {
   const n = points.length;
   if (n < 3) return null;
@@ -1107,7 +937,6 @@ function fitLinear(points) {
   };
 }
 
-/** Parse every particlesJS(id, {...}) call out of a script body, without executing it. */
 function parseParticlesCalls(source) {
   const calls = [];
   const re = /particlesJS\(\s*"([^"]+)"\s*,\s*/g;
@@ -1140,10 +969,6 @@ function parseParticlesCalls(source) {
   return calls;
 }
 
-// ---------------------------------------------------------------------------
-// Capture
-// ---------------------------------------------------------------------------
-
 class Run {
   constructor(siteKey) {
     this.siteKey = siteKey;
@@ -1157,7 +982,6 @@ class Run {
     console.warn(`    ! ${code}: ${detail}`);
   }
 
-  /** Record an artifact. `describes` is what lets an agent pick twelve files without opening 400. */
   record(
     path,
     kind,
@@ -1195,14 +1019,11 @@ async function newContext(browser, viewport, extra = {}) {
     timezoneId: "America/Chicago",
     colorScheme: "light",
     reducedMotion: "no-preference",
-    // Headless Chromium advertises "HeadlessChrome" in its UA and Cloudflare notices. Borrow the
-    // real Chrome string Playwright ships for Desktop Chrome.
     userAgent: devices["Desktop Chrome"].userAgent,
     ...extra,
   });
 }
 
-/** Wire console/pageerror/response listeners onto a context so subframes are covered too. */
 function instrumentContext(context, sink) {
   context.on("console", (msg) => {
     if (sink.console.length >= 400) return;
@@ -1229,14 +1050,10 @@ function instrumentContext(context, sink) {
       status: response.status(),
       resourceType: request.resourceType(),
       contentType: response.headers()["content-type"] ?? null,
-      // Header-reported size. Nothing here is a copy of a body.
       contentLength: Number(response.headers()["content-length"] ?? 0) || null,
       fromCache: response.fromServiceWorker(),
       downloaded: false,
     };
-    // Version strings only, read transiently and never stored as a body. response.text() throws for
-    // a body Chromium has already discarded; an unguarded throw in this listener kills the listener
-    // and silently loses the rest of the network log.
     if (
       request.resourceType() === "script" &&
       entry.contentLength &&
@@ -1260,12 +1077,6 @@ function instrumentContext(context, sink) {
   });
 }
 
-/**
- * Wait for the page to settle: load, a networkidle hint that is never a gate, fonts, then a
- * top-to-bottom sweep that triggers lazy images, then back to the top.
- *
- * networkidle is a hint because Vimeo and GTM poll forever and it will never fire on either target.
- */
 async function settle(page, run, route) {
   await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
   await page.evaluate(() => document.fonts.ready).catch(() => {});
@@ -1305,7 +1116,6 @@ async function settle(page, run, route) {
   return sweep;
 }
 
-/** Close cookie banners and modals that survived the localStorage seed. */
 async function dismissOverlays(page) {
   const SELECTORS = [
     "button.cm__btn--close",
@@ -1324,20 +1134,11 @@ async function dismissOverlays(page) {
       if ((await loc.count()) && (await loc.isVisible({ timeout: 300 }))) {
         await loc.click({ timeout: 900, force: true }).catch(() => {});
       }
-    } catch {
-      /* a selector that does not exist is the normal case */
-    }
+    } catch {}
   }
   await page.keyboard.press("Escape").catch(() => {});
 }
 
-/**
- * Full-page screenshot with an explicit banding fallback.
- *
- * Chromium truncates a screenshot whose raster exceeds 16384 device px in either axis, and does it
- * silently — the file is well formed and simply missing the bottom of the page. The ethnocare home
- * route measured 56821 CSS px in this run, so banding is the normal path there, not an edge case.
- */
 async function fullPageShot(page, run, { route, viewport, pass, baseName }) {
   const geometry = await page.evaluate(() => ({
     scrollHeight: document.documentElement.scrollHeight,
@@ -1413,12 +1214,6 @@ async function fullPageShot(page, run, { route, viewport, pass, baseName }) {
   };
 }
 
-/**
- * One route, one viewport, one pass. The order inside this function is the whole determinism
- * contract and is why it is a single function: load, settle, extract motion JSON, only then inject
- * the freeze stylesheet, only then screenshot. Inject the freeze earlier and the extract faithfully
- * reports every transition on the page as 0s.
- */
 async function capturePass(page, run, { site, route, viewport, pass }) {
   const url = site.origin + route.path;
   const label = `${route.slug} ${viewport.name} ${pass}`;
@@ -1428,13 +1223,6 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
   await dismissOverlays(page);
   await settle(page, run, route.slug);
 
-  // Library fingerprints, taken BEFORE the smooth-scroll teardown.
-  //
-  // This is not belt-and-braces. Lenis and Locomotive are bundled as ES modules on ethnocare.ca with
-  // no global to detect, so the only evidence they are running is `html.lenis lenis-smooth` and the
-  // data-scroll* attribute vocabulary — and the teardown below deliberately strips exactly those.
-  // Extracting afterwards produced a libraries[] that omitted Lenis entirely while the site was
-  // demonstrably using it. Snapshot first, merge after.
   const preTeardown = await page.evaluate(() => {
     const found = [];
     const FINGERPRINTS = [
@@ -1480,10 +1268,6 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
   let teardown = null;
   if (pass === "native") {
     teardown = await page.evaluate(TEARDOWN_SMOOTH_SCROLL);
-    // A page that was already one screen tall before the teardown is not a teardown failure — it is
-    // a one-screen page, and www.andrewrinehart.us genuinely is one. Separating the two matters:
-    // the first means a full-page screenshot was lost and the artifact tree has a hole, the second
-    // means the above-fold shot already *is* the whole page.
     if (!teardown.ok) {
       const wasAlreadyShort =
         teardown.before.scrollHeight <= teardown.before.innerHeight * 1.2;
@@ -1505,7 +1289,6 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
     await page.waitForTimeout(400);
   }
 
-  // 1. Extract BEFORE the freeze.
   const extract = await page.evaluate(EXTRACT);
   extract.pass = pass;
   extract.viewport = viewport.name;
@@ -1514,7 +1297,6 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
   extract.capturedAt = new Date().toISOString();
   if (teardown) extract.smoothScrollTeardown = teardown;
 
-  // Merge the pre-teardown fingerprints in, keeping any the in-page walk also found.
   extract.htmlClassesBeforeTeardown = preTeardown.htmlClasses;
   extract.dataScrollSpeedValues = preTeardown.dataScrollSpeedValues;
   for (const library of preTeardown.libraries) {
@@ -1535,8 +1317,6 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
     ]);
   }
 
-  // Refetch every CORS-blocked sheet through the context's request API, which reuses cookies and is
-  // not subject to the CSSOM same-origin rule, and parse the text here in Node.
   if ((extract.stylesheetCors ?? []).length) {
     extract.refetchedStylesheets = [];
     for (const href of extract.stylesheetCors) {
@@ -1605,7 +1385,6 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
     describes: `Full design-system measurement of ${route.slug} at ${viewport.name} (${pass} pass): ${extract.customProperties.count} custom properties declared+resolved, ${extract.typography.length} typographic roles, ${extract.colors.length} colours ranked by painted area, ${extract.motion.transitions.length} transition fingerprints, ${extract.motion.animations.length} animations with keyframes, ${extract.breakpoints.length} breakpoints, ${extract.domOutline.length} sections.`,
   });
 
-  // 2. Freeze, then shoot.
   await page.addStyleTag({ content: FREEZE_CSS });
   await page.waitForTimeout(250);
 
@@ -1637,7 +1416,6 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
     });
   }
 
-  // 3. Per-section shots, from the outline the extract just measured.
   if (FULL_VIEWPORTS.has(viewport.name) && pass === "native") {
     let n = 0;
     for (const section of extract.domOutline) {
@@ -1649,16 +1427,9 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
       try {
         const loc = page.locator(section.selector).first();
         if (!(await loc.count())) continue;
-        // A zero-height or hidden match — .c-card-cta is inside a closed modal at mobile — makes
-        // locator.screenshot() wait for visibility and then throw after its full timeout. Twenty-two
-        // of those cost several minutes on the first pass and produced nothing.
         if (!(await loc.isVisible().catch(() => false))) continue;
         const box = await loc.boundingBox();
         if (!box || box.height < 80 || box.width < 8) continue;
-        // A scroll-driven section on this site is routinely taller than ten viewports — the tallest
-        // measured 16748px. Capturing all of it produces a nine-megabyte strip that shows the same
-        // sticky element repeated. Clip to the top SECTION_CLIP_PX; the banded full-page shots and
-        // the scroll-frame sequence already carry what happens further down.
         const clipped = box.height > SECTION_CLIP_PX;
         await loc.screenshot({
           path,
@@ -1696,11 +1467,6 @@ async function capturePass(page, run, { site, route, viewport, pass }) {
   return { extract, teardown, fullPage };
 }
 
-/**
- * Hover and focus deltas. Two pictures of a button tell a spec writer nothing they can copy; the
- * diff of getComputedStyle before and after tells them `background-color goes #0F2536 to #FFCE34
- * over 400ms cubic-bezier(0.19,1,0.22,1)`, which is the line that ends up in the spec.
- */
 async function captureStates(page, run, { site, route, viewport }) {
   const deltas = [];
   const TRACKED = [
@@ -1726,9 +1492,6 @@ async function captureStates(page, run, { site, route, viewport }) {
     for (const state of ["hover", "focus"]) {
       let path = null;
       try {
-        // .u-hover-underline's first match on every route lives inside the closed menu modal, so
-        // `.first()` alone hovers something that can never be visible and times out. Walk the
-        // matches and take the first one that is genuinely on the page.
         const all = page.locator(target.selector);
         const total = Math.min(await all.count(), 12);
         let loc = null;
@@ -1770,9 +1533,6 @@ async function captureStates(page, run, { site, route, viewport }) {
           if (before[p] !== after[p])
             changed[p] = { from: before[p], to: after[p] };
 
-        // JPEG: these corroborate the computed-style delta beside them, which is the artifact a spec
-        // is actually written from. A lossless full-viewport PNG per hover state per route per
-        // viewport came to 133MB on the first pass for no added information.
         path = run.file(
           "states",
           `${state}-${target.slug}.${route.slug}.${viewport.name}.jpg`,
@@ -1818,7 +1578,6 @@ async function captureStates(page, run, { site, route, viewport }) {
     }
   }
 
-  // nav-open and nav-scrolled
   if (site.chrome.navToggle) {
     let path = null;
     try {
@@ -1926,16 +1685,6 @@ async function captureStates(page, run, { site, route, viewport }) {
   return deltas;
 }
 
-/**
- * Scroll frames on the live pass.
- *
- * Targets, not intervals: y_i = round(i * travel / (N-1)). Actuated with page.mouse.wheel, which
- * dispatches a trusted wheel event — the thing smooth-scroll libraries consume. They ignore
- * programmatic window.scrollTo, so a scrollTo loop on a Lenis page produces sixteen copies of the
- * hero. Settling is three consecutive identical samples 100ms apart, capped at 5s; a bare
- * waitForTimeout either wastes seconds or shoots mid-animation, and which one it does varies run to
- * run.
- */
 async function captureScrollFrames(
   page,
   run,
@@ -1946,10 +1695,6 @@ async function captureScrollFrames(
     window.__forensics.reveals.length = 0;
     window.__scrollSamples = [];
   });
-  // Park the pointer in the middle of the viewport before any wheeling. page.mouse.wheel dispatches
-  // at the pointer's current position, which starts at (0,0) — the top-left corner, where a fixed
-  // header or an inner scroller can swallow the event. That is how /pages/support advanced 42px on
-  // the first pass and had the rest of its frames abandoned.
   const size = page.viewportSize();
   if (size)
     await page.mouse.move(
@@ -1984,7 +1729,6 @@ async function captureScrollFrames(
       const delta = targetY - current;
       if (Math.abs(delta) < 8) break;
       await page.mouse.wheel(0, delta * (attempt === 0 ? 1 : 1.35));
-      // Settle: three consecutive identical samples, 100ms apart, 5s cap.
       const settled = await page.evaluate(async () => {
         const deadline = Date.now() + 5000;
         let last = -1;
@@ -2042,7 +1786,6 @@ async function captureScrollFrames(
       ],
     );
 
-    // Guard against sixteen copies of the hero.
     if (i > 0 && Math.abs(measured.y - previousY) <= 50) {
       run.warn(
         "SCROLL_DID_NOT_ADVANCE",
@@ -2075,7 +1818,6 @@ async function captureScrollFrames(
     parallaxSamples.push(measured);
   }
 
-  // Least-squares fit of every parallax element's translateY against scrollY.
   const byKey = {};
   for (const sample of parallaxSamples) {
     for (const s of sample.samples) {
@@ -2097,13 +1839,10 @@ async function captureScrollFrames(
   return { frames, parallax, reveals };
 }
 
-/** Background video: two seeked frames each, nothing downloaded. */
 async function captureVideoEffects(page, run, { route }) {
   const inventory = await page.evaluate(() => {
     const out = [];
     document.querySelectorAll("video").forEach((v, i) => {
-      // Lazily-assigned sources: the theme keeps the real URL in data-src until the element is in
-      // view. Promote it so the element can actually be seeked.
       if (!v.currentSrc && v.dataset && v.dataset.src) {
         v.src = v.dataset.src;
         v.load();
@@ -2135,19 +1874,13 @@ async function captureVideoEffects(page, run, { route }) {
     if (!video.currentSrc) continue;
     video.frames = [];
 
-    // Three of the four <video> elements on the ethnocare home route measure 0x0 when first reached:
-    // they sit inside .c-video blocks that the theme has not yet sized. locator.screenshot() waits
-    // for a visible, stable element and burns its full timeout on each one. Scroll the element into
-    // view, let the theme size it, and re-measure before deciding whether a frame is even possible.
     const locator = page
       .locator(`video[data-forensics-index="${video.index}"]`)
       .first();
     try {
       await locator.scrollIntoViewIfNeeded({ timeout: 5000 });
       await page.waitForTimeout(700);
-    } catch {
-      /* an element that cannot be scrolled to is handled by the rect check below */
-    }
+    } catch {}
     const rect = await locator.boundingBox().catch(() => null);
     video.renderedAtCaptureTime = rect
       ? { width: Math.round(rect.width), height: Math.round(rect.height) }
@@ -2201,10 +1934,6 @@ async function captureVideoEffects(page, run, { route }) {
           continue;
         }
         await page.waitForTimeout(300);
-        // A background video is routinely sized larger than the viewport — Divi renders this one at
-        // 1600px wide inside a 1440px viewport so it can cover. An unclipped element screenshot of
-        // something wider than the viewport pads the overflow with white, which looks like a broken
-        // capture. Clip to the part that is actually on screen.
         const shot = locator;
         const box = await shot.boundingBox();
         const view = page.viewportSize();
@@ -2247,22 +1976,6 @@ async function captureVideoEffects(page, run, { route }) {
   return inventory;
 }
 
-/**
- * particles.js.
- *
- * On www.andrewrinehart.us `particlesJS` is loaded and `window.pJSDom` is an empty array: the Divi
- * Particles plugin ships one static file containing five `particlesJS()` calls, each guarded on an
- * element id (`#divi-particles` .. `#divi-particles-4`) and none of those elements exist in this
- * site's markup. The canvas particle field is therefore installed but not running.
- *
- * Two artifacts result, and they must not be confused with each other:
- *
- *   `live`  — what the page actually runs. Records `instanceCount: 0` when that is the truth.
- *   `probe` — the plugin's own shipped config, parsed out of its own script and then instantiated in
- *             the page against the site's own particles.min.js, so the numbers written to disk are
- *             read back off a real live pJS instance rather than copied out of a file. Labelled with
- *             its provenance so nobody mistakes it for the running page.
- */
 async function captureParticles(page, run, { site, route }) {
   const live = await page.evaluate(() => {
     const result = {
@@ -2340,8 +2053,6 @@ async function captureParticles(page, run, { site, route }) {
           calls.every(
             (c) => JSON.stringify(c.config) === JSON.stringify(calls[0].config),
           ),
-        // The config exactly as the plugin ships it, parsed without executing it. Keep this beside
-        // the probe: they legitimately disagree, and the reason is `retina_detect`.
         authoredConfig: calls[0]?.config ?? null,
       };
       out.source.guardElementsPresentOnPage = await page.evaluate(
@@ -2351,8 +2062,6 @@ async function captureParticles(page, run, { site, route }) {
       );
 
       if (calls[0]?.config) {
-        // Instantiate the plugin's own config against the site's own particles.min.js, then read the
-        // resulting live pJS tree back. Measured, not transcribed.
         out.probe = await page.evaluate((config) => {
           const host = document.createElement("div");
           host.id = "__forensics-particles";
@@ -2400,18 +2109,6 @@ async function captureParticles(page, run, { site, route }) {
           };
         }, calls[0].config);
 
-        // Corroborating pixels. The config is the deliverable; these only show what it looks like.
-        //
-        // The filename carries the disclaimer because the `describes` field did
-        // not survive contact with a reader. These frames show a dense, genuinely
-        // handsome linked-node constellation, and an earlier pass named them
-        // `particles-probe-frame{0,1}.png` with the caveat in prose. A reviewer
-        // skimming the index for images to open saw an attractive file called
-        // `particles-frame` and stopped reading — which is exactly how a spec
-        // comes to specify an effect the reference site does not have. The live
-        // background is a `<video>`; particles.js is enqueued here and never
-        // initialises. Anything that makes the counterfactual legible only to
-        // someone who reads the whole entry is not enough.
         for (const [i, wait] of [600, 2400].entries()) {
           await page.waitForTimeout(i === 0 ? wait : wait - 600);
           const ms = i === 0 ? 600 : 2400;
@@ -2454,7 +2151,6 @@ async function captureParticles(page, run, { site, route }) {
   return out;
 }
 
-/** Typewriter: the strings, the plugin's option parsing, and the cursor blink out of computed style. */
 async function captureTypewriter(page, run, { site, route }) {
   const config = await page.evaluate(() => {
     const el = document.querySelector(".typed-me");
@@ -2473,8 +2169,6 @@ async function captureTypewriter(page, run, { site, route }) {
     const elCs = getComputedStyle(el);
     return {
       selector: ".typed-me",
-      // If the plugin read the strings out of data-string* they are here; if the markup carries
-      // them as <br>-separated HTML instead, that is what the visible element holds right now.
       datasetStrings: strings,
       datasetOptions: options,
       renderedHtml: el.innerHTML.slice(0, 500),
@@ -2498,9 +2192,6 @@ async function captureTypewriter(page, run, { site, route }) {
   });
   if (!config) return null;
 
-  // Typed.js starts on document ready and, with a single string and no loop, is finished long before
-  // the rest of this capture reaches it. Sampling the page as-is yields eight identical frames of the
-  // completed string, which measures nothing. Reload and start the clock at load instead.
   await page.goto(site.origin + route.path, {
     waitUntil: "domcontentloaded",
     timeout: 45000,
@@ -2535,21 +2226,6 @@ async function captureTypewriter(page, run, { site, route }) {
   return config;
 }
 
-/**
- * Page transitions.
- *
- * The contract for this pass anticipated Barba.js. Stage 1 recon found zero `data-barba` attributes
- * and no barba global on ethnocare.ca, so there is no DOM-swap to hook. What the theme does have is
- * a documented class-driven enter animation: `window.config.CSS_CLASS` names LOADING/READY/LOADED,
- * `html` carries `is-first-loaded is-loaded is-ready is-hero-animation-completed`, and sections
- * carry `u-anim-page`.
- *
- * So this instruments both possibilities and records which one actually happened: a rAF style
- * sampler plus a CDP screencast wrapped around a real click, with the navigation event itself
- * observed rather than assumed. Every transition runs in a fresh context because a warm client-side
- * router caches fetched pages in memory and a second traversal is measurably faster and not
- * comparable.
- */
 async function captureTransition(browser, run, { site, transition, index }) {
   const viewport = VIEWPORTS.find((v) => v.name === "desktop");
   const videoDir = run.file("transitions", `t${index}`);
@@ -2595,12 +2271,8 @@ async function captureTransition(browser, run, { site, transition, index }) {
       return result;
     }
 
-    // Hooks first. A screenshot loop is far too coarse for a 600-1200ms transition, and the numbers
-    // are what a spec is written from; the frames only corroborate.
     await page.evaluate((selector) => {
       window.__t = { click: null, unload: null, samples: [], phases: [] };
-      // Scope to main: the footer also carries .u-anim-page, and an unscoped query picks it first on
-      // some routes, which silently samples the footer's opacity curve instead of the page's.
       const container =
         document.querySelector('[data-barba="container"]') ||
         document.querySelector("main .c-page_content") ||
@@ -2616,7 +2288,6 @@ async function captureTransition(browser, run, { site, transition, index }) {
         ? (overlay.className || overlay.tagName).toString().slice(0, 80)
         : null;
 
-      // Barba hooks, if barba turns out to be present after all.
       try {
         if (window.barba?.hooks) {
           for (const phase of ["before", "leave", "enter", "after"]) {
@@ -2666,8 +2337,6 @@ async function captureTransition(browser, run, { site, transition, index }) {
       void selector;
     }, transition.link);
 
-    // CDP screencast. Every frame must be acknowledged or the stream stalls after a handful — that
-    // omission is the standard failure and looks exactly like a slow site.
     const cdp = await context.newCDPSession(page);
     const frames = [];
     const t0 = Date.now();
@@ -2675,9 +2344,7 @@ async function captureTransition(browser, run, { site, transition, index }) {
       frames.push({ tMs: Date.now() - t0, data });
       try {
         await cdp.send("Page.screencastFrameAck", { sessionId });
-      } catch {
-        /* page gone */
-      }
+      } catch {}
     });
     await cdp.send("Page.startScreencast", {
       format: "jpeg",
@@ -2695,7 +2362,6 @@ async function captureTransition(browser, run, { site, transition, index }) {
     await link.click({ timeout: 8000, force: true });
     result.navigationEventFired = await navigationPromise;
 
-    // Give the enter animation room whether or not a navigation happened.
     await page.waitForTimeout(2600);
     await cdp.send("Page.stopScreencast").catch(() => {});
 
@@ -2724,7 +2390,6 @@ async function captureTransition(browser, run, { site, transition, index }) {
       }
     }
 
-    // A navigation destroys the old JS context, so read the sampler from whichever context survived.
     const samples = await page
       .evaluate(() => (window.__t ? window.__t : null))
       .catch(() => null);
@@ -2738,9 +2403,6 @@ async function captureTransition(browser, run, { site, transition, index }) {
       result.samplerLostToNavigation = true;
     }
 
-    // If the click caused a real navigation, the interesting motion is the *enter* animation on a
-    // cold load, which the sampler above cannot see because its context was destroyed. Measure that
-    // separately, from goto to is-ready.
     if (result.navigationEventFired) {
       const enter = await measureEnterAnimation(context, site, transition.to);
       result.enterAnimation = enter;
@@ -2756,7 +2418,6 @@ async function captureTransition(browser, run, { site, transition, index }) {
     await context.close().catch(() => {});
   }
 
-  // Playwright only finalises the webm on context close.
   try {
     const webm = readdirSync(videoDir).find((f) => f.endsWith(".webm"));
     if (webm) {
@@ -2767,9 +2428,7 @@ async function captureTransition(browser, run, { site, transition, index }) {
         describes: `Human-watchable recording of the ${transition.from} -> ${transition.to} traversal, including the click and the enter animation. Our own recording of our own browser, not a downloaded asset.`,
       });
     }
-  } catch {
-    /* no video dir */
-  }
+  } catch {}
 
   const path = run.file("transitions", `t${index}`, "styles.json");
   writeJson(path, result);
@@ -2782,7 +2441,6 @@ async function captureTransition(browser, run, { site, transition, index }) {
   return result;
 }
 
-/** goto -> is-ready, sampled every frame. The enter animation of a cold page load. */
 async function measureEnterAnimation(context, site, path) {
   const page = await context.newPage();
   const samples = [];
@@ -2813,11 +2471,9 @@ async function measureEnterAnimation(context, site, path) {
     const data = await page.evaluate(() => window.__enter?.samples ?? []);
     samples.push(...data);
   } catch {
-    /* recorded by the caller through an empty sample list */
   } finally {
     await page.close().catch(() => {});
   }
-  // Derive the class-flip timeline, which is the readable form of this data.
   const flips = [];
   let previous = "";
   for (const s of samples) {
@@ -2839,16 +2495,9 @@ async function measureEnterAnimation(context, site, path) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Site driver
-// ---------------------------------------------------------------------------
-
 async function captureSite(browser, siteKey) {
   const site = SITES[siteKey];
   const run = new Run(siteKey);
-  // --clean removes only the directories and files this script writes, never the whole site
-  // directory. Other tooling writes siblings into the same tree — a concurrent stack survey landed
-  // `tech-stack.md` here during this pass — and an rmSync of the parent silently destroys them.
   if (CLEAN && existsSync(run.dir)) {
     for (const name of [
       "shots",
@@ -2864,9 +2513,6 @@ async function captureSite(browser, siteKey) {
       const path = resolve(run.dir, name);
       if (existsSync(path)) rmSync(path, { recursive: true, force: true });
     }
-    // notes.md is deliberately NOT in this list: it is hand-written prose about the capture, not a
-    // generated artifact, and --clean destroying it is a silent loss of the only file in the tree a
-    // human wrote.
     for (const name of ["index.json", "design-system.json"]) {
       const path = resolve(run.dir, name);
       if (existsSync(path)) rmSync(path, { force: true });
@@ -2905,7 +2551,6 @@ async function captureSite(browser, siteKey) {
 
     for (const route of site.routes) {
       try {
-        // native pass: document flow restored, everything byte-stable.
         const native = await capturePass(page, run, {
           site,
           route,
@@ -2931,7 +2576,6 @@ async function captureSite(browser, siteKey) {
             ...(await captureStates(page, run, { site, route, viewport })),
           );
 
-          // live pass: nothing torn down, so the parallax and reveal machinery is intact.
           await page.goto(site.origin + route.path, {
             waitUntil: "load",
             timeout: 45000,
@@ -2963,7 +2607,6 @@ async function captureSite(browser, siteKey) {
             });
           }
 
-          // Effects, once per site, on the route that carries them.
           if (route.slug === "home" && viewport.name === "desktop") {
             const effects = {};
             if (site.effects.video)
@@ -3157,7 +2800,6 @@ async function captureSite(browser, siteKey) {
       }
     }
 
-    // reduced-motion, desktop + home route only.
     if (viewport.name === "desktop") {
       const rmContext = await newContext(browser, viewport, {
         reducedMotion: "reduce",
@@ -3174,7 +2816,6 @@ async function captureSite(browser, siteKey) {
         const path = run.file("shots", "reduced-motion.desktop.png");
         await rmPage.screenshot({ path, animations: "disabled" });
         const blanks = await rmPage.evaluate(() => {
-          // Sections still at opacity 0 after load are reveals that never fired.
           const out = [];
           for (const el of document.querySelectorAll(
             "section, .c-fadein-text, .c-images-sequence, .et_pb_section, [class*='anim']",
@@ -3232,7 +2873,6 @@ async function captureSite(browser, siteKey) {
     }
   }
 
-  // Transitions, each in a fresh context.
   for (const [index, transition] of site.transitions.entries()) {
     console.log(
       `    transition ${index}: ${transition.from} -> ${transition.to}`,
@@ -3240,7 +2880,6 @@ async function captureSite(browser, siteKey) {
     await captureTransition(browser, run, { site, transition, index });
   }
 
-  // ---- derived files -------------------------------------------------------
   const dsPath = run.file("design-system.json");
   writeJson(dsPath, designSystem);
   run.record(dsPath, "design-system", {
@@ -3265,9 +2904,6 @@ async function captureSite(browser, siteKey) {
     const path = run.file("motion", "reveals-observed.json");
     writeJson(path, revealsAll);
     const totals = revealsAll.reduce((a, r) => a + r.events.length, 0);
-    // A single median over every flip is meaningless here: `lenis-scrolling` toggles on and off
-    // hundreds of times per scroll and drowns the twenty-odd flips that are actually reveals. The
-    // per-class median is the number a reveal threshold is written from.
     const byClass = {};
     for (const group of revealsAll) {
       for (const event of group.events) {
@@ -3316,7 +2952,6 @@ async function captureSite(browser, siteKey) {
     });
   }
 
-  // Network inventory, joined to the DOM.
   const assets = {
     fonts: [],
     video: [],
@@ -3386,10 +3021,6 @@ async function captureSite(browser, siteKey) {
   return run;
 }
 
-// ---------------------------------------------------------------------------
-// --check: no browser, no network, safe in a sandbox
-// ---------------------------------------------------------------------------
-
 function runCheck() {
   const sites = ONLY_SITE ? [ONLY_SITE] : Object.keys(SITES);
   let artifacts = 0;
@@ -3430,7 +3061,6 @@ function runCheck() {
       }
       artifacts++;
     }
-    // The download ban, enforced rather than asserted: no third-party binary may be in the tree.
     const walk = (dir) => {
       for (const name of readdirSync(dir)) {
         const p = resolve(dir, name);
@@ -3453,8 +3083,6 @@ function runCheck() {
   }
   console.log(`${artifacts} artifacts verified`);
 }
-
-// ---------------------------------------------------------------------------
 
 async function main() {
   if (CHECK) return runCheck();
@@ -3482,28 +3110,12 @@ async function main() {
     await browser.close();
   }
 
-  // Top-level index across every site whose capture survives on disk.
-  //
-  // This MERGES rather than replaces, and the distinction is not academic: it
-  // cost a whole run once. `runs` holds only the sites captured by THIS
-  // invocation, so a `--site www.andrewrinehart.us` pass used to rewrite the
-  // root index with that site alone — silently deleting ethnocare's 530
-  // artifacts from the only file that lists what exists. The per-site indexes
-  // were both intact the whole time; the entry point was the thing that lied,
-  // and it lied in the direction nobody checks, because a 282-byte file that
-  // parses looks healthy.
-  //
-  // A site is carried forward only if its per-site index is still readable.
-  // That keeps `--clean` honest: delete a site's directory and it leaves the
-  // root index on the next run, rather than lingering as a dangling entry.
   const priorSites = (() => {
     const priorPath = resolve(outRoot, "index.json");
     if (!existsSync(priorPath)) return [];
     try {
       return JSON.parse(readFileSync(priorPath, "utf8"))?.sites ?? [];
     } catch {
-      // A truncated or hand-edited root index must not abort a capture that
-      // otherwise succeeded — the sites in `runs` are still rewritten below.
       return [];
     }
   })();

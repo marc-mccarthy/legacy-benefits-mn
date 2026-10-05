@@ -9,12 +9,6 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-/**
- * App tables owned by the site, kept separate from Payload's content tables.
- * Payload manages its own schema through its migrations; these are managed by
- * drizzle-kit against the same database.
- */
-
 export const outboxStatus = pgEnum("crm_outbox_status", [
   "pending",
   "sent",
@@ -33,15 +27,11 @@ export const leads = pgTable(
     message: text("message"),
     sourcePath: text("source_path"),
     utm: jsonb("utm").$type<Record<string, string>>(),
-    // The text and version as shown, not a boolean — a flag cannot reproduce
-    // what the visitor actually read.
     consentedAt: timestamp("consented_at", { withTimezone: true }),
     consentText: text("consent_text"),
     consentVersion: text("consent_version"),
     userAgent: text("user_agent"),
-    // Hashed, never raw — the raw address is not needed after rate limiting.
     ipHash: text("ip_hash"),
-    // Read by the purge job to decide what is eligible for deletion.
     retentionUntil: timestamp("retention_until", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -50,8 +40,6 @@ export const leads = pgTable(
   (t) => [index("leads_created_at_idx").on(t.createdAt)],
 );
 
-// Kept out of the CRM path and out of the marketing-opt-out purge; the two
-// write paths are separate for that reason.
 export const soaSubmissions = pgTable(
   "soa_submissions",
   {
@@ -60,13 +48,10 @@ export const soaSubmissions = pgTable(
     email: text("email"),
     phone: text("phone"),
     address: text("address"),
-    /** Values from SOA_PRODUCT_TYPES. */
     productTypes: jsonb("product_types").$type<string[]>().notNull(),
     agentName: text("agent_name"),
-    /** Typed signature plus the date the beneficiary signed. */
     signature: text("signature").notNull(),
     signedAt: timestamp("signed_at", { withTimezone: true }).notNull(),
-    /** When the sales meeting is expected to occur. */
     appointmentAt: timestamp("appointment_at", { withTimezone: true }),
     attestationText: text("attestation_text").notNull(),
     attestationVersion: text("attestation_version").notNull(),
@@ -82,18 +67,14 @@ export const soaSubmissions = pgTable(
   (t) => [index("soa_created_at_idx").on(t.createdAt)],
 );
 
-// Rows here survive a lead purge: a suppression that vanished with the lead
-// would stop suppressing anything.
 export const dncRequests = pgTable(
   "dnc_requests",
   {
     id: serial("id").primaryKey(),
     email: text("email"),
     phone: text("phone"),
-    /** revoke-contact | do-not-sell | delete-my-data */
     requestType: text("request_type").notNull(),
     notes: text("notes"),
-    /** Set when a human has actioned it in MedicarePRO and any dialer. */
     handledAt: timestamp("handled_at", { withTimezone: true }),
     ipHash: text("ip_hash"),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -106,11 +87,6 @@ export const dncRequests = pgTable(
   ],
 );
 
-/**
- * Transactional outbox. A lead row and its outbox row are written in one
- * transaction, so a MedicarePRO outage can delay delivery but never lose a
- * lead. Drained by /api/jobs/outbox.
- */
 export const crmOutbox = pgTable(
   "crm_outbox",
   {
@@ -118,7 +94,6 @@ export const crmOutbox = pgTable(
     leadId: integer("lead_id")
       .notNull()
       .references(() => leads.id, { onDelete: "cascade" }),
-    // Idempotency key sent to the CRM so a retry cannot duplicate a contact.
     idempotencyKey: text("idempotency_key").notNull().unique(),
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
     status: outboxStatus("status").notNull().default("pending"),

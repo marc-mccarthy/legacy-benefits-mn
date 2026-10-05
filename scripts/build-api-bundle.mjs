@@ -17,16 +17,8 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(repoRoot, "api-bundle");
 const entry = join(repoRoot, "src", "api", "index.ts");
 
-// `pg` reaches for its native binding behind a try/catch and falls back to the
-// JavaScript client; bundling it would turn that miss into a build error.
 const EXTERNAL = ["pg-native", "cloudflare:sockets"];
 
-/**
- * `server-only` throws on import unless a React Server Component loaded it.
- * The Lambda has no React runtime, so the marker is resolved to an empty
- * module — the guarantee it encodes, that these modules never reach a browser,
- * is already true of a bundle whose only entrypoint is the Lambda handler.
- */
 const serverOnlyShim = {
   name: "server-only-shim",
   setup(build) {
@@ -57,7 +49,6 @@ const result = await build({
   legalComments: "none",
   logLevel: "silent",
   banner: {
-    // Bundled CJS dependencies expect these; ESM does not define them.
     js: [
       "import { createRequire as __createRequire } from 'node:module';",
       "import { fileURLToPath as __fileURLToPath } from 'node:url';",
@@ -91,14 +82,9 @@ function directorySize(dir) {
 
 const bytes = directorySize(outDir);
 
-// The bundle is one file plus its manifest, so a directory named in the spec's
-// exclusion list can only appear as an inlined module path.
 const inlined = Object.keys(
   result.metafile.outputs[Object.keys(result.metafile.outputs)[0]].inputs ?? {},
 );
-// `src/content/site.ts` and the types it names are the one exception:
-// `getBusinessIdentity` falls back to them, and the lead route needs it for the
-// notification list and the stored consent text.
 const CONTENT_ALLOWED = /^src\/content\/(site|types)\.ts$/;
 const forbidden = inlined.filter(
   (path) =>
@@ -123,8 +109,6 @@ if (bytes >= MAX_PACKAGE_BYTES) {
   process.exit(1);
 }
 
-// Proves the entrypoint loads and exports `handler` under the Node version the
-// Lambda runs, rather than only that esbuild wrote a file.
 execFileSync(
   process.execPath,
   [

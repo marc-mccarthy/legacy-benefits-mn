@@ -12,8 +12,6 @@ import {
 import { Field, FormStatus, Input, Textarea } from "./fields";
 import { Turnstile } from "./turnstile";
 
-// Checkboxes rather than one catch-all: the submitted row names each product
-// type separately.
 export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",
@@ -122,7 +120,10 @@ export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
           We may only discuss the products you select here.
         </p>
         {SOA_PRODUCT_TYPES.map((product) => (
-          <label key={product.value} className="flex gap-3 leading-relaxed">
+          <label
+            key={product.value}
+            className="flex min-h-11 items-center gap-3 leading-relaxed"
+          >
             <input
               type="checkbox"
               value={product.value}

@@ -1,7 +1,3 @@
-/**
- *   node scripts/generate-diagrams.mjs          # write the manifest and SOURCES.md
- *   node scripts/generate-diagrams.mjs --check  # fail if either is stale
- */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -13,9 +9,6 @@ const manifestPath = resolve(diagramsDir, "diagrams.manifest.json");
 const sourcesPath = resolve(diagramsDir, "SOURCES.md");
 const CHECK = process.argv.includes("--check");
 
-// `mustContain` is the sentinel set per figure: strings that can only be in the source if it
-// still draws the part of the system it exists to show. They are matched against the .mmd text,
-// so a figure gutted of its content fails even though its bytes are internally consistent.
 const DIAGRAMS = [
   {
     id: "LEGEND",
@@ -82,10 +75,6 @@ function fail(message) {
 const stale = (path) =>
   `${relativePath(path)} is stale — run: pnpm diagrams:build`;
 
-/**
- * One collapsed section per diagram, each wrapping a fence whose body is byte-identical to the
- * .mmd file beside it. The trailing newline is stripped so the fence closes on its own line.
- */
 function buildSources() {
   const fence = "`".repeat(3);
   const lines = [
@@ -110,8 +99,6 @@ function buildSources() {
   return lines.join("\n");
 }
 
-// Two-space indent, keys in a fixed order, one trailing newline — --check compares the rendered
-// string rather than the parsed object, so the formatting has to be reproducible.
 function buildManifest() {
   const diagrams = DIAGRAMS.map((diagram) => ({
     id: diagram.id,
@@ -121,11 +108,6 @@ function buildManifest() {
   return `${JSON.stringify({ diagrams }, null, 2)}\n`;
 }
 
-/**
- * mermaid's parser is pure JS but reaches for a DOM through DOMPurify, so jsdom stands in for
- * one. `navigator` is getter-only on globalThis in Node, so it has to be defined rather than
- * assigned.
- */
 async function parseAll() {
   const dom = new JSDOM("<!doctype html><html><body></body></html>");
   for (const key of ["window", "document", "Element", "SVGElement", "Node"]) {
@@ -166,9 +148,6 @@ function runCheck() {
     }
   }
 
-  // The first line of every source has to be the shared init directive, byte for byte. A source
-  // that lost it renders in mermaid's default theme, which looks fine on its own and wrong
-  // beside the other seven.
   const sharedInit = firstLineOf("D1-system-context");
   if (!sharedInit.startsWith("%%{init:")) {
     fail(
@@ -183,8 +162,6 @@ function runCheck() {
     }
   }
 
-  // A file with no classDef lines is exempt: D3 is a sequence diagram, where the directive has
-  // nothing to apply to. A file that declares any must declare D1's set exactly.
   const sharedClassDefs = classDefsOf("D1-system-context").join("\n");
   for (const diagram of DIAGRAMS) {
     const own = classDefsOf(diagram.id);
@@ -215,8 +192,6 @@ function runCheck() {
     fail(stale(sourcesPath));
 }
 
-// Parses before either path: --check must not pass a broken source, and a build must not write
-// a manifest over one.
 await parseAll();
 
 if (CHECK) {

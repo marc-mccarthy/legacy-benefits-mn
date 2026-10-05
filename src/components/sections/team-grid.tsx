@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import Link from "next/link";
 import { Card, CardBody } from "@/components/ui/card";
 import { Container, Section, type Scheme } from "@/components/ui/section";
@@ -11,6 +11,7 @@ export type TeamMember = {
   name: string;
   slug: string;
   role: string;
+  bio?: string;
   photo?: unknown;
 };
 
@@ -18,22 +19,30 @@ export function TeamGrid({
   heading,
   members,
   scheme = "light",
+  headingLevel = "h2",
 }: {
   heading?: string | null;
   members: TeamMember[];
   scheme?: Scheme;
+  headingLevel?: "h1" | "h2";
 }) {
   if (members.length === 0) return null;
+
+  const Heading = headingLevel;
 
   return (
     <Section scheme={scheme} aria-labelledby="team-heading">
       <Container className="space-y-10">
-        <h2
+        <Heading
           id="team-heading"
-          className="font-display text-(length:--text-display-lg)"
+          className={
+            headingLevel === "h1"
+              ? "font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]"
+              : "font-display text-(length:--text-display-lg)"
+          }
         >
-          {heading ?? "Meet the team"}
-        </h2>
+          {heading ?? "Meet Nate"}
+        </Heading>
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((member, i) => {
             const photo = mediaProps(member.photo as never);
@@ -50,7 +59,7 @@ export function TeamGrid({
                         alt={member.name}
                         width={600}
                         height={720}
-                        sizes="(min-width: 1024px) 25vw, 50vw"
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                         className="aspect-[5/6] w-full object-cover"
                       />
                     ) : (
@@ -70,6 +79,7 @@ export function TeamGrid({
                         </Link>
                       </h3>
                       <p className="text-muted">{member.role}</p>
+                      {member.bio ? <p>{member.bio}</p> : null}
                     </CardBody>
                   </Card>
                 </Reveal>

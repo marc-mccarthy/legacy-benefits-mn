@@ -8,12 +8,6 @@ export type BusinessIdentity = {
   notificationEmails: string[];
 };
 
-/**
- * The environment is the only source. There is no fallback: a missing
- * `BUSINESS_NAME` throws at build time rather than rendering a stale value that
- * looks deliberate, which is how the wrong trading name reached a deployed page
- * once already.
- */
 export async function getBusinessIdentity(): Promise<BusinessIdentity> {
   const name = env("BUSINESS_NAME");
   if (!name) {

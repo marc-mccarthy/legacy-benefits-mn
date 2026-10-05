@@ -45,6 +45,21 @@ function getServerSnapshot(): Snapshot {
   return undefined;
 }
 
+function reserveStripSpace(strip: HTMLDivElement | null) {
+  if (!strip) return;
+  const root = document.documentElement;
+  const observer = new ResizeObserver(() => {
+    root.style.setProperty("--consent-h", `${strip.offsetHeight}px`);
+  });
+  root.setAttribute("data-consent-open", "");
+  observer.observe(strip);
+  return () => {
+    observer.disconnect();
+    root.removeAttribute("data-consent-open");
+    root.style.removeProperty("--consent-h");
+  };
+}
+
 export function Analytics({ gtmId }: { gtmId?: string }) {
   const choice = useSyncExternalStore<Snapshot>(
     subscribe,
@@ -76,31 +91,30 @@ export function Analytics({ gtmId }: { gtmId?: string }) {
 
       {showBanner ? (
         <div
+          ref={reserveStripSpace}
           role="dialog"
           aria-label="Cookie choices"
-          className="border-border-subtle bg-surface text-on-surface fixed inset-x-0 bottom-0 z-50 border-t p-5 shadow-lg"
+          className="border-border-subtle bg-surface text-on-surface fixed inset-x-0 bottom-0 z-50 flex flex-col gap-3 border-t px-5 py-3 shadow-(--shadow-lifted) sm:flex-row sm:items-center sm:justify-between print:hidden"
         >
-          <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <p className="leading-relaxed">
-              We use cookies to understand how this site is used. We do not sell
-              your personal information. See our{" "}
-              <a href="/privacy" className="underline underline-offset-4">
-                privacy policy
-              </a>
-              .
-            </p>
-            <div className="flex shrink-0 gap-3">
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => update("denied")}
-              >
-                Reject
-              </Button>
-              <Button size="sm" onClick={() => update("granted")}>
-                Accept
-              </Button>
-            </div>
+          <p className="text-base leading-snug">
+            We use cookies to understand how this site is used. We do not sell
+            your personal information. See our{" "}
+            <a href="/privacy" className="underline underline-offset-4">
+              privacy policy
+            </a>
+            .
+          </p>
+          <div className="flex shrink-0 gap-3">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => update("denied")}
+            >
+              Reject
+            </Button>
+            <Button size="sm" onClick={() => update("granted")}>
+              Accept
+            </Button>
           </div>
         </div>
       ) : null}

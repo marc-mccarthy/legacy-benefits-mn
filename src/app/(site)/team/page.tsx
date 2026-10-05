@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { TeamGrid } from "@/components/sections/team-grid";
+import { TeamMember } from "@/components/sections/team-member";
 import { team } from "@/content/team";
 
 export const metadata: Metadata = {
-  title: "Our team",
-  description: "The licensed agents you will actually be speaking to.",
+  title: "Nate Best",
+  description:
+    "Meet Nate Best, the licensed Medicare agent you talk to every time.",
 };
 
 export default function TeamPage() {
-  return <TeamGrid heading="Our team" members={team as never} />;
+  return <TeamMember member={team[0]!} />;
 }

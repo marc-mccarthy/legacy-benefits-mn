@@ -1,26 +1,8 @@
 import { expect, test } from "@playwright/test";
-
-/**
- * WCAG 1.4.10 (Reflow): content must not require horizontal scrolling at 400%
- * zoom. Browser zoom presents to CSS as a proportionally narrower viewport, so
- * 200% and 400% on a 1440px window are emulated as 720px and 360px.
- *
- * This audience zooms — it is the primary way presbyopia is compensated for on
- * a laptop. The specific regression it guards is a fluid `clamp()` written with
- * only `vw` terms: those ignore zoom entirely, so type stays put while the
- * layout around it shrinks, and something eventually overflows.
- */
-
-const PAGES = [
-  "/",
-  "/services",
-  "/learn",
-  "/events",
-  "/contact",
-  "/disclosures",
-];
+import { PAGES } from "./support/routes";
 
 const ZOOMS = [
+  { label: "phone", width: 390, height: 844 },
   { label: "200%", width: 720, height: 450 },
   { label: "400%", width: 360, height: 225 },
 ];
@@ -35,8 +17,6 @@ for (const { label, width, height } of ZOOMS) {
 
       const overflow = await page.evaluate(() => {
         const d = document.documentElement;
-        // Name the widest offenders, so a failure points at the element rather
-        // than just reporting that the page is too wide.
         const offenders = [...document.querySelectorAll("body *")]
           .filter((el) => el.getBoundingClientRect().right > d.clientWidth + 1)
           .slice(0, 3)
@@ -44,7 +24,6 @@ for (const { label, width, height } of ZOOMS) {
         return { scrollW: d.scrollWidth, clientW: d.clientWidth, offenders };
       });
 
-      // 1px of tolerance for sub-pixel rounding at fractional widths.
       expect(
         overflow.scrollW,
         `overflowing: ${overflow.offenders.join(" | ")}`,
@@ -52,3 +31,81 @@ for (const { label, width, height } of ZOOMS) {
     });
   }
 }
+
+test("the header lockup wraps without overflow or shrinking the mark at 360px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto("/");
+
+  const text = page.locator("header [data-brand-lockup] > span");
+  const mark = page.locator("header [data-brand-mark]");
+
+  for (const name of [
+    "Northern Lights Medicare Benefits Advisors LLC",
+    "x".repeat(40),
+  ]) {
+    await text.evaluate((el, value) => {
+      el.textContent = value;
+    }, name);
+
+    const { scrollW, clientW } = await page.evaluate(() => ({
+      scrollW: document.documentElement.scrollWidth,
+      clientW: document.documentElement.clientWidth,
+    }));
+    expect(scrollW, name).toBeLessThanOrEqual(clientW);
+
+    const box = await mark.boundingBox();
+    expect(box?.width, name).toBeGreaterThanOrEqual(20);
+    expect(box?.height, name).toBeGreaterThanOrEqual(20);
+  }
+});
+
+for (const width of [360, 390]) {
+  test(`the stuck header keeps the full lockup visible at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/");
+    await page.evaluate(() => window.scrollTo(0, 1500));
+    await expect(page.locator("header[data-site-header]")).toHaveAttribute(
+      "data-stuck",
+      "",
+    );
+
+    const box = await page
+      .locator("header [data-brand-lockup] > span")
+      .boundingBox();
+    expect(box?.width).toBeGreaterThan(80);
+    expect(box?.height).toBeGreaterThan(12);
+
+    const { scrollW, clientW } = await page.evaluate(() => ({
+      scrollW: document.documentElement.scrollWidth,
+      clientW: document.documentElement.clientWidth,
+    }));
+    expect(scrollW).toBeLessThanOrEqual(clientW);
+  });
+}
+
+test("long footer address and email wrap instead of widening the page at 390px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  await page.evaluate(() => {
+    const set = (selector: string, value: string) => {
+      const el = document.querySelector(selector);
+      if (!el) throw new Error(`missing ${selector}`);
+      el.textContent = value;
+    };
+    set("[data-footer-address]", "x".repeat(60));
+    set("[data-footer-email]", `${"y".repeat(50)}@${"z".repeat(9)}`);
+  });
+
+  const { scrollW, clientW } = await page.evaluate(() => ({
+    scrollW: document.documentElement.scrollWidth,
+    clientW: document.documentElement.clientWidth,
+  }));
+  expect(scrollW).toBeLessThanOrEqual(clientW + 1);
+});

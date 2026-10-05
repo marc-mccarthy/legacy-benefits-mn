@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLockup } from "@/components/ui/brand-mark";
 import { Container } from "@/components/ui/section";
 import { FooterComplianceBlock } from "@/components/compliance/disclosures";
 
@@ -40,9 +41,9 @@ export function Footer({
       data-scheme="dark"
       className="bg-surface text-on-surface border-border-subtle mt-auto border-t"
     >
-      <Container className="space-y-4 py-(--spacing-medium)">
+      <Container className="space-y-4 py-6 md:py-(--spacing-medium)">
         {phone ? (
-          <p className="flex items-center gap-2">
+          <p className="flex items-center gap-(--spacing-micro)">
             <a
               href={`tel:${phone.replace(/\D/g, "")}`}
               className="inline-flex min-h-11 items-center hover:underline"
@@ -59,19 +60,23 @@ export function Footer({
         />
       </Container>
 
-      <Container className="grid gap-10 py-(--spacing-large) md:grid-cols-3">
+      <Container className="grid grid-cols-2 gap-x-6 gap-y-6 py-6 md:grid-cols-3 md:gap-x-10 md:gap-y-10 md:py-(--spacing-large)">
         <div className="space-y-2">
-          <p className="text-lg font-bold">{brand}</p>
+          <BrandLockup name={brand} />
           {address ? (
-            <p className="text-muted whitespace-pre-line">
+            <p
+              data-footer-address
+              className="text-muted [overflow-wrap:anywhere] whitespace-pre-line"
+            >
               {address.replace(/\\r\\n|\\n/g, "\n")}
             </p>
           ) : null}
           {email ? (
             <p>
               <a
+                data-footer-email
                 href={`mailto:${email}`}
-                className="inline-flex min-h-11 items-center hover:underline"
+                className="inline-flex min-h-11 items-center [overflow-wrap:anywhere] hover:underline"
               >
                 {email}
               </a>
@@ -94,7 +99,7 @@ export function Footer({
           </ul>
         </nav>
 
-        <div className="text-muted space-y-2">
+        <div className="text-muted col-span-2 space-y-2 md:col-span-1">
           {npn ? <p>National Producer Number: {npn}</p> : null}
           {stateLicenses?.length ? (
             <p>
@@ -109,7 +114,7 @@ export function Footer({
       </Container>
 
       <div className="border-border-subtle border-t">
-        <Container className="py-(--spacing-medium)">
+        <Container className="py-6 md:py-(--spacing-medium)">
           <p className="text-muted">
             © {year} {brand}. All rights reserved.
           </p>

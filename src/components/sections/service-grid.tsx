@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import Link from "next/link";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { Curtain } from "@/components/motion/curtain";
@@ -83,7 +83,7 @@ export function ServiceGrid({
                   )}
                 >
                   <div className="max-w-xl space-y-4">
-                    <h3 className="text-(length:--text-display-md) font-semibold">
+                    <h3 className="text-(length:--text-display-md) leading-[1.2] font-semibold tracking-[-0.01em]">
                       {service.title}
                     </h3>
                     <p className="text-muted leading-relaxed text-pretty">

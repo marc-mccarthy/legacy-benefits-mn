@@ -3,234 +3,73 @@
   "generator": "sourcing-media",
   "assets": [
     {
-      "slot": "pages.poster",
-      "lane": "photo",
-      "file": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro.jpg",
+      "slot": "services.image",
+      "lane": "archival",
+      "file": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh.jpg",
       "variants": [
         {
           "width": 1920,
           "format": "avif",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-1920.avif",
-          "bytes": 138507
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-1920.avif",
+          "bytes": 434831
         },
         {
           "width": 1920,
           "format": "webp",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-1920.webp",
-          "bytes": 103156
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-1920.webp",
+          "bytes": 338304
         },
         {
           "width": 900,
           "format": "avif",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-900.avif",
-          "bytes": 46573
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-900.avif",
+          "bytes": 84699
         },
         {
           "width": 900,
           "format": "webp",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-900.webp",
-          "bytes": 32128
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-900.webp",
+          "bytes": 68200
         },
         {
           "width": 480,
           "format": "avif",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-480.avif",
-          "bytes": 18829
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-480.avif",
+          "bytes": 26056
         },
         {
           "width": 480,
           "format": "webp",
-          "path": "public/media/pagesposter-a-senior-couple-walking-by-the-lake-sharing-a-ro-480.webp",
-          "bytes": 13010
+          "path": "public/media/servicesimage-minneapolis-skyline-from-loring-park-neighborh-480.webp",
+          "bytes": 20258
         }
       ],
       "intrinsic": {
-        "width": 6016,
-        "height": 4016
+        "width": 1920,
+        "height": 1080
       },
-      "alt": "An older couple walking outdoors on an autumn afternoon",
+      "alt": "The downtown Minneapolis skyline seen from the air on a clear autumn morning",
       "altNeedsReview": false,
       "source": {
-        "name": "pexels",
-        "provider": "pexels",
-        "id": "6128921",
-        "pageUrl": "https://www.pexels.com/photo/an-elderly-man-kissing-an-elderly-woman-6128921/",
-        "downloadUrl": "https://images.pexels.com/photos/6128921/pexels-photo-6128921.jpeg"
+        "name": "wikimedia",
+        "provider": "wikimedia-commons",
+        "id": "155968640",
+        "pageUrl": "https://commons.wikimedia.org/wiki/File:Minneapolis_skyline_from_Loring_Park_neighborhood_aerial,_October_2024.jpg",
+        "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Minneapolis_skyline_from_Loring_Park_neighborhood_aerial%2C_October_2024.jpg/1920px-Minneapolis_skyline_from_Loring_Park_neighborhood_aerial%2C_October_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
       },
       "license": {
-        "id": "pexels-license",
-        "name": "Pexels License",
-        "url": "https://www.pexels.com/license/",
+        "id": "cc0",
+        "name": "CC0 1.0",
+        "url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
         "commercial": true,
         "derivatives": true,
         "attributionRequired": false,
         "shareAlike": false,
-        "publicDomain": false,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [
-          "No redistribution of Pexels content on a competing stock platform.",
-          "Identifiable people may not be shown in a bad light or in an offensive way."
-        ],
-        "creditLine": "Photo by Leeloo The First on Pexels (https://www.pexels.com/photo/an-elderly-man-kissing-an-elderly-woman-6128921/)"
-      },
-      "risk": {
-        "recognizablePerson": true,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": false
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "pages.slides",
-      "lane": "photo",
-      "file": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p.jpg",
-      "variants": [
-        {
-          "width": 1920,
-          "format": "avif",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-1920.avif",
-          "bytes": 1067720
-        },
-        {
-          "width": 1920,
-          "format": "webp",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-1920.webp",
-          "bytes": 1007472
-        },
-        {
-          "width": 900,
-          "format": "avif",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-900.avif",
-          "bytes": 249192
-        },
-        {
-          "width": 900,
-          "format": "webp",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-900.webp",
-          "bytes": 214840
-        },
-        {
-          "width": 480,
-          "format": "avif",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-480.avif",
-          "bytes": 66248
-        },
-        {
-          "width": 480,
-          "format": "webp",
-          "path": "public/media/pagesslides-superior-hiking-trail-autumn-tettegouche-state-p-480.webp",
-          "bytes": 56076
-        }
-      ],
-      "intrinsic": {
-        "width": 1920,
-        "height": 1280
-      },
-      "alt": "Autumn colour along the Superior Hiking Trail in Tettegouche State Park, Minnesota",
-      "altNeedsReview": false,
-      "source": {
-        "name": "wikimedia",
-        "provider": "wikimedia-commons",
-        "id": "44812496",
-        "pageUrl": "https://commons.wikimedia.org/wiki/File:Superior_Hiking_Trail_Autumn_-_Tettegouche_State_Park,_Minnesota_(22399172757).jpg",
-        "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Superior_Hiking_Trail_Autumn_-_Tettegouche_State_Park%2C_Minnesota_%2822399172757%29.jpg/1920px-Superior_Hiking_Trail_Autumn_-_Tettegouche_State_Park%2C_Minnesota_%2822399172757%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
-      },
-      "license": {
-        "id": "by-sa",
-        "name": "CC BY-SA",
-        "url": "https://creativecommons.org/licenses/by-sa/2.0",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": true,
-        "shareAlike": true,
-        "publicDomain": false,
+        "publicDomain": true,
         "verifyRequired": false,
         "hotlinkAllowed": false,
         "caveats": [],
-        "creditLine": "\"Superior Hiking Trail Autumn - Tettegouche State Park, Minnesota (22399172757)\" by Tony Webster from San Francisco, California, CC BY-SA, https://commons.wikimedia.org/wiki/File:Superior_Hiking_Trail_Autumn_-_Tettegouche_State_Park,_Minnesota_(22399172757).jpg"
-      },
-      "risk": {
-        "recognizablePerson": false,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": true
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "services.image",
-      "lane": "photo",
-      "file": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi.jpg",
-      "variants": [
-        {
-          "width": 1920,
-          "format": "avif",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-1920.avif",
-          "bytes": 409924
-        },
-        {
-          "width": 1920,
-          "format": "webp",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-1920.webp",
-          "bytes": 316256
-        },
-        {
-          "width": 900,
-          "format": "avif",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-900.avif",
-          "bytes": 88826
-        },
-        {
-          "width": 900,
-          "format": "webp",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-900.webp",
-          "bytes": 62894
-        },
-        {
-          "width": 480,
-          "format": "avif",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-480.avif",
-          "bytes": 23616
-        },
-        {
-          "width": 480,
-          "format": "webp",
-          "path": "public/media/servicesimage-minneapolis-april-2025-28-skyline-and-mississi-480.webp",
-          "bytes": 14812
-        }
-      ],
-      "intrinsic": {
-        "width": 1920,
-        "height": 1280
-      },
-      "alt": "The Minneapolis skyline above the Mississippi River",
-      "altNeedsReview": false,
-      "source": {
-        "name": "wikimedia",
-        "provider": "wikimedia-commons",
-        "id": "164795872",
-        "pageUrl": "https://commons.wikimedia.org/wiki/File:Minneapolis_April_2025_28_(skyline_and_Mississippi_River).jpg",
-        "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Minneapolis_April_2025_28_%28skyline_and_Mississippi_River%29.jpg/1920px-Minneapolis_April_2025_28_%28skyline_and_Mississippi_River%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
-      },
-      "license": {
-        "id": "by-sa",
-        "name": "CC BY-SA",
-        "url": "https://creativecommons.org/licenses/by-sa/4.0",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": true,
-        "shareAlike": true,
-        "publicDomain": false,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [],
-        "creditLine": "\"Minneapolis April 2025 28 (skyline and Mississippi River)\" by Michael Barera, CC BY-SA, https://commons.wikimedia.org/wiki/File:Minneapolis_April_2025_28_(skyline_and_Mississippi_River).jpg"
+        "creditLine": "Minneapolis skyline from Loring Park neighborhood aerial, October 2024 — CC0 1.0, via Wikimedia Commons"
       },
       "risk": {
         "recognizablePerson": false,
@@ -310,175 +149,6 @@
         "hotlinkAllowed": false,
         "caveats": [],
         "creditLine": "Mission Farms Tepee Village, Plymouth, Minnesota - DPLA - 470f5911a614a8065b99ab491302764f — Public Domain Mark, via Wikimedia Commons"
-      },
-      "risk": {
-        "recognizablePerson": true,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": false
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "articles.coverImage",
-      "lane": "photo",
-      "file": "public/media/articlescoverimage-prairie-sunrise-54762711587.jpg",
-      "variants": [
-        {
-          "width": 1920,
-          "format": "avif",
-          "path": "public/media/articlescoverimage-prairie-sunrise-54762711587-1920.avif",
-          "bytes": 799056
-        },
-        {
-          "width": 1920,
-          "format": "webp",
-          "path": "public/media/articlescoverimage-prairie-sunrise-54762711587-1920.webp",
-          "bytes": 658216
-        },
-        {
-          "width": 900,
-          "format": "avif",
-          "path": "public/media/articlescoverimage-prairie-sunrise-54762711587-900.avif",
-          "bytes": 176853
-        },
-        {
-          "width": 900,
-          "format": "webp",
-          "path": "public/media/articlescoverimage-prairie-sunrise-54762711587-900.webp",
-          "bytes": 122360
-        },
-        {
-          "width": 480,
-          "format": "avif",
-          "path": "public/media/articlescoverimage-prairie-sunrise-54762711587-480.avif",
-          "bytes": 49082
-        },
-        {
-          "width": 480,
-          "format": "webp",
-          "path": "public/media/articlescoverimage-prairie-sunrise-54762711587-480.webp",
-          "bytes": 31412
-        }
-      ],
-      "intrinsic": {
-        "width": 1920,
-        "height": 1379
-      },
-      "alt": "Open Minnesota prairie at sunrise",
-      "altNeedsReview": false,
-      "source": {
-        "name": "wikimedia",
-        "provider": "wikimedia-commons",
-        "id": "174691230",
-        "pageUrl": "https://commons.wikimedia.org/wiki/File:Prairie_sunrise_(54762711587).jpg",
-        "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Prairie_sunrise_%2854762711587%29.jpg/1920px-Prairie_sunrise_%2854762711587%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
-      },
-      "license": {
-        "id": "pdm",
-        "name": "Public Domain Mark",
-        "url": "https://creativecommons.org/publicdomain/mark/1.0/",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": false,
-        "shareAlike": false,
-        "publicDomain": true,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [],
-        "creditLine": "Prairie sunrise (54762711587) — Public Domain Mark, via Wikimedia Commons"
-      },
-      "risk": {
-        "recognizablePerson": false,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": true
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "team.headshot",
-      "lane": "avatar",
-      "file": "public/media/teamheadshot-confident-handsome-adult-man-in-blue-shirt-sitt.jpg",
-      "variants": [],
-      "intrinsic": {
-        "width": 3840,
-        "height": 3840
-      },
-      "alt": "Portrait of a licensed insurance agent in a blue shirt, seated at a desk",
-      "altNeedsReview": false,
-      "source": {
-        "name": "pexels",
-        "provider": "pexels",
-        "id": "7752811",
-        "pageUrl": "https://www.pexels.com/photo/cheerful-mature-man-in-shirt-smiling-7752811/",
-        "downloadUrl": "https://images.pexels.com/photos/7752811/pexels-photo-7752811.jpeg"
-      },
-      "license": {
-        "id": "pexels-license",
-        "name": "Pexels License",
-        "url": "https://www.pexels.com/license/",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": false,
-        "shareAlike": false,
-        "publicDomain": false,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [
-          "No redistribution of Pexels content on a competing stock platform.",
-          "Identifiable people may not be shown in a bad light or in an offensive way."
-        ],
-        "creditLine": "Photo by Apunto Group Agencia de publicidad on Pexels (https://www.pexels.com/photo/cheerful-mature-man-in-shirt-smiling-7752811/)"
-      },
-      "risk": {
-        "recognizablePerson": true,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": false
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
-      "slot": "testimonials.photo",
-      "lane": "avatar",
-      "file": "public/media/testimonialsphoto-happy-senior-couple-sitting-outdoors-on-a.jpg",
-      "variants": [],
-      "intrinsic": {
-        "width": 8400,
-        "height": 8400
-      },
-      "alt": "A senior couple sitting outdoors on a sunny winter day",
-      "altNeedsReview": false,
-      "source": {
-        "name": "pexels",
-        "provider": "pexels",
-        "id": "28589008",
-        "pageUrl": "https://www.pexels.com/photo/senior-couple-enjoying-outdoor-winter-relaxation-28589008/",
-        "downloadUrl": "https://images.pexels.com/photos/28589008/pexels-photo-28589008.jpeg"
-      },
-      "license": {
-        "id": "pexels-license",
-        "name": "Pexels License",
-        "url": "https://www.pexels.com/license/",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": false,
-        "shareAlike": false,
-        "publicDomain": false,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [
-          "No redistribution of Pexels content on a competing stock platform.",
-          "Identifiable people may not be shown in a bad light or in an offensive way."
-        ],
-        "creditLine": "Photo by Nishant Aneja on Pexels (https://www.pexels.com/photo/senior-couple-enjoying-outdoor-winter-relaxation-28589008/)"
       },
       "risk": {
         "recognizablePerson": true,
@@ -571,6 +241,2045 @@
       "usage": "commercial",
       "query": null,
       "fetchedBy": "sourcing-media"
+    },
+    {
+      "slot": "nate.cutout",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-cutout.png",
+      "variants": [],
+      "intrinsic": {
+        "width": 651,
+        "height": 1229
+      },
+      "alt": "Nate Best",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "scripts/portrait-assets.sh"
+    },
+    {
+      "slot": "nate.cutoutSample",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-cutout-sample.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 326,
+        "height": 615
+      },
+      "alt": "Nate Best",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "scripts/portrait-assets.sh"
+    },
+    {
+      "slot": "nate.duotone",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-duotone.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/nate-duotone-480.avif",
+          "bytes": 67928
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/nate-duotone-480.webp",
+          "bytes": 60278
+        },
+        {
+          "width": 651,
+          "format": "avif",
+          "path": "public/media/nate-duotone-651.avif",
+          "bytes": 113198
+        },
+        {
+          "width": 651,
+          "format": "webp",
+          "path": "public/media/nate-duotone-651.webp",
+          "bytes": 106074
+        }
+      ],
+      "intrinsic": {
+        "width": 651,
+        "height": 1229
+      },
+      "alt": "Nate Best, founder of Legacy Benefits Group",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "scripts/portrait-assets.sh"
+    },
+    {
+      "slot": "nate.withDaughter",
+      "lane": "photo",
+      "file": "public/media/nate-with-daughter.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/nate-with-daughter-480.avif",
+          "bytes": 41540
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/nate-with-daughter-480.webp",
+          "bytes": 62484
+        },
+        {
+          "width": 800,
+          "format": "avif",
+          "path": "public/media/nate-with-daughter-800.avif",
+          "bytes": 92825
+        },
+        {
+          "width": 800,
+          "format": "webp",
+          "path": "public/media/nate-with-daughter-800.webp",
+          "bytes": 133306
+        },
+        {
+          "width": 920,
+          "format": "avif",
+          "path": "public/media/nate-with-daughter-920.avif",
+          "bytes": 119420
+        },
+        {
+          "width": 920,
+          "format": "webp",
+          "path": "public/media/nate-with-daughter-920.webp",
+          "bytes": 166474
+        }
+      ],
+      "intrinsic": {
+        "width": 920,
+        "height": 1150
+      },
+      "alt": "Nate Best with his daughter",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-with-daughter",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-with-daughter.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Owner-supplied personal photograph of the business owner with his daughter; owner's own, no separate model release document."
+        ],
+        "creditLine": "Nate Best — owner-supplied personal photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "owner"
+    },
+    {
+      "slot": "close.starSprite",
+      "lane": "generated-antigravity",
+      "file": "public/media/star-particle-glow.png",
+      "variants": [],
+      "intrinsic": {
+        "width": 256,
+        "height": 256
+      },
+      "alt": "A four-point North Star with a soft glow",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "star-particle-glow",
+        "pageUrl": null,
+        "downloadUrl": "public/media/star-particle-glow.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white-on-alpha sprite for the night close star field; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "env.studio",
+      "lane": "generated-three",
+      "file": "public/media/env/studio-cool-gold.jpg",
+      "variants": [],
+      "intrinsic": {
+        "width": 2048,
+        "height": 1024
+      },
+      "alt": "Studio lighting map",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-three",
+        "id": "studio-cool-gold",
+        "pageUrl": null,
+        "downloadUrl": "public/media/env/studio-cool-gold.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated equirectangular studio map (gold key, cyan fill) used only as the reflection environment for the services glass objects; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity three.js rig"
+    },
+    {
+      "slot": "nate.chip",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-chip-192.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 192,
+        "height": 192
+      },
+      "alt": "Nate Best",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "team.owner",
+      "lane": "owner-supplied",
+      "file": "public/media/nate-best-authentic.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/nate-best-authentic-480.avif",
+          "bytes": 51830
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/nate-best-authentic-480.webp",
+          "bytes": 85786
+        },
+        {
+          "width": 600,
+          "format": "avif",
+          "path": "public/media/nate-best-authentic-600.avif",
+          "bytes": 67542
+        },
+        {
+          "width": 600,
+          "format": "webp",
+          "path": "public/media/nate-best-authentic-600.webp",
+          "bytes": 118812
+        }
+      ],
+      "intrinsic": {
+        "width": 651,
+        "height": 1229
+      },
+      "alt": "Nate Best, founder of Legacy Benefits Group",
+      "altNeedsReview": false,
+      "source": {
+        "name": "owner",
+        "provider": "owner-supplied",
+        "id": "nate-best-authentic",
+        "pageUrl": null,
+        "downloadUrl": "public/media/nate-best-authentic.jpg"
+      },
+      "license": {
+        "id": "owner-owned",
+        "name": "Owner-owned",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Owner-supplied self-portrait of the business owner; no separate model release document."
+        ],
+        "creditLine": "Nate Best — owner-supplied photograph"
+      },
+      "risk": {
+        "recognizablePerson": true,
+        "modelRelease": true,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "owner"
+    },
+    {
+      "slot": "noise.envelope",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-envelope.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-envelope",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-envelope.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.tornEnvelope",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-torn-envelope.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-torn-envelope",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-torn-envelope.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.form",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-form.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-form",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-form.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.card",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-card.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-card",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-card.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.folder",
+      "lane": "generated-antigravity",
+      "file": "public/media/silhouettes/paper-folder-v2.svg",
+      "variants": [],
+      "intrinsic": {
+        "width": 100,
+        "height": 100
+      },
+      "alt": "Paperwork silhouette",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-folder-v2",
+        "pageUrl": null,
+        "downloadUrl": "public/media/silhouettes/paper-folder-v2.svg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated white vector paperwork silhouette for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.paper01",
+      "lane": "generated-antigravity",
+      "file": "public/media/paper/paper-01.png",
+      "variants": [
+        {
+          "width": 800,
+          "format": "webp",
+          "path": "public/media/paper/paper-01.webp",
+          "bytes": 9858
+        }
+      ],
+      "intrinsic": {
+        "width": 800,
+        "height": 571
+      },
+      "alt": "Paper cut-out",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-01",
+        "pageUrl": null,
+        "downloadUrl": "public/media/paper/paper-01.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated photographic paper cut-out with alpha for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.paper02",
+      "lane": "generated-antigravity",
+      "file": "public/media/paper/paper-02.png",
+      "variants": [
+        {
+          "width": 738,
+          "format": "webp",
+          "path": "public/media/paper/paper-02.webp",
+          "bytes": 26030
+        }
+      ],
+      "intrinsic": {
+        "width": 738,
+        "height": 800
+      },
+      "alt": "Paper cut-out",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-02",
+        "pageUrl": null,
+        "downloadUrl": "public/media/paper/paper-02.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated photographic paper cut-out with alpha for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.paper06",
+      "lane": "generated-antigravity",
+      "file": "public/media/paper/paper-06.png",
+      "variants": [
+        {
+          "width": 800,
+          "format": "webp",
+          "path": "public/media/paper/paper-06.webp",
+          "bytes": 19110
+        }
+      ],
+      "intrinsic": {
+        "width": 800,
+        "height": 620
+      },
+      "alt": "Paper cut-out",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-06",
+        "pageUrl": null,
+        "downloadUrl": "public/media/paper/paper-06.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated photographic paper cut-out with alpha for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.paper08",
+      "lane": "generated-antigravity",
+      "file": "public/media/paper/paper-08.png",
+      "variants": [
+        {
+          "width": 591,
+          "format": "webp",
+          "path": "public/media/paper/paper-08.webp",
+          "bytes": 23164
+        }
+      ],
+      "intrinsic": {
+        "width": 591,
+        "height": 800
+      },
+      "alt": "Paper cut-out",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-08",
+        "pageUrl": null,
+        "downloadUrl": "public/media/paper/paper-08.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated photographic paper cut-out with alpha for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.paper09",
+      "lane": "generated-antigravity",
+      "file": "public/media/paper/paper-09.png",
+      "variants": [
+        {
+          "width": 796,
+          "format": "webp",
+          "path": "public/media/paper/paper-09.webp",
+          "bytes": 23408
+        }
+      ],
+      "intrinsic": {
+        "width": 796,
+        "height": 800
+      },
+      "alt": "Paper cut-out",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-09",
+        "pageUrl": null,
+        "downloadUrl": "public/media/paper/paper-09.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated photographic paper cut-out with alpha for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "noise.paper10",
+      "lane": "generated-antigravity",
+      "file": "public/media/paper/paper-10.png",
+      "variants": [
+        {
+          "width": 518,
+          "format": "webp",
+          "path": "public/media/paper/paper-10.webp",
+          "bytes": 29608
+        }
+      ],
+      "intrinsic": {
+        "width": 518,
+        "height": 800
+      },
+      "alt": "Paper cut-out",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "paper-10",
+        "pageUrl": null,
+        "downloadUrl": "public/media/paper/paper-10.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Generated photographic paper cut-out with alpha for the home noise section; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "lake.dusk",
+      "lane": "generated-antigravity",
+      "file": "public/media/lake-dusk.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/lake-dusk-480.avif",
+          "bytes": 8984
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/lake-dusk-480.webp",
+          "bytes": 8372
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/lake-dusk-900.avif",
+          "bytes": 21751
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/lake-dusk-900.webp",
+          "bytes": 20290
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/lake-dusk-1920.avif",
+          "bytes": 67589
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/lake-dusk-1920.webp",
+          "bytes": 58384
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A Minnesota lake under a crimson sunset sky",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "lake-dusk",
+        "pageUrl": null,
+        "downloadUrl": "public/media/lake-dusk.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Dusk frame of the graded dawn-to-dusk video, graded from the CC0 Boundary Waters plate (Dan Carlson / Unsplash); no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "lake.loop",
+      "lane": "generated-antigravity",
+      "file": "public/video/mn-lake-dawn-dusk-mobile.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 1080,
+        "height": 608
+      },
+      "alt": "A Minnesota lake moving from dawn to dusk",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "mn-lake-dawn-dusk-mobile",
+        "pageUrl": null,
+        "downloadUrl": "public/video/mn-lake-dawn-dusk-mobile.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Muted H.264 dawn-to-dusk grade of the CC0 Boundary Waters plate (Dan Carlson / Unsplash) for phones below 700 px; no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "band.loop",
+      "lane": "generated-antigravity",
+      "file": "public/video/mn-blue-hour-loop.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A Minnesota lake in the blue hour after sunset",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "mn-blue-hour-loop",
+        "pageUrl": null,
+        "downloadUrl": "public/video/mn-blue-hour-loop.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Muted H.264 seamless crossfade loop of a graded CC0 blue-hour plate, played behind the inform page header bands; no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "glass.partC",
+      "lane": "generated-three",
+      "file": "public/media/glass-part-c.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 900,
+        "height": 562
+      },
+      "alt": "A glass torus knot lit gold and cyan",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Claude Code",
+        "provider": "generated-three",
+        "id": "glass-part-c",
+        "pageUrl": null,
+        "downloadUrl": "public/media/glass-part-c.webp"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rendered from the site's three.js glass scene (owner-commissioned); no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "three.js render of the glass scene"
+    },
+    {
+      "slot": "glass.medigap",
+      "lane": "generated-three",
+      "file": "public/media/glass-medigap.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 900,
+        "height": 562
+      },
+      "alt": "A glass shield lit gold and cyan",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Claude Code",
+        "provider": "generated-three",
+        "id": "glass-medigap",
+        "pageUrl": null,
+        "downloadUrl": "public/media/glass-medigap.webp"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rendered from the site's three.js glass scene (owner-commissioned); no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "three.js render of the glass scene"
+    },
+    {
+      "slot": "glass.partD",
+      "lane": "generated-three",
+      "file": "public/media/glass-part-d.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 900,
+        "height": 562
+      },
+      "alt": "A faceted glass prism lit gold and cyan",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Claude Code",
+        "provider": "generated-three",
+        "id": "glass-part-d",
+        "pageUrl": null,
+        "downloadUrl": "public/media/glass-part-d.webp"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rendered from the site's three.js glass scene (owner-commissioned); no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "three.js render of the glass scene"
+    },
+    {
+      "slot": "learn.when-can-i-change-my-plan",
+      "lane": "generated-antigravity",
+      "file": "public/media/learn/when-can-i-change-my-plan.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/learn/when-can-i-change-my-plan-480.avif",
+          "bytes": 17668
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/learn/when-can-i-change-my-plan-480.webp",
+          "bytes": 16202
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/learn/when-can-i-change-my-plan-900.avif",
+          "bytes": 52459
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/learn/when-can-i-change-my-plan-900.webp",
+          "bytes": 44418
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/learn/when-can-i-change-my-plan-1920.avif",
+          "bytes": 162595
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/learn/when-can-i-change-my-plan-1920.webp",
+          "bytes": 137146
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A misty Minnesota lake at sunrise with autumn maples along the shore",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "learn-when-can-i-change-my-plan",
+        "pageUrl": null,
+        "downloadUrl": "public/media/learn/when-can-i-change-my-plan.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": ["Generated Learning Center cover; no people, no text."],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "learn.enrollment-checklist",
+      "lane": "generated-antigravity",
+      "file": "public/media/learn/enrollment-checklist.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/learn/enrollment-checklist-480.avif",
+          "bytes": 11592
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/learn/enrollment-checklist-480.webp",
+          "bytes": 9762
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/learn/enrollment-checklist-900.avif",
+          "bytes": 30060
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/learn/enrollment-checklist-900.webp",
+          "bytes": 23926
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/learn/enrollment-checklist-1920.avif",
+          "bytes": 84040
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/learn/enrollment-checklist-1920.webp",
+          "bytes": 67142
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A blank clipboard and pen on a wooden desk beside a frosted winter window",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "learn-enrollment-checklist",
+        "pageUrl": null,
+        "downloadUrl": "public/media/learn/enrollment-checklist.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": ["Generated Learning Center cover; no people, no text."],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "learn.advantage-or-supplement",
+      "lane": "generated-antigravity",
+      "file": "public/media/learn/advantage-or-supplement.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/learn/advantage-or-supplement-480.avif",
+          "bytes": 24879
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/learn/advantage-or-supplement-480.webp",
+          "bytes": 22966
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/learn/advantage-or-supplement-900.avif",
+          "bytes": 76545
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/learn/advantage-or-supplement-900.webp",
+          "bytes": 65614
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/learn/advantage-or-supplement-1920.avif",
+          "bytes": 232189
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/learn/advantage-or-supplement-1920.webp",
+          "bytes": 197284
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A gravel road forking through a birch and pine forest at golden hour",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "learn-advantage-or-supplement",
+        "pageUrl": null,
+        "downloadUrl": "public/media/learn/advantage-or-supplement.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": ["Generated Learning Center cover; no people, no text."],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "learn.part-d-coverage-gaps",
+      "lane": "generated-antigravity",
+      "file": "public/media/learn/part-d-coverage-gaps.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/learn/part-d-coverage-gaps-480.avif",
+          "bytes": 8277
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/learn/part-d-coverage-gaps-480.webp",
+          "bytes": 6768
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/learn/part-d-coverage-gaps-900.avif",
+          "bytes": 19995
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/learn/part-d-coverage-gaps-900.webp",
+          "bytes": 15690
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/learn/part-d-coverage-gaps-1920.avif",
+          "bytes": 60960
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/learn/part-d-coverage-gaps-1920.webp",
+          "bytes": 43166
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "An empty glass jar catching sunlight on a wooden windowsill",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "learn-part-d-coverage-gaps",
+        "pageUrl": null,
+        "downloadUrl": "public/media/learn/part-d-coverage-gaps.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": ["Generated Learning Center cover; no people, no text."],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "learn.drug-cost-worksheet",
+      "lane": "generated-antigravity",
+      "file": "public/media/learn/drug-cost-worksheet.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/learn/drug-cost-worksheet-480.avif",
+          "bytes": 10250
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/learn/drug-cost-worksheet-480.webp",
+          "bytes": 7696
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/learn/drug-cost-worksheet-900.avif",
+          "bytes": 24458
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/learn/drug-cost-worksheet-900.webp",
+          "bytes": 17658
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/learn/drug-cost-worksheet-1920.avif",
+          "bytes": 69227
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/learn/drug-cost-worksheet-1920.webp",
+          "bytes": 47616
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A desk lamp glowing over a notebook beside a rain-streaked window at dusk",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "learn-drug-cost-worksheet",
+        "pageUrl": null,
+        "downloadUrl": "public/media/learn/drug-cost-worksheet.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": ["Generated Learning Center cover; no people, no text."],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "learn.turning-65-timeline",
+      "lane": "generated-antigravity",
+      "file": "public/media/learn/turning-65-timeline.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/learn/turning-65-timeline-480.avif",
+          "bytes": 10030
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/learn/turning-65-timeline-480.webp",
+          "bytes": 9094
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/learn/turning-65-timeline-900.avif",
+          "bytes": 26548
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/learn/turning-65-timeline-900.webp",
+          "bytes": 22850
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/learn/turning-65-timeline-1920.avif",
+          "bytes": 77788
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/learn/turning-65-timeline-1920.webp",
+          "bytes": 63072
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A wooden dock reaching into a calm Minnesota lake at sunrise",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "learn-turning-65-timeline",
+        "pageUrl": null,
+        "downloadUrl": "public/media/learn/turning-65-timeline.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": ["Generated Learning Center cover; no people, no text."],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "learn.annual-enrollment-check",
+      "lane": "generated-antigravity",
+      "file": "public/media/learn/annual-enrollment-check.jpg",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/learn/annual-enrollment-check-480.avif",
+          "bytes": 23035
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/learn/annual-enrollment-check-480.webp",
+          "bytes": 23446
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/learn/annual-enrollment-check-900.avif",
+          "bytes": 71123
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/learn/annual-enrollment-check-900.webp",
+          "bytes": 65714
+        },
+        {
+          "width": 1920,
+          "format": "avif",
+          "path": "public/media/learn/annual-enrollment-check-1920.avif",
+          "bytes": 216112
+        },
+        {
+          "width": 1920,
+          "format": "webp",
+          "path": "public/media/learn/annual-enrollment-check-1920.webp",
+          "bytes": 195840
+        }
+      ],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "Brick row houses glowing with lamplight on a snowy winter evening",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "learn-annual-enrollment-check",
+        "pageUrl": null,
+        "downloadUrl": "public/media/learn/annual-enrollment-check.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": ["Generated Learning Center cover; no people, no text."],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "lake.scrub",
+      "lane": "generated-antigravity",
+      "file": "public/video/mn-lake-desktop-scrub.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A Minnesota lake passing from a starry night through dawn, day and golden hour to dusk",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "mn-lake-desktop-scrub",
+        "pageUrl": null,
+        "downloadUrl": "public/video/mn-lake-desktop-scrub.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Muted H.264, 12 s at 30 fps with a keyframe every 6 frames so desktop scroll can seek it; no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "lake.scrubPoster",
+      "lane": "generated-antigravity",
+      "file": "public/media/mn-lake-desktop-scrub-poster.jpg",
+      "variants": [],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A Minnesota lake under a starry violet night sky",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "mn-lake-desktop-scrub-poster",
+        "pageUrl": null,
+        "downloadUrl": "public/media/mn-lake-desktop-scrub-poster.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "First frame of the desktop scroll-scrub lake video; no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "signal.loop",
+      "lane": "generated-antigravity",
+      "file": "public/video/signal-converge-loop.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "Threads of cyan light converging into a single gold beam on deep navy",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "signal-converge-loop",
+        "pageUrl": null,
+        "downloadUrl": "public/video/signal-converge-loop.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Muted H.264 8 s seamless loop; abstract light, no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "signal.loopMobile",
+      "lane": "generated-antigravity",
+      "file": "public/video/signal-converge-loop-mobile.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 1080,
+        "height": 1350
+      },
+      "alt": "Threads of cyan light converging into a single gold beam on deep navy",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "signal-converge-loop-mobile",
+        "pageUrl": null,
+        "downloadUrl": "public/video/signal-converge-loop-mobile.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Portrait 1080x1350 cut of the signal loop for phones; no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "signal.poster",
+      "lane": "generated-antigravity",
+      "file": "public/video/signal-converge-loop-poster.jpg",
+      "variants": [],
+      "intrinsic": {
+        "width": 1920,
+        "height": 1080
+      },
+      "alt": "A single gold beam of light on deep navy",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "signal-converge-loop-poster",
+        "pageUrl": null,
+        "downloadUrl": "public/video/signal-converge-loop-poster.jpg"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Still frame of the signal loop; abstract light, no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
     }
   ]
 }

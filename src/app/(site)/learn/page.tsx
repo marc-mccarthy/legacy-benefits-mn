@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageBand } from "@/components/sections/page-band";
 import { LearningFilter } from "@/components/sections/learning-filter";
 import { LearningGrid } from "@/components/sections/learning-grid";
 import { articles } from "@/content/articles";
@@ -12,24 +13,27 @@ export const metadata: Metadata = {
 
 export default function LearnPage() {
   return (
-    <Suspense
-      fallback={
-        <LearningGrid
-          scheme="light"
-          heading="Learning Center"
-          intro="Straight answers to the questions we get asked most."
-          articles={articles as never}
-        />
-      }
-    >
-      <LearningFilter>
-        <LearningGrid
-          scheme="light"
-          heading="Learning Center"
-          intro="Straight answers to the questions we get asked most."
-          articles={articles as never}
-        />
-      </LearningFilter>
-    </Suspense>
+    <>
+      <PageBand title="Learning Center" />
+      <Suspense
+        fallback={
+          <LearningGrid
+            scheme="light"
+            heading="Medicare, explained"
+            intro="Straight answers to the questions we get asked most."
+            articles={articles as never}
+          />
+        }
+      >
+        <LearningFilter>
+          <LearningGrid
+            scheme="light"
+            heading="Medicare, explained"
+            intro="Straight answers to the questions we get asked most."
+            articles={articles as never}
+          />
+        </LearningFilter>
+      </Suspense>
+    </>
   );
 }

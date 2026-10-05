@@ -5,7 +5,7 @@ export const site: SiteContent = {
     { label: "Services", href: "/services" },
     { label: "Events", href: "/events" },
     { label: "Learning Center", href: "/learn" },
-    { label: "Our Team", href: "/team" },
+    { label: "Meet Nate", href: "/team" },
     { label: "Contact", href: "/contact" },
   ],
 
@@ -24,8 +24,6 @@ export const site: SiteContent = {
     { value: 8, suffix: "", label: "Carriers represented" },
     { value: 3, suffix: "", label: "States licensed" },
   ],
-
-  cta: { label: "Talk to an agent", href: "/contact" },
 
   clientPortal: {
     label: "Client Portal",

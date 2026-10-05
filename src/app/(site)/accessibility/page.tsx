@@ -17,7 +17,7 @@ export default async function AccessibilityPage() {
     <Section>
       <Container>
         <Prose className="space-y-6">
-          <h1 className="font-display text-(length:--text-display-page)">
+          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
             Accessibility
           </h1>
           <p className="lead text-lg leading-relaxed">
@@ -42,6 +42,15 @@ export default async function AccessibilityPage() {
             <li>Text can be resized to 200% without loss of content.</li>
             <li>Automated accessibility checks run against every release.</li>
           </ul>
+
+          <h2 className="font-display text-(length:--text-display-lg)">
+            Animations
+          </h2>
+          <p className="leading-relaxed">
+            Every page works without animation. Use the Pause animations button
+            at the top of any page, or turn on Reduce motion in your device
+            settings, and the site shows still images instead.
+          </p>
 
           <h2 className="font-display text-(length:--text-display-lg)">
             Alternative formats

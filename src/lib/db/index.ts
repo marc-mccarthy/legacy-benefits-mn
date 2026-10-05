@@ -6,7 +6,6 @@ declare global {
   var __pgPool: Pool | undefined;
 }
 
-// Reuse one pool across hot reloads in dev and across warm invocations.
 const pool =
   globalThis.__pgPool ??
   new Pool({

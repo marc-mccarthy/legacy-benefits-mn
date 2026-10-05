@@ -1,35 +1,39 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import {
+  Archivo,
   Atkinson_Hyperlegible_Next as AtkinsonHyperlegibleNext,
-  Newsreader,
 } from "next/font/google";
 import "./globals.css";
 import { getBusinessIdentity } from "@/lib/business";
+import { getSiteUrl } from "@/lib/site-url";
 
 const atkinson = AtkinsonHyperlegibleNext({
   variable: "--font-atkinson",
   subsets: ["latin"],
   display: "swap",
+  fallback: ["Arial", "sans-serif"],
 });
 
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
   display: "swap",
-  style: ["normal", "italic"],
+  axes: ["wdth"],
+  preload: false,
 });
 
 export const viewport: Viewport = {
-  themeColor: "#17304d",
+  themeColor: "#081A3A",
 };
 
 export async function generateMetadata(): Promise<Metadata> {
   const { name } = await getBusinessIdentity().catch(() => ({
-    name: "Medicare Advisors",
+    name: "Legacy Benefits Group",
   }));
 
   return {
+    metadataBase: new URL(getSiteUrl()),
     title: {
       default: `${name} — Medicare Plans & Guidance`,
       template: `%s | ${name}`,
@@ -43,7 +47,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${atkinson.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${atkinson.variable} ${archivo.variable} h-full antialiased`}
     >
       <head>
         <script
@@ -52,7 +56,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
         <noscript>
-          <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
+          <style>{`[data-reveal]{opacity:1 !important;transform:none !important;clip-path:none !important}`}</style>
         </noscript>
       </head>
       <body className="bg-surface text-on-surface flex min-h-full flex-col">

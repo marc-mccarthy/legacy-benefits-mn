@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { mediaProps } from "@/lib/media";
 
@@ -8,6 +8,31 @@ export type Carrier = {
   logo?: unknown;
   approved?: boolean | null;
 };
+
+function CarrierItem({ carrier }: { carrier: Carrier }) {
+  const logo = mediaProps(carrier.logo as never);
+  return (
+    <li translate="no">
+      {logo ? (
+        <Image
+          src={logo.src}
+          alt={carrier.name}
+          width={160}
+          height={48}
+          translate="no"
+          className="h-10 w-auto object-contain opacity-70 grayscale transition hover:opacity-100 hover:grayscale-0"
+        />
+      ) : (
+        <span
+          translate="no"
+          className="text-muted text-lg font-semibold tracking-tight whitespace-nowrap"
+        >
+          {carrier.name}
+        </span>
+      )}
+    </li>
+  );
+}
 
 export function CarrierStrip({
   heading,
@@ -27,7 +52,7 @@ export function CarrierStrip({
       className="py-(--spacing-medium) md:py-(--spacing-large)"
       aria-labelledby="carriers-heading"
     >
-      <Container className="space-y-8">
+      <Container className="space-y-(--spacing-small)">
         <h2
           id="carriers-heading"
           className="text-muted text-center text-base font-semibold"
@@ -35,32 +60,26 @@ export function CarrierStrip({
           {heading ?? "We represent"}
         </h2>
 
-        <ul className="flex flex-wrap items-center justify-center gap-x-12 gap-y-8">
-          {visible.map((carrier) => {
-            const logo = mediaProps(carrier.logo as never);
-            return (
-              <li key={carrier.id} translate="no">
-                {logo ? (
-                  <Image
-                    src={logo.src}
-                    alt={carrier.name}
-                    width={160}
-                    height={48}
-                    translate="no"
-                    className="h-10 w-auto object-contain opacity-70 grayscale transition hover:opacity-100 hover:grayscale-0"
-                  />
-                ) : (
-                  <span
-                    translate="no"
-                    className="text-muted text-lg font-semibold tracking-tight"
-                  >
-                    {carrier.name}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <div
+          data-marquee=""
+          role="group"
+          aria-labelledby="carriers-heading"
+          tabIndex={0}
+          className="marquee"
+        >
+          {[0, 1, 2].map((copy) => (
+            <ul
+              key={copy}
+              aria-hidden={copy > 0 || undefined}
+              data-marquee-copy={copy > 0 ? "" : undefined}
+              className="marquee-row"
+            >
+              {visible.map((carrier) => (
+                <CarrierItem key={carrier.id} carrier={carrier} />
+              ))}
+            </ul>
+          ))}
+        </div>
       </Container>
     </Section>
   );

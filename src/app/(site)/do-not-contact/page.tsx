@@ -12,8 +12,8 @@ export default function DoNotContactPage() {
   return (
     <Section>
       <Container className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
-        <Prose className="space-y-5">
-          <h1 className="font-display text-(length:--text-display-page)">
+        <Prose className="fade-in space-y-5">
+          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
             Stop contact or remove my information
           </h1>
           <p className="lead text-muted text-lg">
@@ -22,8 +22,8 @@ export default function DoNotContactPage() {
             what we hold about you.
           </p>
           <p className="text-muted">
-            You can also reply STOP to any text message from us. We honour
-            Global Privacy Control signals sent by your browser automatically.
+            You can also reply STOP to any text message from us. We honor Global
+            Privacy Control signals sent by your browser automatically.
           </p>
         </Prose>
 

@@ -13,7 +13,6 @@ resource "aws_iam_role" "lambda" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
-# ENI management in the VPC; without it the function cannot start at all.
 resource "aws_iam_role_policy_attachment" "lambda_vpc" {
   role       = aws_iam_role.lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
@@ -50,7 +49,6 @@ resource "aws_iam_role_policy" "lambda" {
   policy = data.aws_iam_policy_document.lambda.json
 }
 
-# CloudFront signs Function URL requests with SigV4 under its own service principal.
 resource "aws_lambda_permission" "cloudfront" {
   statement_id           = "AllowCloudFront"
   action                 = "lambda:InvokeFunctionUrl"
@@ -60,9 +58,6 @@ resource "aws_lambda_permission" "cloudfront" {
   function_url_auth_type = "AWS_IAM"
 }
 
-# Since October 2025 a Function URL reached through CloudFront also needs
-# lambda:InvokeFunction; InvokeFunctionUrl alone returns 403. No
-# function_url_auth_type here — this grant is on the function, not the URL.
 resource "aws_lambda_permission" "cloudfront_invoke" {
   statement_id  = "AllowCloudFrontInvoke"
   action        = "lambda:InvokeFunction"
@@ -91,7 +86,6 @@ data "aws_iam_policy_document" "deploy_assume" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # A job with `environment:` gets sub `...:environment:NAME`, never the ref: form.
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"

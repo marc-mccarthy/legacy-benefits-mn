@@ -5,8 +5,6 @@ import { services } from "@/content/services";
 import { team } from "@/content/team";
 import { getSiteUrl } from "@/lib/site-url";
 
-// A metadata route is a route handler, and `output: "export"` requires one
-// to declare itself static.
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {

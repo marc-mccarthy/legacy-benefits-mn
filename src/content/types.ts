@@ -5,7 +5,12 @@ export type MediaAsset = {
   width: number;
   height: number;
   alt: string;
-  srcSet: { width: number; format: "avif" | "webp" | "jpeg"; src: string }[];
+  srcSet: {
+    width: number;
+    format: "avif" | "webp" | "jpeg";
+    src: string;
+    bytes: number;
+  }[];
 };
 
 export type NavItem = {
@@ -83,17 +88,11 @@ export type Carrier = {
 
 export type FaqItem = { question: string; answer: ReactNode };
 
-/**
- * Keys are camelCase because `RenderBlocks` reads them that way, not the
- * snake_case of the columns the content was extracted from.
- */
 export type PageBlock = {
   blockType: string;
-  scheme?: "light" | "muted" | "dark";
+  scheme?: "light" | "muted" | "dark" | "black";
 } & Record<string, unknown>;
 
-/** Business identity is not here: it comes from the environment only, through
- *  `getBusinessIdentity()`. */
 export type SiteContent = {
   nav: NavItem[];
   announcement: {
@@ -105,7 +104,6 @@ export type SiteContent = {
     endsAt: string | null;
   };
   stats: Stat[];
-  cta: { label: string | null; href: string | null };
   clientPortal: { label: string | null; href: string | null };
   compliance: {
     orgCount: number | null;

@@ -8,7 +8,6 @@ import type { DncInput } from "./dnc-schema";
 
 export { dncInputSchema, type DncInput } from "./dnc-schema";
 
-// No identity check on the way in; a stop request is taken at face value.
 export async function recordDncRequest(
   input: DncInput,
   meta: { ip?: string } = {},

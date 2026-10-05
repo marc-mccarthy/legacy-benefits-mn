@@ -33,9 +33,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
-.env
-
 # vercel
 .vercel
 
@@ -45,6 +42,7 @@ next-env.d.ts
 
 # playwright mcp output + reference screenshots
 .playwright-mcp/
+.playwright/
 
 # env — real values never ship, but the documented template must.
 .env
@@ -96,6 +94,13 @@ tfplan-*
 
 # technomancy
 technomancy_artifacts/
+SPEC_*.md
 
 # project-local postgres cluster (db:server:*)
 .pgdata/
+
+# Superpowers Skill
+.superpowers/
+
+# Playwright CLI
+.playwright-cli/

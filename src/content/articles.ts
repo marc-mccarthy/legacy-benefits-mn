@@ -8,8 +8,6 @@ import WhenCanIChangeMyPlanBody from "./articles/when-can-i-change-my-plan";
 import { media } from "./media";
 import type { Article } from "./types";
 
-const cover = media["articles.coverImage"] ?? null;
-
 export const articles: Article[] = [
   {
     id: "when-can-i-change-my-plan",
@@ -19,7 +17,7 @@ export const articles: Article[] = [
     excerpt:
       "The enrollment windows, in plain English, and what happens if you miss one.",
     publishedAt: "2026-09-11T02:37:32.636Z",
-    coverImage: cover,
+    coverImage: media["learn.when-can-i-change-my-plan"],
     Body: WhenCanIChangeMyPlanBody,
   },
   {
@@ -30,7 +28,7 @@ export const articles: Article[] = [
     excerpt:
       "A one-page list of what to gather before you compare plans, including your medication list.",
     publishedAt: "2026-09-10T02:37:32.655Z",
-    coverImage: null,
+    coverImage: media["learn.enrollment-checklist"],
     Body: EnrollmentChecklistBody,
   },
   {
@@ -41,7 +39,7 @@ export const articles: Article[] = [
     excerpt:
       "The trade-offs that actually matter — networks, travel, and predictability of cost.",
     publishedAt: "2026-09-09T02:37:32.666Z",
-    coverImage: cover,
+    coverImage: media["learn.advantage-or-supplement"],
     Body: AdvantageOrSupplementBody,
   },
   {
@@ -52,7 +50,7 @@ export const articles: Article[] = [
     excerpt:
       "How formularies, tiers, and the annual out-of-pocket cap work in practice.",
     publishedAt: "2026-09-08T02:37:32.679Z",
-    coverImage: null,
+    coverImage: media["learn.part-d-coverage-gaps"],
     Body: PartDCoverageGapsBody,
   },
   {
@@ -63,7 +61,7 @@ export const articles: Article[] = [
     excerpt:
       "Bring your medication list and compare real annual cost across the plans you are considering.",
     publishedAt: "2026-09-07T02:37:32.690Z",
-    coverImage: null,
+    coverImage: media["learn.drug-cost-worksheet"],
     Body: DrugCostWorksheetBody,
   },
   {
@@ -74,7 +72,7 @@ export const articles: Article[] = [
     excerpt:
       "A short walkthrough of what to do and when, starting three months before your birthday month.",
     publishedAt: "2026-09-06T02:37:32.702Z",
-    coverImage: cover,
+    coverImage: media["learn.turning-65-timeline"],
     Body: Turning65TimelineBody,
   },
   {
@@ -85,7 +83,7 @@ export const articles: Article[] = [
     excerpt:
       "Plans change every year. Here is the 15-minute check that catches the expensive surprises.",
     publishedAt: "2026-09-05T02:37:32.716Z",
-    coverImage: null,
+    coverImage: media["learn.annual-enrollment-check"],
     Body: AnnualEnrollmentCheckBody,
   },
 ];

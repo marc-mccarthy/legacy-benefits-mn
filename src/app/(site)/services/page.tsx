@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageBand } from "@/components/sections/page-band";
 import { ServiceGrid } from "@/components/sections/service-grid";
 import { CtaBand } from "@/components/sections/cta-band";
 import { services } from "@/content/services";
@@ -15,6 +16,7 @@ export default async function ServicesPage() {
 
   return (
     <>
+      <PageBand title="Services" />
       <ServiceGrid
         heading="How we help"
         intro="Independent guidance across the coverage types we are appointed to offer."

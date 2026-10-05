@@ -37,3 +37,15 @@ output "db_endpoint" {
 output "migrate_function_name" {
   value = aws_lambda_function.migrate.function_name
 }
+
+output "name_servers" {
+  description = "Route 53 nameservers to set as the domain's custom nameservers at the registrar."
+  value       = one(aws_route53_zone.this[*].name_servers)
+}
+
+output "acm_validation_records" {
+  description = "ACM DNS validation CNAMEs, name to value, for adding at the current DNS host before the nameserver switch."
+  value = {
+    for dvo in flatten(aws_acm_certificate.this[*].domain_validation_options) : dvo.resource_record_name => dvo.resource_record_value
+  }
+}

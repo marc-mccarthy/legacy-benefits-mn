@@ -2,23 +2,12 @@
 
 import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
-import { ArrowLeft, ArrowRight, CalendarDays, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Card, CardBody } from "@/components/ui/card";
 import { Container } from "@/components/ui/section";
-import { formatDate, formatTime } from "@/lib/utils";
-import { EventImage } from "./event-image";
+import { EventCard, type EventItem } from "./event-card";
 
-export type EventItem = {
-  id: number | string;
-  title: string;
-  slug: string;
-  summary: string;
-  startsAt: string;
-  venue: string;
-  cost: "free" | "paid";
-  image?: unknown;
-};
+export type { EventItem };
 
 export function EventCarousel({
   heading,
@@ -79,35 +68,7 @@ export function EventCarousel({
               key={event.id}
               className="min-w-0 flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%]"
             >
-              <Card className="h-full">
-                <EventImage
-                  image={event.image}
-                  cost={event.cost}
-                  morphSlug={event.slug}
-                />
-                <CardBody>
-                  <p className="text-muted flex items-center gap-2">
-                    <CalendarDays aria-hidden className="size-4" />
-                    <time className="tabular" dateTime={event.startsAt}>
-                      {formatDate(event.startsAt)} ·{" "}
-                      {formatTime(event.startsAt)}
-                    </time>
-                  </p>
-                  <p className="text-muted flex items-center gap-2">
-                    <MapPin aria-hidden className="size-4" />
-                    {event.venue}
-                  </p>
-                  <h3 className="text-lg font-semibold">{event.title}</h3>
-                  <p className="text-muted flex-1">{event.summary}</p>
-                  <Link
-                    href={`/events/${event.slug}`}
-                    className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
-                  >
-                    View event
-                    <span className="sr-only">: {event.title}</span>
-                  </Link>
-                </CardBody>
-              </Card>
+              <EventCard event={event} headingLevel="h3" className="h-full" />
             </li>
           ))}
         </ul>
@@ -161,7 +122,9 @@ export function EventCarousel({
             </button>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div aria-hidden className="h-11" />
+      )}
     </Container>
   );
 }

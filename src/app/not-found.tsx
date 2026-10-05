@@ -8,11 +8,6 @@ import { getBusinessIdentity } from "@/lib/business";
 
 export const metadata = { title: "Page not found" };
 
-/**
- * Rendered to `out/404.html`, which CloudFront returns for an unmatched path.
- * It sits at the app root rather than inside `(site)`, so it supplies the
- * header and footer itself instead of inheriting them from that layout.
- */
 export default async function NotFound() {
   const identity = await getBusinessIdentity();
 
@@ -24,7 +19,6 @@ export default async function NotFound() {
       <Header
         brand={identity.name}
         nav={site.nav}
-        cta={site.cta}
         clientPortal={site.clientPortal}
         phone={identity.phone}
       />
@@ -32,7 +26,7 @@ export default async function NotFound() {
         <Section>
           <Container>
             <Prose className="space-y-6">
-              <h1 className="font-display text-(length:--text-display-page)">
+              <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
                 We could not find that page
               </h1>
               <p className="lead text-muted text-lg">

@@ -1,14 +1,11 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: nates-website-db
+    container_name: legacy-benefits-mn
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      # Only applied when the volume below is first initialised. Renaming this
-      # against an existing pgdata volume does nothing — remove the volume, or
-      # createdb inside the running container.
       POSTGRES_DB: legacybenefitsmn
     ports:
       - "5433:5432"

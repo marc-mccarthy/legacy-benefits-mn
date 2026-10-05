@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/card";
 import { Morph } from "@/components/motion/morph";
@@ -38,7 +38,7 @@ export function EventImage({
       ) : (
         <div
           aria-hidden
-          className="bg-navy-800 grid size-full place-items-center text-white/40"
+          className="bg-ground-black text-ink-dark/40 grid size-full place-items-center"
         >
           <CalendarDays className="size-10" />
         </div>

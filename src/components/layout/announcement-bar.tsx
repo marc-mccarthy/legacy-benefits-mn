@@ -29,7 +29,7 @@ export function AnnouncementBar({
   const dismissed = useSyncExternalStore(
     subscribe,
     () => window.localStorage.getItem(storageKey) === "1",
-    () => true,
+    () => false,
   );
 
   if (dismissed) return null;

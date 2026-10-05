@@ -26,6 +26,10 @@ data "aws_availability_zones" "available" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_kms_alias" "rds" {
+  name = "alias/aws/rds"
+}
+
 locals {
   db_name    = replace(var.name, "-", "_")
   use_domain = var.domain_name != ""
@@ -147,6 +151,8 @@ resource "aws_rds_cluster" "this" {
   database_name      = local.db_name
   master_username    = "postgres"
   master_password    = random_password.db.result
+  storage_encrypted  = true
+  kms_key_id         = data.aws_kms_alias.rds.target_key_arn
 
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.db.id]
@@ -157,8 +163,15 @@ resource "aws_rds_cluster" "this" {
     seconds_until_auto_pause = var.db_seconds_until_auto_pause
   }
 
-  skip_final_snapshot = true
-  apply_immediately   = true
+  deletion_protection       = true
+  backup_retention_period   = 7
+  skip_final_snapshot       = false
+  final_snapshot_identifier = "${var.name}-final"
+  apply_immediately         = true
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
 }
 
 resource "aws_rds_cluster_instance" "this" {
@@ -167,6 +180,10 @@ resource "aws_rds_cluster_instance" "this" {
   instance_class     = "db.serverless"
   engine             = aws_rds_cluster.this.engine
   engine_version     = aws_rds_cluster.this.engine_version
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
 }
 
 resource "aws_s3_bucket" "assets" {
@@ -198,9 +215,53 @@ data "aws_iam_policy_document" "assets" {
       values   = [aws_cloudfront_distribution.this.arn]
     }
   }
+
+  statement {
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.assets.arn]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.this.arn]
+    }
+  }
+
+  statement {
+    effect    = "Deny"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.assets.arn}/releases/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "assets" {
   bucket = aws_s3_bucket.assets.id
   policy = data.aws_iam_policy_document.assets.json
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "assets" {
+  bucket = aws_s3_bucket.assets.id
+
+  rule {
+    id     = "expire-releases"
+    status = "Enabled"
+
+    filter {
+      prefix = "releases/"
+    }
+
+    expiration {
+      days = 30
+    }
+  }
 }

@@ -63,12 +63,13 @@ playwright-report/
 **/.terraform/*
 *.tfstate
 *.tfstate.*
-terraform.tfvars
-*.auto.tfvars
+*.tfvars
 crash.log
 override.tf
 override_*.tf
 !terraform.tfvars.example
+infra/.*.log
+infra/.bootstrap.zip
 
 # Saved plan files. A plan holds the full planned state, which means every
 # generated password and every SSM parameter value the apply would write, in
@@ -104,3 +105,25 @@ SPEC_*.md
 
 # Playwright CLI
 .playwright-cli/
+
+public/brand/
+public/media/team-marcus-bell*
+public/media/team-renata-cruz*
+public/media/team-nate-best*
+public/media/hero-tech-*
+public/media/services-medicare-*
+public/media/services-prescription-part-d*
+public/media/article-turning-65-timeline*
+public/media/lake-source.jpg
+public/media/lake-boundary-waters-original.jpg
+public/media/env/studio-softbox.jpg
+public/media/env/studio-cool-gold-2.jpg
+public/media/silhouettes/paper-folder.svg
+public/media/silhouettes/paper-letter.svg
+public/media/silhouettes/paper-document.svg
+public/video/hero-tech-*
+public/video/transitions/
+public/video/mn-lake-dawn-dusk-source.mp4
+public/video/mn-blue-hour-source.mp4
+public/media/high-falls-*
+public/video/high-falls-*

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { postJson } from "@/lib/post-json";
 import { soaInputSchema, type SoaInput } from "@/lib/compliance/soa-schema";
 import {
   SOA_ATTESTATION,
@@ -31,11 +32,7 @@ export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
   const onSubmit = handleSubmit(async (values) => {
     setStatus("sending");
     try {
-      const res = await fetch("/api/soa", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, turnstileToken }),
-      });
+      const res = await postJson("/api/soa", { ...values, turnstileToken });
       if (!res.ok) throw new Error(String(res.status));
       setStatus("sent");
     } catch {

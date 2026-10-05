@@ -20,13 +20,6 @@ Neither Claude Code nor Antigravity (Gemini) shall EVER prompt, ask questions of
 - **Zero Tool Prompts**: Antigravity must NEVER invoke user-prompting tools (e.g. `ask_question`). Claude Code must NEVER invoke interactive prompts. All tool executions must run non-interactively (`--dangerously-skip-permissions`, `bypassPermissions`).
 - **Overrides global rules**: in this repository this mandate overrides rules 4 ("ask every question up front") and 11 ("ask before any architectural change") of `~/.claude/CLAUDE.md`. Decide, and record the decision as a `Ruling:`.
 
-### Subagent Monitoring & 10-Minute Watchdog
-
-- After deploying a subagent, the main expert agent must check on it every 10 minutes to ensure it is not stuck, stalled, or looping, and is continually producing high-quality output.
-- If stalled, deploy an expert subagent for that task type to assist or unblock it immediately.
-- If the stalled subagent cannot recover with assistance, absorb the partial work and deploy a fresh expert subagent to finish the task to full completion.
-- Notify the owner with minimal text. NEVER prompt the owner.
-
 ### On-Track Plan Alignment
 
 Content produced by subagents must strictly align with the plan and spec files. If modifications to the plan/spec are required, the main expert agent must deploy 3 independent `ui-ux-pro` subagents to evaluate the decision, ensuring exceeding expectations, KISS code, and professional architectural design patterns without prompting the owner.
@@ -196,6 +189,16 @@ The owner must have something said about him and his picture should be done imac
 - Hard limits (never do them, and never ask about them): `git push`; rewriting history; spending money; deleting untracked files git cannot recover (list them for the owner instead).
 - Commit only as the approved plan's tasks do: one commit per task, staging only the paths that task names.
 - Read `node_modules/next/dist/docs/` before writing Next.js code. APIs differ from training data.
+
+## Subagent watchdog (MANDATORY)
+
+A global Claude Code hook watches every subagent. When one makes no progress for 10 minutes, the hook wakes you with a `[subagent-watchdog]` reminder. This rule is mandatory. Never schedule your own checks (no /loop, CronCreate or ScheduleWakeup).
+
+On that reminder:
+
+- Deploy an expert subagent for that task type to help or unblock it.
+- If it cannot recover, absorb the partial work and deploy a fresh expert subagent to finish the task to full completion.
+- Notify the owner with minimal text. NEVER prompt the owner.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -418,7 +418,7 @@ accDescr {
   and the one that decides whether a person may be contacted are drawn as gates, because their
   job is to reject. The database schema is drawn as regulated data, because that is what it
   declares. Test files are excluded: a test importing a module says nothing about how the
-  application is wired. 41 modules and 57 imports are drawn.
+  application is wired. 40 modules and 56 imports are drawn.
 }
 
 subgraph Routehandlers ["Route handlers"]
@@ -471,7 +471,6 @@ subgraph Outboundandconfiguration ["Outbound and configuration"]
   env["env.ts"]
   siteUrl["site-url.ts"]
   postJson["post-json.ts"]
-  ics["ics.ts"]
   business["business.ts"]
   announcement["announcement.ts"]
   motion["motion.ts"]
@@ -505,7 +504,6 @@ dncRoute --> dncSchema
 dncRoute --> request
 dncSchema --> phone
 healthRoute --> db
-ics --> siteUrl
 jobsRoute --> env
 jobsRoute --> outbox
 leadService --> db
@@ -553,7 +551,7 @@ class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,leadService,l
 class turnstile,request,suppression guard
 class webhook,zapier,mock,email vendor
 class dbSchema phi
-class db,media,imageLoader,env,siteUrl,ics,business,announcement,motion artifact
+class db,media,imageLoader,env,siteUrl,business,announcement,motion artifact
 ```
 
 </details>

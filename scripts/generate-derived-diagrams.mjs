@@ -103,7 +103,6 @@ const GROUPS = [
       ["lib/env.ts", "env", "artifact"],
       ["lib/site-url.ts", "siteUrl", "artifact"],
       ["lib/post-json.ts", "postJson", "ours"],
-      ["lib/ics.ts", "ics", "artifact"],
       ["lib/business.ts", "business", "artifact"],
       ["lib/announcement.ts", "announcement", "artifact"],
       ["lib/motion.ts", "motion", "artifact"],

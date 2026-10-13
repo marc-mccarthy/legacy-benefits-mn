@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 import { articles } from "@/content/articles";
-import { events } from "@/content/events";
 import { services } from "@/content/services";
 import { team } from "@/content/team";
 import { getSiteUrl } from "@/lib/site-url";
@@ -15,7 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "",
     "/services",
     "/team",
-    "/events",
     "/learn",
     "/contact",
     "/scope-of-appointment",
@@ -33,7 +31,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const collections = [
     { prefix: "/services", slugs: services.map((item) => item.slug) },
     { prefix: "/team", slugs: team.map((item) => item.slug) },
-    { prefix: "/events", slugs: events.map((item) => item.slug) },
     { prefix: "/learn", slugs: articles.map((item) => item.slug) },
   ];
 

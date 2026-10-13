@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 
-export type MorphKind = "learn" | "event";
+export type MorphKind = "learn";
 
 export function morphName(kind: MorphKind, slug: string): string {
   return `morph-${kind}-${slug.replace(/[^a-zA-Z0-9_-]/g, "-")}`;

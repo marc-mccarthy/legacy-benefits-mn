@@ -477,7 +477,8 @@ test.describe("hero signal field", () => {
   const HERO = "main [data-hero]";
   const STAGE = "[data-hero-stage]";
   const CANVAS = '[data-three-stage="signal-hero"]';
-  const PORTRAIT = `${HERO} img[alt*="Nate Best"]`;
+  const PORTRAIT = `${HERO} img[src*="hero-maze"]`;
+  const RUN = `${HERO} video[data-hero-run]`;
 
   const portraitShown = async (page: Page) => {
     const portrait = page.locator(PORTRAIT);
@@ -502,7 +503,7 @@ test.describe("hero signal field", () => {
     return { context, page: await context.newPage() };
   };
 
-  test("with JavaScript disabled: the headline and Nate's photo, no canvas, one screen tall", async ({
+  test("with JavaScript disabled: the headline and the gold maze, no canvas, one screen tall", async ({
     browser,
   }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
@@ -517,7 +518,7 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("with reduced motion: Nate's photo stays, no canvas ever mounts, one screen tall", async ({
+  test("with reduced motion: the gold maze stays, no canvas or light-run video ever mounts, one screen tall", async ({
     browser,
   }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
@@ -527,13 +528,14 @@ test.describe("hero signal field", () => {
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(3000);
     await expect(page.locator(CANVAS)).toHaveCount(0);
+    await expect(page.locator(RUN)).toHaveCount(0);
     await portraitShown(page);
     expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
 
     await context.close();
   });
 
-  test("on load, without scrolling, the field converges into Nate's photo and stays alive as gold dust", async ({
+  test("on load, without scrolling, the field converges into the gold maze, the light runs to the centre once and holds", async ({
     browser,
   }) => {
     const { context, page } = await withMotion(browser);
@@ -544,10 +546,37 @@ test.describe("hero signal field", () => {
     await canvas.waitFor({ state: "attached", timeout: 15_000 });
     await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "false");
     await expect(page.locator(PORTRAIT)).toHaveCSS("opacity", "0");
+    await expect(page.locator(RUN)).toHaveCount(0);
 
     await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true", {
       timeout: 6000,
     });
+    const run = page.locator(RUN);
+    await expect(run).toHaveCount(1);
+    await expect(run).toHaveJSProperty("muted", true);
+    await expect(run).toHaveJSProperty("loop", false);
+    await expect
+      .poll(
+        () => run.evaluate((video: HTMLVideoElement) => video.currentTime),
+        {
+          timeout: 10_000,
+        },
+      )
+      .toBeGreaterThan(0.2);
+    await expect
+      .poll(() => run.evaluate((video: HTMLVideoElement) => video.ended), {
+        timeout: 15_000,
+      })
+      .toBe(true);
+    const held = await run.evaluate(
+      (video: HTMLVideoElement) => video.currentTime,
+    );
+    await page.waitForTimeout(1000);
+    expect(
+      await run.evaluate((video: HTMLVideoElement) => video.currentTime),
+      "the light run holds its last frame instead of restarting",
+    ).toBe(held);
+    await expect(run).toBeVisible();
     await expect(canvas).toHaveCount(1);
     await expect(canvas).toHaveCSS("opacity", "1");
     await portraitShown(page);
@@ -568,7 +597,7 @@ test.describe("hero signal field", () => {
       await page
         .locator(PORTRAIT)
         .evaluate((img) => getComputedStyle(img).opacity),
-      "returning to the hero never hides Nate's photo again",
+      "returning to the hero never hides the maze again",
     ).toBe("1");
     await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true");
     await portraitShown(page);
@@ -576,15 +605,21 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("in print with the field mounted: Nate's photo shows, one page tall", async ({
+  test("in print with the field mounted: the maze still shows and the light-run video hides, one page tall", async ({
     browser,
   }) => {
     const { context, page } = await withMotion(browser);
     await page.goto("/");
     await page.locator(CANVAS).waitFor({ state: "attached", timeout: 15_000 });
 
+    await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true", {
+      timeout: 6000,
+    });
+    await expect(page.locator(RUN)).toHaveCount(1);
+
     await page.emulateMedia({ media: "print" });
     await expect(page.locator(CANVAS)).toBeHidden();
+    await expect(page.locator(RUN)).toBeHidden();
     await portraitShown(page);
     expect(await heroHeightInViewports(page)).toBeLessThan(1.2);
 
@@ -613,7 +648,7 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("paused while live: the hero canvas goes and Nate's photo returns", async ({
+  test("paused while live: the hero canvas and light-run video go and the still maze returns", async ({
     browser,
   }) => {
     const { context, page } = await withMotion(browser);
@@ -625,6 +660,7 @@ test.describe("hero signal field", () => {
 
     await expect(page.locator(CANVAS)).toHaveCount(0);
     await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "false");
+    await expect(page.locator(RUN)).toHaveCount(0);
     await expect(page.locator(EFFECTS_PAUSE).first()).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -634,7 +670,7 @@ test.describe("hero signal field", () => {
     await context.close();
   });
 
-  test("the largest contentful paint is hero copy or Nate's portrait", async ({
+  test("the largest contentful paint is hero copy or the maze", async ({
     page,
   }) => {
     await page.goto("/");
@@ -1896,9 +1932,12 @@ test.describe("night close", () => {
         await expect(close.locator("img")).toHaveCount(0);
         await expect(close.locator('a[href^="tel:"]')).toBeVisible();
         await expect(
-          page.locator('main img[src*="nate-duotone"]'),
-          "Nate's duotone portrait appears once on the home page",
+          page.locator('main img[src*="hero-maze"]'),
+          "the gold maze appears once on the home page",
         ).toHaveCount(1);
+        await expect(page.locator('main img[src*="nate-duotone"]')).toHaveCount(
+          0,
+        );
       }
       if (options.reducedMotion !== "no-preference") {
         await page.emulateMedia({ media: "screen" });

@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { upcomingEvents } from "../src/content/events";
 import { homeBlocks } from "../src/content/home";
 import { bandsWithoutVisibleText, sweepAndSettle } from "./support/parity";
 import { ROUTES } from "./support/routes";
@@ -101,7 +100,5 @@ test.describe("canvas count with motion", () => {
 test("/ renders one band per home block", async ({ page }) => {
   await page.goto("/");
 
-  const expected =
-    homeBlocks.length - (upcomingEvents(new Date()).length === 0 ? 1 : 0);
-  expect(await page.locator("[data-band]").count()).toBe(expected);
+  expect(await page.locator("[data-band]").count()).toBe(homeBlocks.length);
 });

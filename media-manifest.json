@@ -82,85 +82,6 @@
       "fetchedBy": "sourcing-media"
     },
     {
-      "slot": "events.image",
-      "lane": "photo",
-      "file": "public/media/eventsimage-mission-farms-tepee-village-plymouth-minnesota-d.jpg",
-      "variants": [
-        {
-          "width": 1920,
-          "format": "avif",
-          "path": "public/media/eventsimage-mission-farms-tepee-village-plymouth-minnesota-d-1920.avif",
-          "bytes": 455789
-        },
-        {
-          "width": 1920,
-          "format": "webp",
-          "path": "public/media/eventsimage-mission-farms-tepee-village-plymouth-minnesota-d-1920.webp",
-          "bytes": 330992
-        },
-        {
-          "width": 900,
-          "format": "avif",
-          "path": "public/media/eventsimage-mission-farms-tepee-village-plymouth-minnesota-d-900.avif",
-          "bytes": 114362
-        },
-        {
-          "width": 900,
-          "format": "webp",
-          "path": "public/media/eventsimage-mission-farms-tepee-village-plymouth-minnesota-d-900.webp",
-          "bytes": 79054
-        },
-        {
-          "width": 480,
-          "format": "avif",
-          "path": "public/media/eventsimage-mission-farms-tepee-village-plymouth-minnesota-d-480.avif",
-          "bytes": 30020
-        },
-        {
-          "width": 480,
-          "format": "webp",
-          "path": "public/media/eventsimage-mission-farms-tepee-village-plymouth-minnesota-d-480.webp",
-          "bytes": 21126
-        }
-      ],
-      "intrinsic": {
-        "width": 1920,
-        "height": 1347
-      },
-      "alt": "A Minnesota lake shoreline on a clear summer day",
-      "altNeedsReview": false,
-      "source": {
-        "name": "wikimedia",
-        "provider": "wikimedia-commons",
-        "id": "193555797",
-        "pageUrl": "https://commons.wikimedia.org/wiki/File:Mission_Farms_Tepee_Village,_Plymouth,_Minnesota_-_DPLA_-_470f5911a614a8065b99ab491302764f.jpg",
-        "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Mission_Farms_Tepee_Village%2C_Plymouth%2C_Minnesota_-_DPLA_-_470f5911a614a8065b99ab491302764f.jpg/1920px-Mission_Farms_Tepee_Village%2C_Plymouth%2C_Minnesota_-_DPLA_-_470f5911a614a8065b99ab491302764f.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
-      },
-      "license": {
-        "id": "pdm",
-        "name": "Public Domain Mark",
-        "url": "https://creativecommons.org/publicdomain/mark/1.0/",
-        "commercial": true,
-        "derivatives": true,
-        "attributionRequired": false,
-        "shareAlike": false,
-        "publicDomain": true,
-        "verifyRequired": false,
-        "hotlinkAllowed": false,
-        "caveats": [],
-        "creditLine": "Mission Farms Tepee Village, Plymouth, Minnesota - DPLA - 470f5911a614a8065b99ab491302764f — Public Domain Mark, via Wikimedia Commons"
-      },
-      "risk": {
-        "recognizablePerson": true,
-        "modelRelease": false,
-        "propertyRelease": false,
-        "safeForPaidAds": false
-      },
-      "usage": "commercial",
-      "query": null,
-      "fetchedBy": "sourcing-media"
-    },
-    {
       "slot": "pages.image",
       "lane": "photo",
       "file": "public/media/pagesimage-a-business-meeting-between-an-elderly-client-and.jpg",
@@ -615,45 +536,45 @@
     {
       "slot": "team.owner",
       "lane": "owner-supplied",
-      "file": "public/media/nate-best-authentic.jpg",
+      "file": "public/media/nate-headshot.jpg",
       "variants": [
         {
           "width": 480,
           "format": "avif",
-          "path": "public/media/nate-best-authentic-480.avif",
-          "bytes": 51830
+          "path": "public/media/nate-headshot-480.avif",
+          "bytes": 25312
         },
         {
           "width": 480,
           "format": "webp",
-          "path": "public/media/nate-best-authentic-480.webp",
-          "bytes": 85786
+          "path": "public/media/nate-headshot-480.webp",
+          "bytes": 28520
         },
         {
-          "width": 600,
+          "width": 800,
           "format": "avif",
-          "path": "public/media/nate-best-authentic-600.avif",
-          "bytes": 67542
+          "path": "public/media/nate-headshot-800.avif",
+          "bytes": 60299
         },
         {
-          "width": 600,
+          "width": 800,
           "format": "webp",
-          "path": "public/media/nate-best-authentic-600.webp",
-          "bytes": 118812
+          "path": "public/media/nate-headshot-800.webp",
+          "bytes": 63826
         }
       ],
       "intrinsic": {
-        "width": 651,
-        "height": 1229
+        "width": 1122,
+        "height": 1402
       },
       "alt": "Nate Best, founder of Legacy Benefits Group",
       "altNeedsReview": false,
       "source": {
         "name": "owner",
         "provider": "owner-supplied",
-        "id": "nate-best-authentic",
+        "id": "nate-headshot",
         "pageUrl": null,
-        "downloadUrl": "public/media/nate-best-authentic.jpg"
+        "downloadUrl": "public/media/nate-headshot.jpg"
       },
       "license": {
         "id": "owner-owned",
@@ -2268,6 +2189,219 @@
         "hotlinkAllowed": false,
         "caveats": [
           "Still frame of the signal loop; abstract light, no people, no text."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "hero.maze",
+      "lane": "generated-antigravity",
+      "file": "public/media/hero-maze-keyed.png",
+      "variants": [
+        {
+          "width": 480,
+          "format": "avif",
+          "path": "public/media/hero-maze-480.avif",
+          "bytes": 57353
+        },
+        {
+          "width": 480,
+          "format": "webp",
+          "path": "public/media/hero-maze-480.webp",
+          "bytes": 114874
+        },
+        {
+          "width": 900,
+          "format": "avif",
+          "path": "public/media/hero-maze-900.avif",
+          "bytes": 124591
+        },
+        {
+          "width": 900,
+          "format": "webp",
+          "path": "public/media/hero-maze-900.webp",
+          "bytes": 302200
+        },
+        {
+          "width": 1600,
+          "format": "avif",
+          "path": "public/media/hero-maze-1600.avif",
+          "bytes": 252367
+        },
+        {
+          "width": 1600,
+          "format": "webp",
+          "path": "public/media/hero-maze-1600.webp",
+          "bytes": 730202
+        }
+      ],
+      "intrinsic": {
+        "width": 2048,
+        "height": 2048
+      },
+      "alt": "A gold circular maze on deep navy with a point of light at its entrance",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "hero-maze",
+        "pageUrl": null,
+        "downloadUrl": "public/media/hero-maze.png"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rebuilt from the owner-supplied golden-labyrinth.gif; abstract, no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "hero.mazeSample",
+      "lane": "generated-antigravity",
+      "file": "public/media/hero-maze-sample.webp",
+      "variants": [],
+      "intrinsic": {
+        "width": 512,
+        "height": 512
+      },
+      "alt": "A gold circular maze on deep navy with a point of light at its entrance",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "hero-maze-sample",
+        "pageUrl": null,
+        "downloadUrl": "public/media/hero-maze-sample.webp"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rebuilt from the owner-supplied golden-labyrinth.gif; abstract, no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "hero.mazeRun",
+      "lane": "generated-antigravity",
+      "file": "public/video/hero-maze-run.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 1080,
+        "height": 1080
+      },
+      "alt": "A point of gold light travelling through a circular maze to its centre",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "hero-maze-run",
+        "pageUrl": null,
+        "downloadUrl": "public/video/hero-maze-run.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rebuilt from the owner-supplied golden-labyrinth.gif; abstract, no people, no text, no audio."
+        ],
+        "creditLine": null
+      },
+      "risk": {
+        "recognizablePerson": false,
+        "modelRelease": false,
+        "propertyRelease": false,
+        "safeForPaidAds": true
+      },
+      "usage": "commercial",
+      "query": null,
+      "fetchedBy": "antigravity"
+    },
+    {
+      "slot": "hero.mazeRunMobile",
+      "lane": "generated-antigravity",
+      "file": "public/video/hero-maze-run-mobile.mp4",
+      "variants": [],
+      "intrinsic": {
+        "width": 720,
+        "height": 720
+      },
+      "alt": "A point of gold light travelling through a circular maze to its centre",
+      "altNeedsReview": false,
+      "source": {
+        "name": "Antigravity",
+        "provider": "generated-antigravity",
+        "id": "hero-maze-run-mobile",
+        "pageUrl": null,
+        "downloadUrl": "public/video/hero-maze-run-mobile.mp4"
+      },
+      "license": {
+        "id": "owner-commissioned-generated",
+        "name": "Owner-commissioned, generated",
+        "url": null,
+        "commercial": true,
+        "derivatives": true,
+        "attributionRequired": false,
+        "shareAlike": false,
+        "publicDomain": false,
+        "verifyRequired": false,
+        "hotlinkAllowed": false,
+        "caveats": [
+          "Rebuilt from the owner-supplied golden-labyrinth.gif; abstract, no people, no text, no audio."
         ],
         "creditLine": null
       },

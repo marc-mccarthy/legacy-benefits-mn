@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 
 import { articles } from "@/content/articles";
 import { carriers } from "@/content/carriers";
-import { events, upcomingEvents } from "@/content/events";
 import { faq } from "@/content/faq";
 import { homeBlocks } from "@/content/home";
 import { media } from "@/content/media";
@@ -48,15 +47,14 @@ describe("row counts recorded in the spec's extraction table", () => {
     expect(services).toHaveLength(3);
     expect(team).toHaveLength(1);
     expect(articles).toHaveLength(7);
-    expect(events).toHaveLength(4);
     expect(testimonials).toHaveLength(3);
     expect(carriers).toHaveLength(7);
     expect(faq).toHaveLength(4);
-    expect(homeBlocks).toHaveLength(12);
+    expect(homeBlocks).toHaveLength(11);
   });
 
   it("carries the site settings children", () => {
-    expect(site.nav).toHaveLength(5);
+    expect(site.nav).toHaveLength(4);
     expect(site.stats).toHaveLength(4);
     expect(site.compliance.stateLicenses).toHaveLength(3);
     expect(site.social).toHaveLength(0);
@@ -105,7 +103,6 @@ describe("row counts recorded in the spec's extraction table", () => {
       "signal",
       "serviceGrid",
       "lake",
-      "eventCarousel",
       "learningGrid",
       "testimonials",
       "stats",
@@ -135,10 +132,13 @@ describe("media slots", () => {
         "learn.part-d-coverage-gaps",
         "learn.turning-65-timeline",
         "learn.when-can-i-change-my-plan",
-        "events.image",
         "glass.medigap",
         "glass.partC",
         "glass.partD",
+        "hero.maze",
+        "hero.mazeRun",
+        "hero.mazeRunMobile",
+        "hero.mazeSample",
         "lake.dusk",
         "lake.loop",
         "lake.scrub",
@@ -236,7 +236,7 @@ describe("no two people share a photograph", () => {
 
 describe("slugs", () => {
   it("are unique within each collection", () => {
-    for (const list of [services, team, articles, events]) {
+    for (const list of [services, team, articles]) {
       const slugs = list.map((item) => item.slug);
       expect(new Set(slugs).size).toBe(slugs.length);
     }
@@ -249,12 +249,6 @@ describe("slugs", () => {
       "part-d",
     ]);
     expect(team.map((m) => m.slug)).toEqual(["owner"]);
-    expect(events.map((e) => e.slug)).toEqual([
-      "medicare-basics-workshop",
-      "turning-65-this-year",
-      "annual-enrollment-clinic",
-      "medicare-and-travel",
-    ]);
     expect(articles.map((a) => a.slug)).toEqual([
       "when-can-i-change-my-plan",
       "enrollment-checklist",
@@ -264,27 +258,6 @@ describe("slugs", () => {
       "turning-65-timeline",
       "annual-enrollment-check",
     ]);
-  });
-});
-
-describe("upcomingEvents", () => {
-  it("keeps events whose start is at or after the given moment", () => {
-    expect(upcomingEvents(new Date("2026-01-01T00:00:00.000Z"))).toHaveLength(
-      4,
-    );
-    expect(upcomingEvents(new Date("2026-10-07T00:00:00.000Z"))).toHaveLength(
-      2,
-    );
-    expect(upcomingEvents(new Date("2027-01-01T00:00:00.000Z"))).toHaveLength(
-      0,
-    );
-  });
-
-  it("returns them in chronological order", () => {
-    const starts = upcomingEvents(new Date("2026-01-01T00:00:00.000Z")).map(
-      (e) => new Date(e.startsAt).getTime(),
-    );
-    expect(starts).toEqual([...starts].sort((a, b) => a - b));
   });
 });
 

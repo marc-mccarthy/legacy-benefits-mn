@@ -69,7 +69,7 @@ All visual assets reside under `public/`. Master metadata and responsive variant
 | `public/media/env/`         | `studio-cool-gold.jpg` (Task 17 reflections).                                                                                                                                                                                                                                                                                                                                                                                  |
 | `public/media/silhouettes/` | `paper-{envelope,torn-envelope,form,card,folder-v2}.svg` (Task 14).                                                                                                                                                                                                                                                                                                                                                            |
 | `public/video/`             | `mn-lake-dawn-dusk-mobile.mp4` (980 KB, Task 19 below 700 px), `mn-blue-hour-loop.mp4` (609 KB seamless loop, Task 25). Sources `mn-lake-dawn-dusk-source.mp4` and `mn-blue-hour-source.mp4` (CC0 plate, graded) stay untracked.                                                                                                                                                                                               |
-| `media-manifest.json`       | Every shipped file has an entry (source, licence) and a matching `src/content/media.ts` slot.                                                                                                                                                                                                                                                                                                                                  |
+| `media-manifest.json`       | Every shipped file has an entry and a matching `src/content/media.ts` slot.                                                                                                                                                                                                                                                                                                                                                    |
 
 **Asset Rules:**
 
@@ -186,7 +186,7 @@ The owner must have something said about him and his picture should be done imac
   JavaScript, and in print. Motion is an enhancement, never the only way to see something.
 - Text meets WCAG AA contrast on its actual background. Measure it; don't eyeball it.
 
-- Hard limits (never do them, and never ask about them): `git push`; rewriting history; spending money; deleting untracked files git cannot recover (list them for the owner instead).
+- Hard limits (never do them, and never ask about them): rewriting history; spending money; deleting untracked files git cannot recover (list them for the owner instead).
 - Commit only as the approved plan's tasks do: one commit per task, staging only the paths that task names.
 - Read `node_modules/next/dist/docs/` before writing Next.js code. APIs differ from training data.
 

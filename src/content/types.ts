@@ -65,21 +65,6 @@ export type Article = {
   Body: () => ReactNode;
 };
 
-export type EventItem = {
-  id: string;
-  title: string;
-  slug: string;
-  summary: string;
-  startsAt: string;
-  endsAt: string | null;
-  venue: string;
-  address: string | null;
-  cost: "free" | "paid";
-  registrationUrl: string | null;
-  image: MediaAsset | null;
-  body: string;
-};
-
 export type Testimonial = {
   id: string;
   quote: string;

@@ -3,7 +3,6 @@ import type { SiteContent } from "./types";
 export const site: SiteContent = {
   nav: [
     { label: "Services", href: "/services" },
-    { label: "Events", href: "/events" },
     { label: "Learning Center", href: "/learn" },
     { label: "Meet Nate", href: "/team" },
     { label: "Contact", href: "/contact" },

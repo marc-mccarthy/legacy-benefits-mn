@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { brightestBackground, contrast, HIDE_CHROME } from "./support/contrast";
 import { articles } from "../src/content/articles";
-import { events } from "../src/content/events";
 import { services } from "../src/content/services";
 
 const BAND = "[data-page-band]";
@@ -14,8 +13,6 @@ const ROUTES = [
   `/services/${services[0].slug}`,
   "/learn",
   `/learn/${articles[0].slug}`,
-  "/events",
-  `/events/${events[0].slug}`,
 ];
 
 const seekTo = (page: Page, fraction: number) =>

@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cn, formatDate, formatTime } from "@/lib/utils";
-
-const spaces = (value: string) => value.replace(/\s/g, " ");
+import { cn, formatDate } from "@/lib/utils";
 
 describe("cn", () => {
   it("joins class names", () => {
@@ -85,38 +83,5 @@ describe("formatDate", () => {
     expect(formatDate("2026-09-08T19:30:00Z", { weekday: "short" })).toContain(
       "2026",
     );
-  });
-});
-
-describe("formatTime", () => {
-  it("formats a Date with a timezone label", () => {
-    expect(spaces(formatTime(new Date("2026-09-08T19:30:00Z")))).toBe(
-      "2:30 PM CDT",
-    );
-  });
-
-  it("accepts an ISO string", () => {
-    expect(spaces(formatTime("2026-09-08T19:30:00Z"))).toBe("2:30 PM CDT");
-  });
-
-  it("switches to standard time outside daylight saving", () => {
-    expect(spaces(formatTime("2026-12-07T19:30:00Z"))).toBe("1:30 PM CST");
-  });
-
-  it("always names the zone so the reader can act on it", () => {
-    expect(formatTime("2026-09-08T19:30:00Z")).toMatch(/C[DS]T$/);
-  });
-
-  it("pads the minutes", () => {
-    expect(spaces(formatTime("2026-09-08T19:05:00Z"))).toBe("2:05 PM CDT");
-  });
-
-  it("does not pad the hour", () => {
-    expect(spaces(formatTime("2026-09-08T14:00:00Z"))).toBe("9:00 AM CDT");
-  });
-
-  it("renders midnight and noon unambiguously", () => {
-    expect(spaces(formatTime("2026-09-08T05:00:00Z"))).toBe("12:00 AM CDT");
-    expect(spaces(formatTime("2026-09-08T17:00:00Z"))).toBe("12:00 PM CDT");
   });
 });

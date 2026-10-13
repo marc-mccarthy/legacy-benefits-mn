@@ -18,13 +18,3 @@ export function formatDate(
     ...opts,
   }).format(d);
 }
-
-export function formatTime(value: string | Date): string {
-  const d = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "America/Chicago",
-    timeZoneName: "short",
-  }).format(d);
-}

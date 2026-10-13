@@ -3,7 +3,7 @@
 import { Image } from "@/components/ui/image";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThreeStage } from "@/components/motion/three-stage";
 import { useVisualEffectLifecycle } from "@/components/motion/use-visual-effect-lifecycle";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,32 @@ type HeroProps = {
   ctaHref?: string | null;
 };
 
-const portrait = mediaProps(media["nate.duotone"]);
+const maze = mediaProps(media["hero.maze"]);
+const mazeRun = media["hero.mazeRun"];
+const mazeRunMobile = media["hero.mazeRunMobile"];
+
+const reportUnlessAborted = (error: unknown) => {
+  if (error instanceof DOMException && error.name === "AbortError") return;
+  reportError(error);
+};
 
 export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
   const [resolved, setResolved] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
-  const { mounted, reduced, paused } = useVisualEffectLifecycle(frameRef);
+  const runRef = useRef<HTMLVideoElement>(null);
+  const { mounted, reduced, paused, onscreen, tabVisible } =
+    useVisualEffectLifecycle(frameRef);
   const moving = mounted && !reduced && !paused;
+  const showRun = moving && resolved;
+  const runPlaying = showRun && onscreen && tabVisible;
+
+  useEffect(() => {
+    const video = runRef.current;
+    if (!video || video.ended) return;
+    if (runPlaying) video.play().catch(reportUnlessAborted);
+    else video.pause();
+  }, [showRun, runPlaying]);
+
   const { scrollY } = useScroll();
   const stageY = useTransform(scrollY, [0, 1000], [0, 160]);
   const copyY = useTransform(scrollY, [0, 1000], [0, -140]);
@@ -47,27 +66,45 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
           data-resolved={resolved}
           onAnimationEnd={() => setResolved(true)}
           style={moving ? { y: stageY } : undefined}
-          className="relative mt-(--header-stack) mb-6 min-h-0 flex-1 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] [--hero-hold:calc(var(--duration-converge)+var(--duration-stage))] md:absolute md:top-(--header-stack) md:right-0 md:bottom-0 md:left-1/2 md:m-0 md:[mask-image:none] print:transform-none! [&_canvas]:mix-blend-screen"
+          className="bg-ground-dark relative mt-(--header-stack) mb-6 min-h-0 flex-1 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] [--hero-hold:calc(var(--duration-converge)+var(--duration-stage))] md:absolute md:top-(--header-stack) md:right-0 md:bottom-0 md:left-1/2 md:m-0 md:[mask-image:none] print:transform-none! print:bg-transparent [&_canvas]:mix-blend-screen"
         >
           <ThreeStage
             scene="signal-hero"
             settled={resolved}
             className="absolute inset-0"
             fallback={
-              portrait ? (
+              maze ? (
                 <Image
                   loading="eager"
                   fetchPriority="high"
-                  src={portrait.src}
-                  alt={portrait.alt}
-                  width={portrait.width}
-                  height={portrait.height}
-                  sizes="(min-width: 768px) 40vw, 60vw"
-                  className="portrait-feather h-full w-full object-contain object-bottom print:opacity-100! [[data-resolved=false]>:has(>canvas)>&]:animate-[page-fade-in_var(--duration-stage)_var(--ease-fade)_var(--hero-hold)_both]"
+                  src={maze.src}
+                  alt={maze.alt}
+                  width={maze.width}
+                  height={maze.height}
+                  sizes="(min-width: 768px) 50vw, 90vw"
+                  className="h-full w-full object-contain print:opacity-100! [[data-resolved=false]>:has(>canvas)>&]:animate-[page-fade-in_var(--duration-stage)_var(--ease-fade)_var(--hero-hold)_both]"
                 />
               ) : null
             }
           />
+          {showRun ? (
+            <video
+              ref={runRef}
+              aria-hidden
+              data-hero-run=""
+              muted
+              playsInline
+              preload="auto"
+              className="pointer-events-none absolute inset-0 h-full w-full animate-[page-fade-in_var(--duration-stage)_var(--ease-fade)_both] object-contain mix-blend-screen print:hidden"
+            >
+              <source
+                media="(max-width: 767px)"
+                src={mazeRunMobile.src}
+                type="video/mp4"
+              />
+              <source src={mazeRun.src} type="video/mp4" />
+            </video>
+          ) : null}
         </motion.div>
 
         <Container className="relative pb-32 md:pb-24">

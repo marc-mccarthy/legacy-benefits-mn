@@ -43,7 +43,7 @@ test.each([
   ["an external link", '<a href="https://example.com/">Away</a>'],
   ["a new-tab link", '<a href="/services" target="_blank">Services</a>'],
 ])("a click on %s clears a stale iris", (_, markup) => {
-  click('<a href="/events/x/event.ics">Add to calendar</a>');
+  click('<a href="/services/part-d">Part D</a>');
   expect(iris()).toBe(true);
   click(markup);
   expect(iris()).toBe(false);

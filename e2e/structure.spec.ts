@@ -469,6 +469,25 @@ test.describe("the team page is Nate", () => {
     expect(nav).not.toMatch(PLURAL_PEOPLE);
   });
 
+  test("/team: CMIP is spelled out in the heading, the credentials list and the tab title", async ({
+    page,
+  }) => {
+    await page.goto("/team");
+    expect(await page.title()).toMatch(/^Nate Best, CMIP® \| /);
+    await expect(
+      page.locator('h1 abbr[title="Certified Medicare Insurance Planner"]'),
+    ).toHaveText("CMIP");
+    await expect(page.locator("h1 sup")).toHaveText("®");
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Credentials & licences" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Certified Medicare Insurance Planner (CMIP®)"),
+    ).toBeVisible();
+    await expect(page.getByText("Licensed since 2015")).toBeVisible();
+    await expect(page.getByText("1,400+ clients served")).toBeVisible();
+  });
+
   test("/team/owner canonicalises to /team", async ({ page }) => {
     await page.goto("/team/owner");
     const href = await page

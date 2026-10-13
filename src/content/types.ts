@@ -19,7 +19,12 @@ export type NavItem = {
   children?: { label: string; href: string; description?: string | null }[];
 };
 
-export type Stat = { value: number; suffix?: string | null; label: string };
+export type Stat = {
+  value: number;
+  suffix?: string | null;
+  label: string;
+  year?: boolean;
+};
 
 export type ServiceItem = {
   id: string;
@@ -31,9 +36,12 @@ export type ServiceItem = {
   Body: () => ReactNode;
 };
 
+export type Credential = { short: string; full: string };
+
 export type TeamMember = {
   id: string;
   name: string;
+  credential: Credential | null;
   slug: string;
   role: string;
   order: number;
@@ -41,6 +49,7 @@ export type TeamMember = {
   phone: string | null;
   linkedin: string | null;
   licenses: string[];
+  highlights: string[];
   bio: string;
   photo: MediaAsset | null;
 };

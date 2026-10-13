@@ -17,6 +17,32 @@ const repoRoot = join(import.meta.dirname, "..", "..");
 const publicPath = (src: string) =>
   join(repoRoot, "public", src.replace(/^\//, ""));
 
+describe("the carriers Nate represents", () => {
+  it("lists exactly his carriers, in his order, with their trademark marks", () => {
+    expect(carriers.map((carrier) => carrier.name)).toEqual([
+      "Blue Cross® Blue Shield® MN",
+      "Medica®",
+      "HealthPartners®",
+      "UnitedHealthcare®",
+      "Allina Health® | Aetna®",
+      "HealthSpring℠",
+      "Insurance Company of North America (INA)",
+    ]);
+    expect(carriers.every((carrier) => carrier.approved)).toBe(true);
+    expect(carriers.every((carrier) => carrier.logo === null)).toBe(true);
+  });
+
+  it("credits the trademarks and the Blue Cross licence under the strip", () => {
+    const strip = homeBlocks.find(
+      (block) => block.blockType === "carrierStrip",
+    );
+
+    expect(strip?.note).toBe(
+      "All trademarks are the property of their respective owners. Blue Cross® and Blue Shield® of Minnesota is a nonprofit independent licensee of the Blue Cross and Blue Shield Association.",
+    );
+  });
+});
+
 describe("row counts recorded in the spec's extraction table", () => {
   it("carries every row the database held", () => {
     expect(services).toHaveLength(3);
@@ -24,7 +50,7 @@ describe("row counts recorded in the spec's extraction table", () => {
     expect(articles).toHaveLength(7);
     expect(events).toHaveLength(4);
     expect(testimonials).toHaveLength(3);
-    expect(carriers).toHaveLength(6);
+    expect(carriers).toHaveLength(7);
     expect(faq).toHaveLength(4);
     expect(homeBlocks).toHaveLength(12);
   });
@@ -38,7 +64,38 @@ describe("row counts recorded in the spec's extraction table", () => {
 
   it("keeps the team licences the database held", () => {
     expect(team.map((member) => member.licenses.length)).toEqual([3]);
-    expect(team[0]?.licenses).toContain("NPN 19472086");
+    expect(team[0]?.licenses).toContain("NPN 17742895");
+  });
+
+  it("shows the same NPN in the footer settings and the owner licences", () => {
+    expect(site.compliance.npn).toBe("17742895");
+    expect(team[0]?.licenses).toContain(`NPN ${site.compliance.npn}`);
+  });
+
+  it("gives Nate his CMIP registered credential", () => {
+    expect(team[0]?.credential).toEqual({
+      short: "CMIP®",
+      full: "Certified Medicare Insurance Planner",
+    });
+  });
+
+  it("states the licensed-since year and client count the same way everywhere", () => {
+    const licensed = site.stats.find((stat) => stat.label === "Licensed since");
+    const clients = site.stats.find((stat) => stat.label === "Clients served");
+
+    expect(licensed).toEqual({
+      value: 2015,
+      suffix: "",
+      label: "Licensed since",
+      year: true,
+    });
+    expect(clients).toMatchObject({ value: 1400, suffix: "+" });
+    expect(team[0]?.highlights).toEqual([
+      "Licensed since 2015",
+      "1,400+ clients served",
+    ]);
+    expect(team[0]?.bio).toContain("since 2015");
+    expect(team[0]?.bio).not.toMatch(/eleven years/i);
   });
 
   it("orders the home blocks as the page authored them", () => {

@@ -134,9 +134,9 @@ test.describe("transact pages", () => {
 
     const portrait = page.locator("main img[alt*='Nate Best']");
     await expect(portrait).toBeVisible();
-    await expect(
-      page.getByText("Nate Best, Founder & Licensed Agent"),
-    ).toBeVisible();
+    await expect(page.getByText("Nate Best, CMIP®")).toBeVisible();
+    await expect(page.locator("main sup", { hasText: "®" })).toBeVisible();
+    await expect(page.getByText("Founder & Licensed Agent")).toBeVisible();
     expect(await page.locator("canvas").count()).toBe(0);
 
     const portraitBox = await portrait.boundingBox();

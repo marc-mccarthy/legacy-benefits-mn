@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Image } from "@/components/ui/image";
 import { ContactForm } from "@/components/forms/contact-form";
 import { CalendlyInline } from "@/components/integrations/calendly";
+import { PersonName } from "@/components/ui/person-name";
 import { Container, Prose, Section } from "@/components/ui/section";
 import { TpmoDisclaimer } from "@/components/compliance/disclosures";
 import { tcpaConsentText } from "@/lib/compliance/disclosures";
@@ -40,9 +41,14 @@ export default async function ContactPage() {
               height={96}
               className="size-24 shrink-0 rounded-full object-cover"
             />
-            <p className="text-lg font-semibold">
-              {nate?.name}, {nate?.role}
-            </p>
+            {nate ? (
+              <div>
+                <p className="text-lg font-semibold">
+                  <PersonName name={nate.name} credential={nate.credential} />
+                </p>
+                <p className="text-muted">{nate.role}</p>
+              </div>
+            ) : null}
           </div>
           {phone ? (
             <p>

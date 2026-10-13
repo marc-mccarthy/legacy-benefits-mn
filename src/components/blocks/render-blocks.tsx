@@ -165,6 +165,7 @@ export function RenderBlocks({
                 key={key}
                 scheme={scheme}
                 heading={block.heading as string | null}
+                note={block.note as string | null}
                 carriers={data.carriers}
               />
             );

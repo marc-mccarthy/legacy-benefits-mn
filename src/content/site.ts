@@ -19,7 +19,7 @@ export const site: SiteContent = {
   },
 
   stats: [
-    { value: 11, suffix: "", label: "Years helping Minnesotans" },
+    { value: 2015, suffix: "", label: "Licensed since", year: true },
     { value: 1400, suffix: "+", label: "Clients served" },
     { value: 8, suffix: "", label: "Carriers represented" },
     { value: 3, suffix: "", label: "States licensed" },
@@ -33,7 +33,7 @@ export const site: SiteContent = {
   compliance: {
     orgCount: 8,
     planCount: 42,
-    npn: "19472086",
+    npn: "17742895",
     footerDisclosure: null,
     stateLicenses: [
       { state: "MN", licenseNumber: "40615592" },

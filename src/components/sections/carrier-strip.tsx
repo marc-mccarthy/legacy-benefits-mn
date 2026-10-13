@@ -1,4 +1,5 @@
 import { Image } from "@/components/ui/image";
+import { WithMarks } from "@/components/ui/person-name";
 import { Container, Section, type Scheme } from "@/components/ui/section";
 import { mediaProps } from "@/lib/media";
 
@@ -27,7 +28,7 @@ function CarrierItem({ carrier }: { carrier: Carrier }) {
           translate="no"
           className="text-muted text-lg font-semibold tracking-tight whitespace-nowrap"
         >
-          {carrier.name}
+          <WithMarks text={carrier.name} />
         </span>
       )}
     </li>
@@ -36,10 +37,12 @@ function CarrierItem({ carrier }: { carrier: Carrier }) {
 
 export function CarrierStrip({
   heading,
+  note,
   carriers,
   scheme = "light",
 }: {
   heading?: string | null;
+  note?: string | null;
   carriers: Carrier[];
   scheme?: Scheme;
 }) {
@@ -80,6 +83,14 @@ export function CarrierStrip({
             </ul>
           ))}
         </div>
+        {note ? (
+          <p
+            data-carrier-note
+            className="text-muted mx-auto max-w-3xl text-center text-sm"
+          >
+            <WithMarks text={note} />
+          </p>
+        ) : null}
       </Container>
     </Section>
   );

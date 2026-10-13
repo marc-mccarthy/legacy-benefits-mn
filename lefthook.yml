@@ -21,13 +21,6 @@ pre-commit:
             glob: "*.tf"
             run: terraform fmt -recursive infra/
 
-          - name: diagrams
-            run: >-
-              pnpm diagrams:build &&
-              git add docs/diagrams/SOURCES.md
-              docs/diagrams/diagrams.manifest.json
-              docs/diagrams/D5-module-map.mmd
-
     - name: verify
       group:
         parallel: true
@@ -41,9 +34,6 @@ pre-commit:
           - name: prettier-check
             glob: "*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}"
             run: pnpm exec prettier --check {staged_files}
-
-          - name: diagrams-check
-            run: pnpm diagrams:check
 
           - name: drizzle
             run: pnpm exec drizzle-kit check
@@ -60,10 +50,6 @@ pre-commit:
             glob: "*.tf"
             run: tflint --chdir=infra --init >/dev/null && tflint --chdir=infra
 
-          # - name: trivy
-          #   glob: "*.tf"
-          #   run: trivy config infra/ --exit-code 1
-
 pre-push:
   parallel: true
   jobs:
@@ -73,8 +59,6 @@ pre-push:
       run: pnpm test:unit
     - name: prettier-check
       run: pnpm format:check
-    - name: diagrams-check
-      run: pnpm diagrams:check
     - name: drizzle
       run: pnpm exec drizzle-kit check
     - name: terraform-fmt-check
@@ -95,8 +79,6 @@ verify-all:
       run: pnpm test:unit
     - name: prettier-check
       run: pnpm format:check
-    - name: diagrams-check
-      run: pnpm diagrams:check
     - name: drizzle
       run: pnpm exec drizzle-kit check
     - name: terraform-fmt-check

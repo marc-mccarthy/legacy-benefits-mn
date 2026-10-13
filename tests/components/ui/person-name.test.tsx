@@ -19,7 +19,7 @@ test("PersonName spells out the credential and superscripts the registered mark"
   );
 
   expect(html).toMatch(
-    /^Nate Best<span class="whitespace-nowrap">, <abbr title="Certified Medicare Insurance Planner"[^>]*>CMIP<\/abbr><sup class="[^"]*">®<\/sup><\/span>$/,
+    /^Nate Best<span class="whitespace-nowrap">, <abbr title="Certified Medicare Insurance Planner"[^>]*>CMIP<\/abbr><sup data-legal-mark="" class="[^"]*">®<\/sup><\/span>$/,
   );
 });
 

@@ -26,9 +26,9 @@ test.describe("the 16px floor", () => {
     }) => {
       await page.goto(path);
 
-      const undersized = (await textSizes(page, "[data-compliance]")).filter(
-        (entry) => entry.size < 16,
-      );
+      const undersized = (
+        await textSizes(page, "[data-compliance], [data-legal-mark]")
+      ).filter((entry) => entry.size < 16);
 
       expect(
         undersized,
@@ -36,6 +36,19 @@ test.describe("the 16px floor", () => {
       ).toEqual([]);
     });
   }
+
+  test("item 20: the only text exempt as a legal mark is a lone ®, ℠ or ™", async ({
+    page,
+  }) => {
+    for (const path of ["/", "/contact", "/team"]) {
+      await page.goto(path);
+      const marks = await page
+        .locator("[data-legal-mark]")
+        .evaluateAll((els) => els.map((el) => el.textContent ?? ""));
+      expect(marks.length, path).toBeGreaterThan(0);
+      for (const mark of marks) expect(mark, path).toMatch(/^[®℠™]$/);
+    }
+  });
 
   test("item 20: the excluded disclosures are above the floor too", async ({
     page,

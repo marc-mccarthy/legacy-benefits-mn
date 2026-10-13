@@ -8,6 +8,7 @@ export function WithMarks({ text }: { text: string }) {
     i % 2 === 1 ? (
       <sup
         key={i}
+        data-legal-mark=""
         className="relative -top-[0.75em] ml-[0.05em] align-baseline text-[0.45em] font-normal tracking-normal"
       >
         {part}

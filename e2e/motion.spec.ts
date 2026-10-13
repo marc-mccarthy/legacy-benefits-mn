@@ -577,9 +577,9 @@ test.describe("hero signal field", () => {
       "the light run holds its last frame instead of restarting",
     ).toBe(held);
     await expect(run).toBeVisible();
+    await expect(page.locator(PORTRAIT)).toHaveCSS("opacity", "0");
     await expect(canvas).toHaveCount(1);
     await expect(canvas).toHaveCSS("opacity", "1");
-    await portraitShown(page);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
     const before = await canvas.screenshot();
@@ -593,14 +593,15 @@ test.describe("hero signal field", () => {
     await expect(canvas).toHaveCount(0);
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(canvas).toHaveCount(1, { timeout: 15_000 });
-    expect(
-      await page
-        .locator(PORTRAIT)
-        .evaluate((img) => getComputedStyle(img).opacity),
-      "returning to the hero never hides the maze again",
-    ).toBe("1");
     await expect(page.locator(STAGE)).toHaveAttribute("data-resolved", "true");
-    await portraitShown(page);
+    await expect(
+      run,
+      "returning to the hero keeps the finished run on screen",
+    ).toBeVisible();
+    expect(
+      await run.evaluate((video: HTMLVideoElement) => video.ended),
+      "returning to the hero never replays the run",
+    ).toBe(true);
 
     await context.close();
   });

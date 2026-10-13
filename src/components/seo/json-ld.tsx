@@ -1,3 +1,5 @@
+import type { Credential } from "@/content/types";
+
 export function JsonLd({ data }: { data: object }) {
   return (
     <script
@@ -89,6 +91,7 @@ export function eventSchema(opts: {
 
 export function personSchema(opts: {
   name: string;
+  credential: Credential | null;
   role: string;
   slug: string;
 }) {
@@ -96,6 +99,16 @@ export function personSchema(opts: {
     "@context": "https://schema.org",
     "@type": "Person",
     name: opts.name,
+    ...(opts.credential
+      ? {
+          honorificSuffix: opts.credential.short,
+          hasCredential: {
+            "@type": "EducationalOccupationalCredential",
+            name: opts.credential.full,
+            credentialCategory: "certification",
+          },
+        }
+      : {}),
     jobTitle: opts.role,
     url: `${siteUrl()}/team/${opts.slug}`,
   };

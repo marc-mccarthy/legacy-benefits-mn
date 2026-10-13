@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Reveal } from "@/components/motion/reveal";
 import { JsonLd, personSchema } from "@/components/seo/json-ld";
 import { Button } from "@/components/ui/button";
+import { PersonName, WithMarks } from "@/components/ui/person-name";
 import { PhoneLink } from "@/components/ui/phone-link";
 import { Container, Section } from "@/components/ui/section";
 import type { TeamMember as Member } from "@/content/types";
@@ -15,6 +16,7 @@ export function TeamMember({ member }: { member: Member }) {
       <JsonLd
         data={personSchema({
           name: member.name,
+          credential: member.credential,
           role: member.role,
           slug: member.slug,
         })}
@@ -26,8 +28,28 @@ export function TeamMember({ member }: { member: Member }) {
               {member.role}
             </p>
             <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
-              {member.name}
+              <PersonName name={member.name} credential={member.credential} />
             </h1>
+            {member.highlights.length ? (
+              <ul
+                data-highlights
+                className="mt-4 flex flex-col gap-x-3 gap-y-1 text-lg font-semibold sm:flex-row sm:flex-wrap sm:items-center md:text-xl"
+              >
+                {member.highlights.map((highlight, i) => (
+                  <li key={highlight} className="flex items-center gap-x-3">
+                    {i > 0 ? (
+                      <span
+                        aria-hidden
+                        className="text-action hidden sm:inline"
+                      >
+                        ·
+                      </span>
+                    ) : null}
+                    {highlight}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
           {photo ? (
             <Image
@@ -50,12 +72,25 @@ export function TeamMember({ member }: { member: Member }) {
       </Section>
       <Section>
         <Container className="space-y-6">
-          {member.licenses.length ? (
-            <ul className="text-muted space-y-1 text-base">
-              {member.licenses.map((license) => (
-                <li key={license}>{license}</li>
-              ))}
-            </ul>
+          {member.credential || member.licenses.length ? (
+            <div data-credentials className="space-y-3">
+              <h2 className="font-display text-2xl font-semibold">
+                Credentials &amp; licences
+              </h2>
+              <ul className="space-y-1 text-base">
+                {member.credential ? (
+                  <li className="font-semibold">
+                    {member.credential.full} (
+                    <WithMarks text={member.credential.short} />)
+                  </li>
+                ) : null}
+                {member.licenses.map((license) => (
+                  <li key={license} className="text-muted">
+                    {license}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
           {member.phone ? (
             <p>

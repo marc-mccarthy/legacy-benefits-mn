@@ -19,7 +19,7 @@ export const site: SiteContent = {
   },
 
   stats: [
-    { value: 11, suffix: "", label: "Years helping Minnesotans" },
+    { value: 2015, suffix: "", label: "Licensed since", year: true },
     { value: 1400, suffix: "+", label: "Clients served" },
     { value: 8, suffix: "", label: "Carriers represented" },
     { value: 3, suffix: "", label: "States licensed" },

@@ -3,7 +3,7 @@ import { TeamMember } from "@/components/sections/team-member";
 import { team } from "@/content/team";
 
 export const metadata: Metadata = {
-  title: "Nate Best",
+  title: "Nate Best, CMIP®",
   description:
     "Meet Nate Best, the licensed Medicare agent you talk to every time.",
 };

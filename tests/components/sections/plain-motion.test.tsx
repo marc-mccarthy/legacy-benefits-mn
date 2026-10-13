@@ -79,6 +79,24 @@ test("stats show the real figure at once under reduced motion", () => {
   expect(animateMock).not.toHaveBeenCalled();
 });
 
+test("a year stat shows the plain year and never counts up", () => {
+  inView.mockReturnValue(true);
+  const { container } = render(
+    <StatsBand
+      stats={[{ value: 2015, suffix: "", label: "Licensed since", year: true }]}
+    />,
+  );
+
+  expect(container.querySelector("dd span[aria-hidden]")?.textContent).toBe(
+    "2015",
+  );
+  expect(container.querySelector("dd .sr-only")?.textContent).toBe("2015");
+  expect(container.querySelector("dt")?.textContent).toBe("Licensed since");
+  expect(container.querySelector("[data-count-up]")).toBeNull();
+  expect(container.textContent).not.toContain("2,015");
+  expect(animateMock).not.toHaveBeenCalled();
+});
+
 const carriers = [
   { id: "a", name: "Aetna", approved: true },
   { id: "b", name: "Humana", approved: true },

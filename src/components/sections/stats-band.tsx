@@ -6,10 +6,20 @@ import { Container, Section, type Scheme } from "@/components/ui/section";
 import { useEffectsPaused } from "@/lib/effects-pause";
 import { DURATION_CONVERGE, EASE_MOVE } from "@/lib/motion";
 
-export type Stat = { value: number; suffix?: string | null; label: string };
+export type Stat = {
+  value: number;
+  suffix?: string | null;
+  label: string;
+  year?: boolean;
+};
 
 const formatStat = (value: number, suffix?: string | null) =>
   `${Math.round(value).toLocaleString("en-US")}${suffix ?? ""}`;
+
+const formatFigure = (stat: Stat) =>
+  stat.year
+    ? `${stat.value}${stat.suffix ?? ""}`
+    : formatStat(stat.value, stat.suffix);
 
 function CountUp({ value, suffix }: { value: number; suffix?: string | null }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -70,10 +80,12 @@ export function StatsBand({
               <dt className="sr-only">{stat.label}</dt>
               <dd>
                 <span className="font-display tabular block text-4xl md:text-5xl">
-                  <CountUp value={stat.value} suffix={stat.suffix} />
-                  <span className="sr-only">
-                    {formatStat(stat.value, stat.suffix)}
-                  </span>
+                  {stat.year ? (
+                    <span aria-hidden>{formatFigure(stat)}</span>
+                  ) : (
+                    <CountUp value={stat.value} suffix={stat.suffix} />
+                  )}
+                  <span className="sr-only">{formatFigure(stat)}</span>
                 </span>
                 <span aria-hidden className="text-muted mt-2 block">
                   {stat.label}

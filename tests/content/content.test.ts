@@ -46,6 +46,32 @@ describe("row counts recorded in the spec's extraction table", () => {
     expect(team[0]?.licenses).toContain(`NPN ${site.compliance.npn}`);
   });
 
+  it("gives Nate his CMIP registered credential", () => {
+    expect(team[0]?.credential).toEqual({
+      short: "CMIP®",
+      full: "Certified Medicare Insurance Planner",
+    });
+  });
+
+  it("states the licensed-since year and client count the same way everywhere", () => {
+    const licensed = site.stats.find((stat) => stat.label === "Licensed since");
+    const clients = site.stats.find((stat) => stat.label === "Clients served");
+
+    expect(licensed).toEqual({
+      value: 2015,
+      suffix: "",
+      label: "Licensed since",
+      year: true,
+    });
+    expect(clients).toMatchObject({ value: 1400, suffix: "+" });
+    expect(team[0]?.highlights).toEqual([
+      "Licensed since 2015",
+      "1,400+ clients served",
+    ]);
+    expect(team[0]?.bio).toContain("since 2015");
+    expect(team[0]?.bio).not.toMatch(/eleven years/i);
+  });
+
   it("orders the home blocks as the page authored them", () => {
     expect(homeBlocks.map((block) => block.blockType)).toEqual([
       "hero",

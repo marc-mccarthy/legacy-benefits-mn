@@ -33,7 +33,7 @@ export const site: SiteContent = {
   compliance: {
     orgCount: 8,
     planCount: 42,
-    npn: "19472086",
+    npn: "17742895",
     footerDisclosure: null,
     stateLicenses: [
       { state: "MN", licenseNumber: "40615592" },

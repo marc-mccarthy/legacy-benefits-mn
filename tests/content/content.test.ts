@@ -38,7 +38,12 @@ describe("row counts recorded in the spec's extraction table", () => {
 
   it("keeps the team licences the database held", () => {
     expect(team.map((member) => member.licenses.length)).toEqual([3]);
-    expect(team[0]?.licenses).toContain("NPN 19472086");
+    expect(team[0]?.licenses).toContain("NPN 17742895");
+  });
+
+  it("shows the same NPN in the footer settings and the owner licences", () => {
+    expect(site.compliance.npn).toBe("17742895");
+    expect(team[0]?.licenses).toContain(`NPN ${site.compliance.npn}`);
   });
 
   it("orders the home blocks as the page authored them", () => {

@@ -11,7 +11,7 @@ export const team: TeamMember[] = [
     email: "nateb@legacybenefitsmn.com",
     phone: "(651) 260-1003",
     linkedin: null,
-    licenses: ["Licensed in MN, WI, IA", "AHIP certified", "NPN 19472086"],
+    licenses: ["Licensed in MN, WI, IA", "AHIP certified", "NPN 17742895"],
     bio: "Eleven years helping people across the Twin Cities sort out Medicare. The practice started after watching his own parents get pushed toward a plan that did not cover their prescriptions.",
     photo: media["team.owner"],
   },

@@ -118,6 +118,45 @@ test("the carrier marquee exposes one list and hides its loop copies", () => {
   expect(marquee.getAttribute("aria-labelledby")).toBe("carriers-heading");
 });
 
+test("carrier names raise their trademark marks and keep the full name readable", () => {
+  const { container } = render(
+    <CarrierStrip
+      carriers={[
+        { id: "a", name: "Allina Health® | Aetna®", approved: true },
+        { id: "b", name: "HealthSpring℠", approved: true },
+        {
+          id: "c",
+          name: "Insurance Company of North America (INA)",
+          approved: true,
+        },
+      ]}
+    />,
+  );
+  const list = container.querySelector("[data-marquee] ul")!;
+
+  expect([...list.querySelectorAll("li")].map((li) => li.textContent)).toEqual([
+    "Allina Health® | Aetna®",
+    "HealthSpring℠",
+    "Insurance Company of North America (INA)",
+  ]);
+  expect(
+    [...list.querySelectorAll("sup")].map((sup) => sup.textContent),
+  ).toEqual(["®", "®", "℠"]);
+});
+
+test("the carrier strip shows its trademark note only when one is given", () => {
+  const withNote = render(
+    <CarrierStrip carriers={carriers} note="Blue Cross® is a licensee." />,
+  );
+  const note = withNote.container.querySelector("[data-carrier-note]");
+  expect(note?.textContent).toBe("Blue Cross® is a licensee.");
+  expect(note?.querySelector("sup")?.textContent).toBe("®");
+  withNote.unmount();
+
+  const without = render(<CarrierStrip carriers={carriers} />);
+  expect(without.container.querySelector("[data-carrier-note]")).toBeNull();
+});
+
 const items = [{ question: "Does it cost anything?", answer: "No." }];
 
 test("FAQ answers are native details content present without JavaScript", () => {

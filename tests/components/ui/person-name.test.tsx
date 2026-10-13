@@ -44,6 +44,21 @@ test("WithMarks superscripts every registered mark and keeps the other text", ()
   expect(html.replace(/<[^>]+>/g, "")).toBe("A® and B®");
 });
 
+test("WithMarks superscripts service and trademark marks too", () => {
+  const html = renderToStaticMarkup(<WithMarks text="A℠ B™ C" />);
+
+  expect(html.match(/<sup[^>]*>(℠|™)<\/sup>/g)).toHaveLength(2);
+  expect(html.replace(/<[^>]+>/g, "")).toBe("A℠ B™ C");
+});
+
+test("WithMarks leaves text with no marks untouched", () => {
+  expect(
+    renderToStaticMarkup(
+      <WithMarks text="Insurance Company of North America (INA)" />,
+    ),
+  ).toBe("Insurance Company of North America (INA)");
+});
+
 test("personSchema adds the suffix and the spelled-out credential only when one exists", () => {
   const withCredential = personSchema({
     name: "Nate Best",

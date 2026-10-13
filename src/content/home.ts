@@ -61,6 +61,7 @@ export const homeBlocks: PageBlock[] = [
     blockType: "carrierStrip",
     scheme: "muted",
     heading: "We represent",
+    note: "All trademarks are the property of their respective owners. Blue Cross® and Blue Shield® of Minnesota is a nonprofit independent licensee of the Blue Cross and Blue Shield Association.",
   },
   {
     blockType: "faq",

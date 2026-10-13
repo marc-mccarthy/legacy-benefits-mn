@@ -1,19 +1,21 @@
 import { Fragment } from "react";
 import type { Credential } from "@/content/types";
 
-const REGISTERED = "®";
+const MARKS = /([®℠™])/;
 
 export function WithMarks({ text }: { text: string }) {
-  return text.split(REGISTERED).map((part, i) => (
-    <Fragment key={i}>
-      {i > 0 ? (
-        <sup className="relative -top-[0.75em] ml-[0.05em] align-baseline text-[0.45em] font-normal tracking-normal">
-          {REGISTERED}
-        </sup>
-      ) : null}
-      {part}
-    </Fragment>
-  ));
+  return text.split(MARKS).map((part, i) =>
+    i % 2 === 1 ? (
+      <sup
+        key={i}
+        className="relative -top-[0.75em] ml-[0.05em] align-baseline text-[0.45em] font-normal tracking-normal"
+      >
+        {part}
+      </sup>
+    ) : (
+      <Fragment key={i}>{part}</Fragment>
+    ),
+  );
 }
 
 export function PersonName({
@@ -25,7 +27,7 @@ export function PersonName({
 }) {
   if (!credential) return <>{name}</>;
 
-  const abbreviation = credential.short.split(REGISTERED)[0] ?? "";
+  const abbreviation = credential.short.split(MARKS)[0] ?? "";
 
   return (
     <>

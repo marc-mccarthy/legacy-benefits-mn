@@ -17,6 +17,32 @@ const repoRoot = join(import.meta.dirname, "..", "..");
 const publicPath = (src: string) =>
   join(repoRoot, "public", src.replace(/^\//, ""));
 
+describe("the carriers Nate represents", () => {
+  it("lists exactly his carriers, in his order, with their trademark marks", () => {
+    expect(carriers.map((carrier) => carrier.name)).toEqual([
+      "Blue Cross® Blue Shield® MN",
+      "Medica®",
+      "HealthPartners®",
+      "UnitedHealthcare®",
+      "Allina Health® | Aetna®",
+      "HealthSpring℠",
+      "Insurance Company of North America (INA)",
+    ]);
+    expect(carriers.every((carrier) => carrier.approved)).toBe(true);
+    expect(carriers.every((carrier) => carrier.logo === null)).toBe(true);
+  });
+
+  it("credits the trademarks and the Blue Cross licence under the strip", () => {
+    const strip = homeBlocks.find(
+      (block) => block.blockType === "carrierStrip",
+    );
+
+    expect(strip?.note).toBe(
+      "All trademarks are the property of their respective owners. Blue Cross® and Blue Shield® of Minnesota is a nonprofit independent licensee of the Blue Cross and Blue Shield Association.",
+    );
+  });
+});
+
 describe("row counts recorded in the spec's extraction table", () => {
   it("carries every row the database held", () => {
     expect(services).toHaveLength(3);
@@ -24,7 +50,7 @@ describe("row counts recorded in the spec's extraction table", () => {
     expect(articles).toHaveLength(7);
     expect(events).toHaveLength(4);
     expect(testimonials).toHaveLength(3);
-    expect(carriers).toHaveLength(6);
+    expect(carriers).toHaveLength(7);
     expect(faq).toHaveLength(4);
     expect(homeBlocks).toHaveLength(12);
   });

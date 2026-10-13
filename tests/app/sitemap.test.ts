@@ -6,7 +6,6 @@ vi.mock("@/lib/site-url", () => ({ getSiteUrl }));
 
 const sitemap = (await import("@/app/sitemap")).default;
 const { articles } = await import("@/content/articles");
-const { events } = await import("@/content/events");
 const { services } = await import("@/content/services");
 const { team } = await import("@/content/team");
 
@@ -16,7 +15,6 @@ const STATIC_PATHS = [
   "",
   "/services",
   "/team",
-  "/events",
   "/learn",
   "/contact",
   "/scope-of-appointment",
@@ -87,7 +85,6 @@ describe("content routes", () => {
 
     expect(urls).toContain(`${ORIGIN}/services/medicare-advantage`);
     expect(urls).toContain(`${ORIGIN}/team/owner`);
-    expect(urls).toContain(`${ORIGIN}/events/medicare-basics-workshop`);
     expect(urls).toContain(`${ORIGIN}/learn/when-can-i-change-my-plan`);
   });
 
@@ -98,8 +95,6 @@ describe("content routes", () => {
       expect(urls).toContain(`${ORIGIN}/services/${item.slug}`);
     for (const item of team)
       expect(urls).toContain(`${ORIGIN}/team/${item.slug}`);
-    for (const item of events)
-      expect(urls).toContain(`${ORIGIN}/events/${item.slug}`);
     for (const item of articles)
       expect(urls).toContain(`${ORIGIN}/learn/${item.slug}`);
   });
@@ -124,11 +119,7 @@ describe("the whole route set", () => {
   it("carries one entry per published route and no duplicates", () => {
     const urls = sitemap().map((e) => e.url);
     const expected =
-      STATIC_PATHS.length +
-      services.length +
-      team.length +
-      events.length +
-      articles.length;
+      STATIC_PATHS.length + services.length + team.length + articles.length;
 
     expect(urls).toHaveLength(expected);
     expect(new Set(urls).size).toBe(expected);

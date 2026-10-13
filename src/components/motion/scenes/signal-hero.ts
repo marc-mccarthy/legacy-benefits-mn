@@ -82,7 +82,7 @@ void main() {
 }
 `;
 
-const cutout = media["nate.cutoutSample"];
+const cutout = media["hero.mazeSample"];
 
 const portraits = new Map<
   number,
@@ -187,15 +187,15 @@ const createSignalHero: SceneFactory = async (
     const scale = Math.min(w / cutout.width, h / cutout.height);
     const halfW = (cutout.width * scale) / 2;
     const halfH = (cutout.height * scale) / 2;
-    const centerY = -h / 2 + halfH;
+    const centerY = 0;
     for (let i = 0; i < count; i += 1) {
       noisePx[i * 2] = noise[i * 2] * w * 0.55;
       noisePx[i * 2 + 1] = noise[i * 2 + 1] * h * 0.55;
       targetPx[i * 2] = portrait[i * 2] * halfW;
       targetPx[i * 2 + 1] = centerY + portrait[i * 2 + 1] * halfH;
     }
-    uniforms.uCenter.value.set(0, centerY + halfH * 0.2);
-    uniforms.uRadius.value.set(halfW, halfH * 0.62);
+    uniforms.uCenter.value.set(0, centerY);
+    uniforms.uRadius.value.set(halfW * 0.72, halfH * 0.72);
     uniforms.uSize.value = Math.max(2.5, (halfH / 260) * 2.6) * pixelRatio;
     place();
     renderer.render(scene, camera);

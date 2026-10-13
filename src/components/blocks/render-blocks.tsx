@@ -1,10 +1,5 @@
 import type { ReactNode } from "react";
-import { Section } from "@/components/ui/section";
 import { CtaBand } from "@/components/sections/cta-band";
-import {
-  EventCarousel,
-  type EventItem,
-} from "@/components/sections/event-carousel";
 import { Faq } from "@/components/sections/faq";
 import { Hero } from "@/components/sections/hero";
 import {
@@ -32,7 +27,6 @@ type Block = Record<string, unknown> & { blockType: string; scheme?: Scheme };
 
 type BlockData = {
   services: ServiceItem[];
-  events: EventItem[];
   articles: ArticleItem[];
   stats: Stat[];
   testimonials: Testimonial[];
@@ -118,21 +112,6 @@ export function RenderBlocks({
                 heading={block.heading as string}
                 body={block.body as string}
               />
-            );
-
-          case "eventCarousel":
-            if (data.events.length === 0) return null;
-            return (
-              <Section
-                key={key}
-                scheme={scheme}
-                aria-labelledby="events-heading"
-              >
-                <EventCarousel
-                  heading={block.heading as string | null}
-                  events={data.events}
-                />
-              </Section>
             );
 
           case "learningGrid":

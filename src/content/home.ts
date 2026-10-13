@@ -38,11 +38,6 @@ export const homeBlocks: PageBlock[] = [
     body: "Turning 65, changing plans, or checking in every fall. Nate is here for each part of the year.",
   },
   {
-    blockType: "eventCarousel",
-    scheme: "light",
-    heading: "Free workshops near you",
-  },
-  {
     blockType: "learningGrid",
     scheme: "light",
     heading: "Learning Center",

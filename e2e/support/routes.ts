@@ -1,5 +1,4 @@
 import { articles } from "../../src/content/articles";
-import { events } from "../../src/content/events";
 import { services } from "../../src/content/services";
 import { team } from "../../src/content/team";
 
@@ -13,8 +12,6 @@ export const ROUTES: Route[] = [
   { path: `/services/${services[0].slug}`, tier: "inform" },
   { path: "/learn", tier: "inform" },
   { path: `/learn/${articles[0].slug}`, tier: "inform" },
-  { path: "/events", tier: "inform" },
-  { path: `/events/${events[0].slug}`, tier: "inform" },
   { path: "/team", tier: "inform" },
   { path: `/team/${team[0].slug}`, tier: "inform" },
   { path: "/contact", tier: "transact" },

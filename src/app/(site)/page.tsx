@@ -3,7 +3,6 @@ import { RenderBlocks } from "@/components/blocks/render-blocks";
 import { JsonLd, organizationSchema } from "@/components/seo/json-ld";
 import { articles } from "@/content/articles";
 import { carriers } from "@/content/carriers";
-import { upcomingEvents } from "@/content/events";
 import { homeBlocks } from "@/content/home";
 import { services } from "@/content/services";
 import { site } from "@/content/site";
@@ -17,11 +16,9 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const identity = await getBusinessIdentity();
-  const events = upcomingEvents(new Date()).slice(0, 9);
 
   const blockData = {
     services: services as never,
-    events: events as never,
     articles: articles.slice(0, 3) as never,
     stats: site.stats as never,
     testimonials: testimonials as never,

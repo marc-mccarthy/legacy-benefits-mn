@@ -6,7 +6,6 @@ const PAGES = [
   "/",
   "/services",
   "/learn",
-  "/events",
   "/contact",
   "/scope-of-appointment",
   "/do-not-contact",

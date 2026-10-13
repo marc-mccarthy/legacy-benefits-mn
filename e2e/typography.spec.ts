@@ -5,7 +5,6 @@ const AUDITED_ROUTES = [
   "/",
   "/services",
   "/learn",
-  "/events",
   "/contact",
   "/scope-of-appointment",
   "/do-not-contact",
@@ -56,7 +55,6 @@ test.describe("the 36px display floor", () => {
     "/",
     "/services",
     "/learn",
-    "/events",
     "/contact",
     "/disclosures",
   ];

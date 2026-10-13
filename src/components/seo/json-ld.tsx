@@ -55,40 +55,6 @@ export function articleSchema(opts: {
   };
 }
 
-export function eventSchema(opts: {
-  title: string;
-  description: string;
-  slug: string;
-  startsAt: string;
-  endsAt?: string | null;
-  venue: string;
-  address?: string | null;
-  isFree: boolean;
-}) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Event",
-    name: opts.title,
-    description: opts.description,
-    startDate: opts.startsAt,
-    ...(opts.endsAt ? { endDate: opts.endsAt } : {}),
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    eventStatus: "https://schema.org/EventScheduled",
-    location: {
-      "@type": "Place",
-      name: opts.venue,
-      ...(opts.address ? { address: opts.address } : {}),
-    },
-    url: `${siteUrl()}/events/${opts.slug}`,
-    offers: {
-      "@type": "Offer",
-      price: opts.isFree ? "0" : undefined,
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-    },
-  };
-}
-
 export function personSchema(opts: {
   name: string;
   credential: Credential | null;

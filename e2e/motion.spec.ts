@@ -209,7 +209,22 @@ test.describe("view transitions", () => {
     await navigate(page);
     expect(await transitionCount(page)).toBeGreaterThan(0);
 
-    await page.waitForTimeout(600);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              document
+                .getAnimations()
+                .filter((animation) =>
+                  (
+                    animation.effect as KeyframeEffect | null
+                  )?.pseudoElement?.startsWith("::view-transition"),
+                ).length,
+          ),
+        { timeout: 5000 },
+      )
+      .toBe(0);
 
     const hit = await page.evaluate(
       ({ x, y }) => {

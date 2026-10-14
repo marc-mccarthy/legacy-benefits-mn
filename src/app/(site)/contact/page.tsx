@@ -27,7 +27,7 @@ export default async function ContactPage() {
   const chip = media["nate.chip"];
 
   return (
-    <Section>
+    <Section className="pt-(--spacing-medium) md:pt-16">
       <Container className="grid gap-12 lg:grid-cols-[1.1fr_1fr]">
         <Prose className="fade-in space-y-5">
           <h1 className="font-display text-[clamp(2.5rem,1.25rem+4.5vw,5rem)] leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
@@ -63,7 +63,7 @@ export default async function ContactPage() {
           ) : null}
           <p className="lead text-muted text-lg">
             Tell us what you are trying to sort out and we will call you back.
-            There is no cost, and no obligation to enrol in anything.
+            There is no cost, and no obligation to enroll in anything.
           </p>
           <TpmoDisclaimer
             className="text-muted border-border-subtle border-t pt-5 leading-relaxed"

@@ -32,26 +32,27 @@ test("the credentials list leads with the spelled-out CMIP and keeps every licen
 
   expect(section).toMatch(/<h2[^>]*>Credentials &amp; licences<\/h2>/);
   expect(items).toEqual([
-    "Certified Medicare Insurance Planner (CMIP®)",
+    "Certified Medicare Insurance Planner™ (CMIP®)",
     "Licensed in MN, WI, IA",
     "AHIP certified",
     "NPN 17742895",
   ]);
   expect(section).toMatch(/CMIP<sup[^>]*>®<\/sup>/);
+  expect(section).toMatch(/Planner<sup[^>]*>™<\/sup>/);
 });
 
 test("the Meet Nate heading explains CMIP on hover and to screen readers", () => {
   const html = renderToStaticMarkup(<TeamMember member={team[0]!} />);
   const h1 = html.slice(html.indexOf("<h1"), html.indexOf("</h1>"));
 
-  expect(h1).toContain('<abbr title="Certified Medicare Insurance Planner"');
+  expect(h1).toContain('<abbr title="Certified Medicare Insurance Planner™"');
 });
 
 test("the Meet Nate structured data names the CMIP credential", () => {
   const html = renderToStaticMarkup(<TeamMember member={team[0]!} />);
 
   expect(html).toContain(
-    '"hasCredential":{"@type":"EducationalOccupationalCredential","name":"Certified Medicare Insurance Planner"',
+    '"hasCredential":{"@type":"EducationalOccupationalCredential","name":"Certified Medicare Insurance Planner™"',
   );
 });
 

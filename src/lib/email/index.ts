@@ -1,6 +1,7 @@
 import "server-only";
 
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import { CMIP_DESIGNATION_NOTICE } from "@/lib/compliance/disclosures";
 
 let client: SESv2Client | undefined;
 
@@ -181,6 +182,62 @@ export async function sendLeadNotification(
   });
 }
 
+const SIGNATURE = {
+  name: "Nate Best, CMIP®",
+  title: "Certified Medicare Insurance Planner™",
+  company: "Legacy Benefits Group, LLC.",
+  email: "Nbest@legacybenefitsmn.com",
+};
+
+const SIGNATURE_MEDICARE_NOTICE =
+  "We do not offer every plan available in your area. Any information we provide is limited to those plans we do offer in your area. Please contact Medicare.gov or 1-800-MEDICARE to get information on all your options.";
+
+function dashedPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "").replace(/^1/, "");
+  return digits.length === 10
+    ? `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+    : phone;
+}
+
+function signatureText(phone?: string): string[] {
+  return [
+    SIGNATURE.name,
+    SIGNATURE.title,
+    SIGNATURE.company,
+    ...(phone ? [dashedPhone(phone)] : []),
+    SIGNATURE.email,
+    "",
+    SIGNATURE_MEDICARE_NOTICE,
+    "",
+    CMIP_DESIGNATION_NOTICE,
+  ];
+}
+
+function signatureHtml(phone?: string): string {
+  const fine =
+    "margin:12px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.45;font-style:italic;color:#8a8a8a;";
+  const medicare = escapeHtml(SIGNATURE_MEDICARE_NOTICE)
+    .replace(
+      "Medicare.gov",
+      '<a href="https://www.medicare.gov/" style="color:#2a85e8;">Medicare.gov</a>',
+    )
+    .replace("1-800-MEDICARE", '<b style="color:#000000;">1-800-MEDICARE</b>');
+  const phoneLine = phone
+    ? `<div><a href="tel:+1${phone.replace(/\D/g, "").replace(/^1/, "")}" style="color:#1155cc;">${escapeHtml(dashedPhone(phone))}</a></div>`
+    : "";
+  return [
+    '<div style="margin-top:32px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#222222;">',
+    `<div><b>${escapeHtml(SIGNATURE.name)}</b></div>`,
+    `<div><i>${escapeHtml(SIGNATURE.title)}</i></div>`,
+    `<div>${escapeHtml(SIGNATURE.company)}</div>`,
+    phoneLine,
+    `<div><a href="mailto:${SIGNATURE.email}" style="color:#1155cc;">${SIGNATURE.email}</a></div>`,
+    `<p style="${fine}">${medicare}</p>`,
+    `<p style="${fine}">${escapeHtml(CMIP_DESIGNATION_NOTICE)}</p>`,
+    "</div>",
+  ].join("");
+}
+
 export async function sendLeadConfirmation(
   lead: LeadSummary,
   identity?: { name?: string; phone?: string },
@@ -188,21 +245,47 @@ export async function sendLeadConfirmation(
   const business =
     identity?.name ?? process.env["BUSINESS_NAME"] ?? "Legacy Benefits Group";
   const phone = identity?.phone ?? process.env["BUSINESS_PHONE"];
+  const firstName = lead.name.split(" ")[0];
+  const removal =
+    "If you did not fill in a form on our website, reply to this message and we will remove your details.";
+  const body = (p: string) => `<p style="margin:0 0 16px;">${p}</p>`;
 
   return sendEmail({
     to: [lead.email],
     subject: `We got your request — ${business}`,
     text: [
-      `Hi ${lead.name.split(" ")[0]},`,
+      `Hi ${firstName},`,
       "",
-      `Thanks for reaching out. A licensed agent at ${business} will contact you shortly.`,
-      phone ? `If you need us sooner, call ${phone} (TTY 711).` : null,
+      `Thank you for reaching out to ${business}. Nate Best, CMIP®, will call you soon.`,
+      phone
+        ? `Need help sooner? Call ${phone} (TTY 711) and ask for Nate.`
+        : null,
       "",
-      "There is no cost for a review, and no obligation to enrol in anything.",
+      "There is no cost for a review, and no obligation to enroll in anything.",
       "",
-      "If you did not fill in a form on our website, reply to this message and we will remove your details.",
+      removal,
+      "",
+      ...signatureText(phone),
     ]
       .filter((line) => line !== null)
       .join("\n"),
+    html: [
+      '<div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:1.6;color:#0A1128;max-width:600px;">',
+      body(`Hi ${escapeHtml(firstName ?? "")},`),
+      body(
+        `Thank you for reaching out to ${escapeHtml(business)}. <b>Nate Best, CMIP®</b>, will call you soon.`,
+      ),
+      phone
+        ? body(
+            `Need help sooner? Call <a href="tel:+1${phone.replace(/\D/g, "").replace(/^1/, "")}" style="color:#081A3A;font-weight:bold;">${escapeHtml(phone)}</a> (TTY 711) and ask for Nate.`,
+          )
+        : "",
+      body(
+        "There is no cost for a review, and no obligation to enroll in anything.",
+      ),
+      `<p style="margin:0;font-size:16px;color:#5B6472;">${removal}</p>`,
+      signatureHtml(phone),
+      "</div>",
+    ].join(""),
   });
 }

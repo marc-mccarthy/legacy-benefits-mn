@@ -8,7 +8,7 @@ export const team: TeamMember[] = [
     name: "Nate Best",
     credential: {
       short: "CMIP®",
-      full: "Certified Medicare Insurance Planner",
+      full: "Certified Medicare Insurance Planner™",
     },
     role: "Founder & Licensed Agent",
     order: 1,

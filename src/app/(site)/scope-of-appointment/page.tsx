@@ -22,7 +22,7 @@ export default function ScopeOfAppointmentPage() {
             you: we may only talk about what you tick below.
           </p>
           <ul className="text-muted space-y-2">
-            <li>This does not enrol you in any plan.</li>
+            <li>This does not enroll you in any plan.</li>
             <li>It does not change your current coverage.</li>
             <li>
               You can change the scope at any time, including at the start of

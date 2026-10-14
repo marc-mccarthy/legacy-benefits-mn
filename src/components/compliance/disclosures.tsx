@@ -1,4 +1,5 @@
 import {
+  CMIP_DESIGNATION_NOTICE,
   ENROLLMENT_DISCLAIMER,
   GOVERNMENT_DISCLAIMER,
   NONDISCRIMINATION_NOTICE,
@@ -6,6 +7,7 @@ import {
   tpmoDisclaimer,
 } from "@/lib/compliance/disclosures";
 import { Prose } from "@/components/ui/section";
+import { WithMarks } from "@/components/ui/person-name";
 import { cn } from "@/lib/utils";
 
 const DISCLOSURE_FLOOR = "text-base";
@@ -50,6 +52,18 @@ export function LanguageAccessNotice({ className }: { className?: string }) {
   );
 }
 
+export function CmipDesignationNotice({ className }: { className?: string }) {
+  return (
+    <p
+      data-compliance
+      data-cmip-notice
+      className={cn(className, DISCLOSURE_FLOOR, "leading-snug italic")}
+    >
+      <WithMarks text={CMIP_DESIGNATION_NOTICE} />
+    </p>
+  );
+}
+
 export function FooterComplianceBlock({
   orgCount,
   planCount,
@@ -65,6 +79,7 @@ export function FooterComplianceBlock({
       <GovernmentDisclaimer />
       <EnrollmentDisclaimer />
       <LanguageAccessNotice />
+      <CmipDesignationNotice />
       {extra ? <p>{extra}</p> : null}
     </Prose>
   );

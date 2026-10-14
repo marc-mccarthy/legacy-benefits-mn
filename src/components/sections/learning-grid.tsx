@@ -76,6 +76,7 @@ export function LearningGrid({
   articles,
   scheme = "muted",
   showFilters = false,
+  className,
   activeType,
 }: {
   heading?: string | null;
@@ -83,10 +84,15 @@ export function LearningGrid({
   articles: ArticleItem[];
   scheme?: Scheme;
   showFilters?: boolean;
+  className?: string;
   activeType?: string;
 }) {
   return (
-    <Section scheme={scheme} aria-labelledby="learn-heading">
+    <Section
+      scheme={scheme}
+      aria-labelledby="learn-heading"
+      className={className}
+    >
       <Container className="space-y-8">
         <Reveal className="max-w-2xl space-y-4">
           <h2

@@ -1,15 +1,6 @@
 # CLAUDE.md
 
-## MAJOR RULES
-
-1. All documentation for plans, specs, code, infrastructure, content, etc; any type of *.md file is created and stored under the root docs/ folder.
-2. All AI changes that are made to this repo need to have any additional resources cleaned up after it is done with adding to the repo that do not serve a purpose anymore.
-
-## On-Track Plan Alignment
-
-Content produced by subagents must strictly align with the plan and spec files. If modifications to the plan/spec are required, the main expert agent must deploy 3 independent `ui-ux-pro` subagents to evaluate the decision, ensuring exceeding expectations, KISS code, and professional architectural design patterns without prompting the owner.
-
-## 1. Antigravity (Gemini) — Asset Creation & Expert Subagent System
+## Antigravity (Gemini) — Asset Creation & Expert Subagent System
 
 Antigravity (Gemini Pro) is a core partner in this repository. It serves two distinct roles:
 
@@ -45,16 +36,14 @@ Claude Code exclusively owns all application source code (`.ts`, `.tsx`, `.css`)
 
 All visual assets reside under `public/`. Master metadata and responsive variants are tracked in `media-manifest.json`:
 
-| Path                        | Contents & Current Production Assets                                                                                                                                                                                                                                                                                                                                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Path                        | Accepted files (verified 2026-10-03; the SDD ledger is the record)                                                                                                                                                                                                                                                                                                                                                             |
-| ---                         | ---                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `public/brand/`             | Untracked, never staged or referenced: its `palette.json` and `lockup.png` carry an old palette. The live mark is inline SVG (`BrandMark`) and `src/app/icon.svg`. Palette: Navy `#081A3A`, Ink `#0A1128`, Black `#000000`, Off-white `#F7F9FA`, Cyan `#00E0E0`, North Star Gold `#FFC000`.                                                                                                                                    |
-| `public/media/`             | Nate only from `nate-best-authentic.jpg`: `nate-best-authentic-{480,600}.{avif,webp}`, `nate-cutout.png`, `nate-cutout-sample.webp`, `nate-duotone.jpg` + `nate-duotone-{480,651}.{avif,webp}` (pale `#FFE7A3` highlight, transparent background), `nate-chip-192.webp`. `star-particle-glow.png`. Lake: `lake-boundary-waters.jpg` (CC0 Dan Carlson plate, 2560 w), `lake-dusk.jpg` + `lake-dusk-{480,900,1920}.{avif,webp}`. |
-| `public/media/env/`         | `studio-cool-gold.jpg` (Task 17 reflections).                                                                                                                                                                                                                                                                                                                                                                                  |
-| `public/media/silhouettes/` | `paper-{envelope,torn-envelope,form,card,folder-v2}.svg` (Task 14).                                                                                                                                                                                                                                                                                                                                                            |
-| `public/video/`             | `mn-lake-dawn-dusk-mobile.mp4` (980 KB, Task 19 below 700 px), `mn-blue-hour-loop.mp4` (609 KB seamless loop, Task 25). Sources `mn-lake-dawn-dusk-source.mp4` and `mn-blue-hour-source.mp4` (CC0 plate, graded) stay untracked.                                                                                                                                                                                               |
-| `media-manifest.json`       | Every shipped file has an entry and a matching `src/content/media.ts` slot.                                                                                                                                                                                                                                                                                                                                                    |
+| Path                        | Accepted files (verified 2026-10-03; the SDD ledger is the record)                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/brand/`             | Untracked, never staged or referenced: its `palette.json` and `lockup.png` carry an old palette. The live logo is `public/media/logo/lbg-sprite.svg` (built by `scripts/logo-sprite.mjs` from `brand/logo/`), rendered by `BrandLockup` and `BrandLogo` in `src/components/ui/brand-mark.tsx`; the favicon is `src/app/icon.svg`. Palette: Navy `#081A3A`, Ink `#0A1128`, Black `#000000`, Off-white `#F7F9FA`, Cyan `#00E0E0`, North Star Gold `#FFC000`. |
+| `public/media/`             | Nate only from `nate-best-authentic.jpg`: `nate-best-authentic-{480,600}.{avif,webp}`, `nate-cutout.png`, `nate-cutout-sample.webp`, `nate-duotone.jpg` + `nate-duotone-{480,651}.{avif,webp}` (pale `#FFE7A3` highlight, transparent background), `nate-chip-192.webp`. `star-particle-glow.png`. Lake: `lake-boundary-waters.jpg` (CC0 Dan Carlson plate, 2560 w), `lake-dusk.jpg` + `lake-dusk-{480,900,1920}.{avif,webp}`.                             |
+| `public/media/env/`         | `studio-cool-gold.jpg` (Task 17 reflections).                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `public/media/silhouettes/` | `paper-{envelope,torn-envelope,form,card,folder-v2}.svg` (Task 14).                                                                                                                                                                                                                                                                                                                                                                                        |
+| `public/video/`             | `mn-lake-dawn-dusk-mobile.mp4` (980 KB, Task 19 below 700 px), `mn-blue-hour-loop.mp4` (609 KB seamless loop, Task 25). Sources `mn-lake-dawn-dusk-source.mp4` and `mn-blue-hour-source.mp4` (CC0 plate, graded) stay untracked.                                                                                                                                                                                                                           |
+| `media-manifest.json`       | Every shipped file has an entry and a matching `src/content/media.ts` slot.                                                                                                                                                                                                                                                                                                                                                                                |
 
 **Asset Rules:**
 
@@ -84,20 +73,6 @@ REQUIRED_FIX: <exact, copy-pasteable replacement code or asset instruction>
 - Every piece of content stays visible and readable with reduced motion, without
   JavaScript, and in print. Motion is an enhancement, never the only way to see something.
 - Text meets WCAG AA contrast on its actual background. Measure it; don't eyeball it.
-
-- Hard limits (never do them, and never ask about them): rewriting history; spending money; deleting untracked files git cannot recover (list them for the owner instead).
-- Commit only as the approved plan's tasks do: one commit per task, staging only the paths that task names.
-- Read `node_modules/next/dist/docs/` before writing Next.js code. APIs differ from training data.
-
-## Subagent watchdog (MANDATORY)
-
-A global Claude Code hook watches every subagent. When one makes no progress for 10 minutes, the hook wakes you with a `[subagent-watchdog]` reminder. This rule is mandatory. Never schedule your own checks (no /loop, CronCreate or ScheduleWakeup).
-
-On that reminder:
-
-- Deploy an expert subagent for that task type to help or unblock it.
-- If it cannot recover, absorb the partial work and deploy a fresh expert subagent to finish the task to full completion.
-- Notify the owner with minimal text. NEVER prompt the owner.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

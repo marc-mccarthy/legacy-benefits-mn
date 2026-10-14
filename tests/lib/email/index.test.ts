@@ -42,7 +42,12 @@ type SesInput = {
   FromEmailAddress: string;
   Destination: { ToAddresses: string[] };
   ReplyToAddresses?: string[];
-  Content: { Simple: { Subject: Charsetted; Body: { Text: Charsetted } } };
+  Content: {
+    Simple: {
+      Subject: Charsetted;
+      Body: { Text: Charsetted; Html?: Charsetted };
+    };
+  };
 };
 
 function sentCommand(): SesInput {
@@ -51,6 +56,10 @@ function sentCommand(): SesInput {
 
 function sentBody(): string {
   return sentCommand().Content.Simple.Body.Text.Data;
+}
+
+function sentHtml(): string {
+  return sentCommand().Content.Simple.Body.Html?.Data ?? "";
 }
 
 function sentSubject(): Charsetted {
@@ -130,6 +139,14 @@ describe("sendEmail", () => {
   it("sets ReplyToAddresses when a reply-to is given", async () => {
     await sendEmail({ ...email, replyTo: "jane@example.com" });
     expect(sentCommand().ReplyToAddresses).toEqual(["jane@example.com"]);
+  });
+
+  it("adds an HTML part only when one is given", async () => {
+    await sendEmail({ ...email, html: "<p>Body</p>" });
+    expect(sentCommand().Content.Simple.Body).toEqual({
+      Text: { Data: "Body text", Charset: "UTF-8" },
+      Html: { Data: "<p>Body</p>", Charset: "UTF-8" },
+    });
   });
 
   it("leaves ReplyToAddresses undefined rather than empty", async () => {
@@ -244,32 +261,49 @@ describe("sendLeadNotification content", () => {
     vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "agent@agency.example");
   });
 
-  it("names the lead in the subject and replies to them", async () => {
-    await sendLeadNotification(lead);
+  it("titles the email with the business and the lead's name and replies to them", async () => {
+    await sendLeadNotification(lead, { name: "Legacy Benefits Group" });
 
     expect(sentSubject()).toEqual({
-      Data: "New website lead: Jane Doe",
+      Data: "Legacy Benefits Group - Contact Form filled by Jane Doe",
       Charset: "UTF-8",
     });
     expect(sentCommand().ReplyToAddresses).toEqual(["jane@example.com"]);
   });
 
-  it("lays out every field of a complete lead", async () => {
+  it("falls back to BUSINESS_NAME, then a generic name, in the title", async () => {
+    vi.stubEnv("BUSINESS_NAME", "Env Agency");
+    await sendLeadNotification(lead);
+    expect(sentSubject().Data).toBe(
+      "Env Agency - Contact Form filled by Jane Doe",
+    );
+
+    sesSend.mockClear();
+    vi.stubEnv("BUSINESS_NAME", undefined);
+    await sendLeadNotification(lead);
+    expect(sentSubject().Data).toBe(
+      "Legacy Benefits Group - Contact Form filled by Jane Doe",
+    );
+  });
+
+  it("lays out every field of a complete lead as aligned plain text", async () => {
     await sendLeadNotification(lead);
 
     expect(sentBody()).toBe(
       [
-        "Jane Doe requested a call.",
+        "New contact form from Jane Doe",
         "",
-        "Email:    jane@example.com",
-        "Phone:    612-555-0100",
-        "ZIP:      55101",
-        "Interest: Medicare Advantage (Part C)",
-        "Page:     /contact",
+        "Name:            Jane Doe",
+        "Email:           jane@example.com",
+        "Phone:           612-555-0100",
+        "ZIP code:        55101",
+        "Interested in:   Medicare Advantage (Part C)",
+        "Sent from page:  /contact",
         "",
-        "Message:\nPlease call me about my October enrollment.",
+        "Message:",
+        "Please call me about my October enrollment.",
         "",
-        "This lead is saved and queued to MedicarePRO.",
+        "Reply to this email to answer Jane Doe directly.",
       ].join("\n"),
     );
   });
@@ -279,15 +313,58 @@ describe("sendLeadNotification content", () => {
 
     expect(sentBody()).toBe(
       [
-        "Cher requested a call.",
+        "New contact form from Cher",
         "",
-        "Email:    cher@example.com",
+        "Name:   Cher",
+        "Email:  cher@example.com",
         "",
+        "Message:",
         "(no message)",
         "",
-        "This lead is saved and queued to MedicarePRO.",
+        "Reply to this email to answer Cher directly.",
       ].join("\n"),
     );
+  });
+
+  it("no longer claims the lead was queued to MedicarePRO", async () => {
+    await sendLeadNotification(lead);
+    expect(sentBody()).not.toContain("MedicarePRO");
+    expect(sentHtml()).not.toContain("MedicarePRO");
+  });
+
+  it("sends an HTML table with a row per filled field and linked email and phone", async () => {
+    await sendLeadNotification(lead);
+    const html = sentHtml();
+
+    const labels = [...html.matchAll(/<th[^>]*>([^<]+)<\/th>/g)].map(
+      (m) => m[1],
+    );
+    expect(labels).toEqual([
+      "Name",
+      "Email",
+      "Phone",
+      "ZIP code",
+      "Interested in",
+      "Sent from page",
+    ]);
+    expect(html).toContain('href="mailto:jane@example.com"');
+    expect(html).toContain('href="tel:6125550100"');
+    expect(html).toContain("Please call me about my October enrollment.");
+    expect(sentCommand().Content.Simple.Body.Html?.Charset).toBe("UTF-8");
+  });
+
+  it("escapes HTML a visitor types into the form", async () => {
+    await sendLeadNotification({
+      ...lead,
+      name: '<b>Eve</b> & "Co"',
+      message: "<script>alert(1)</script>",
+    });
+    const html = sentHtml();
+
+    expect(html).not.toContain("<script>");
+    expect(html).not.toContain("<b>Eve</b>");
+    expect(html).toContain("&lt;b&gt;Eve&lt;/b&gt; &amp; &quot;Co&quot;");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
   });
 
   it.each([
@@ -298,19 +375,19 @@ describe("sendLeadNotification content", () => {
     ["other", "Something else"],
   ])("renders the human label for %s", async (value, label) => {
     await sendLeadNotification({ ...lead, interest: value });
-    expect(sentBody()).toContain(`Interest: ${label}`);
+    expect(sentBody()).toContain(`Interested in:   ${label}`);
+    expect(sentHtml()).toContain(label);
   });
 
   it("falls back to the raw value for an unmapped interest", async () => {
     await sendLeadNotification({ ...lead, interest: "dental" });
-    expect(sentBody()).toContain("Interest: dental");
+    expect(sentBody()).toContain("Interested in:   dental");
   });
 
   it("marks a lead that left no message", async () => {
     await sendLeadNotification({ ...lead, message: undefined });
-    const body = sentBody();
-    expect(body).toContain("(no message)");
-    expect(body).not.toContain("Message:");
+    expect(sentBody()).toContain("Message:\n(no message)");
+    expect(sentHtml()).toContain("(no message)");
   });
 });
 

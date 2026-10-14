@@ -447,10 +447,6 @@
     box-shadow: none !important;
   }
 
-  [data-brand-mark] [data-star] {
-    fill: var(--color-star-gold-ink);
-  }
-
   body {
     font-size: 12pt;
     line-height: 1.5;
@@ -523,13 +519,6 @@
 
 body:has(.hero-scrim) header[data-site-header]:not([data-stuck]) {
   background-color: transparent;
-}
-
-@media (width < 48rem) {
-  header[data-site-header][data-stuck] [data-brand-lockup] {
-    font-size: 0.9375rem;
-    line-height: 1.05;
-  }
 }
 
 :root[data-consent-open] {

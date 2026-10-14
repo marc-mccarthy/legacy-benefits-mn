@@ -509,15 +509,23 @@ for (const path of ["/", "/contact"]) {
 
     const header = page.locator("header [data-brand-lockup]");
     const footer = page.locator("footer [data-brand-lockup]");
-    const name = (await header.innerText()).trim();
+    const name = ((await header.textContent()) ?? "").trim();
 
     expect(name, "header lockup has no text").not.toBe("");
-    expect((await footer.innerText()).trim()).toBe(name);
+    expect(((await footer.textContent()) ?? "").trim()).toBe(name);
     await expect(
       page.locator("header").getByRole("link", { name }),
     ).toHaveCount(1);
     await expect(header.locator("img")).toHaveCount(0);
     await expect(footer.locator("img")).toHaveCount(0);
+
+    for (const target of [
+      page.locator("header [data-brand-wordmark]"),
+      page.locator("footer [data-brand-logo]"),
+    ]) {
+      await expect(target).toBeVisible();
+      expect((await target.boundingBox())!.width).toBeGreaterThan(0);
+    }
 
     const markLeft = (await page
       .locator("header [data-brand-mark]")

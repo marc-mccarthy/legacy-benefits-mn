@@ -74,7 +74,9 @@ export function StatsBand({
       className="py-(--spacing-medium) md:py-(--spacing-large)"
     >
       <Container>
-        <dl className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <dl
+          className={`grid gap-8 sm:grid-cols-2 ${stats.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}
+        >
           {stats.map((stat, i) => (
             <div key={i} className="text-center">
               <dt className="sr-only">{stat.label}</dt>

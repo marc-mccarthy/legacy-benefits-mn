@@ -1,0 +1,548 @@
+{
+  "slug": "nate-site-updates",
+  "milestones": [
+    {
+      "id": "M1",
+      "goal": "Ship the final hero from PR #11",
+      "inventory": ["PR #11 CI", "fix new failures", "merge and deploy"],
+      "scenarios": [
+        {
+          "id": "S1",
+          "given": "PR #11 merged",
+          "then": "/ serves hero-maze-run.mp4 and hero-maze-keyed.png",
+          "validations": ["curl -sf $SITE/ | grep -q hero-maze-keyed.png"]
+        }
+      ],
+      "gate": "pass"
+    },
+    {
+      "id": "M2",
+      "goal": "Legacy Benefits Group logo in header, footer and favicon",
+      "inventory": [
+        "header",
+        "footer",
+        "favicon",
+        "brand unit tests",
+        "brand e2e tests",
+        "design review",
+        "CLAUDE.md media table"
+      ],
+      "scenarios": [
+        {
+          "id": "S2",
+          "given": "any page at 360, 390 and 1440 px",
+          "then": "logo visible, no horizontal scroll, screen readers get the business name",
+          "validations": [
+            "pnpm exec playwright test e2e/structure.spec.ts e2e/zoom.spec.ts --project desktop --project mobile"
+          ]
+        }
+      ],
+      "gate": "pass"
+    },
+    {
+      "id": "M3",
+      "goal": "Nate's personal bio",
+      "inventory": [
+        "volleyball",
+        "daughter",
+        "Doyle and Mitka",
+        "basketball",
+        "cabin in Wisconsin"
+      ],
+      "scenarios": [
+        {
+          "id": "S3",
+          "given": "/team",
+          "then": "bio shows the approved copy",
+          "validations": ["pnpm exec vitest run --project 'unit*'"]
+        }
+      ],
+      "gate": "pass"
+    },
+    {
+      "id": "M4",
+      "goal": "Resolve the 8 carriers line",
+      "inventory": ["home stat", "noise heading", "FAQ", "TPMO counts"],
+      "scenarios": [
+        {
+          "id": "S4",
+          "given": "/",
+          "then": "only the owner-approved counts appear and the TPMO disclaimer remains",
+          "validations": [
+            "pnpm exec vitest run --project 'unit*'",
+            "pnpm exec playwright test e2e/compliance.spec.ts --project desktop"
+          ]
+        }
+      ],
+      "gate": "pass"
+    },
+    {
+      "id": "M5",
+      "goal": "Remove the chosen pictures from the home page",
+      "inventory": [
+        "inventory of home pictures",
+        "remove pictures",
+        "update tests",
+        "unused media"
+      ],
+      "scenarios": [
+        {
+          "id": "S5",
+          "given": "/",
+          "then": "chosen pictures gone, every band readable",
+          "validations": [
+            "pnpm exec playwright test e2e/structure.spec.ts e2e/parity.spec.ts --project desktop --project mobile"
+          ]
+        }
+      ],
+      "gate": "pass"
+    },
+    {
+      "id": "M6",
+      "goal": "Correct Nate's email",
+      "inventory": ["team email"],
+      "scenarios": [
+        {
+          "id": "S6",
+          "given": "site build",
+          "then": "one confirmed address everywhere",
+          "validations": ["pnpm exec vitest run --project 'unit*'"]
+        }
+      ],
+      "gate": "pass"
+    },
+    {
+      "id": "M7",
+      "goal": "Contact form reaches Nate's inbox and Postgres",
+      "inventory": [
+        "trace submit path",
+        "1Password values",
+        "terraform plan",
+        "apply",
+        "live test submission"
+      ],
+      "scenarios": [
+        {
+          "id": "S7",
+          "given": "a live form submission",
+          "then": "row in leads and email received",
+          "validations": [
+            "pnpm exec vitest run tests/lib/leads tests/lib/email"
+          ]
+        }
+      ],
+      "gate": "pass"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1.1",
+      "milestone": "M1",
+      "title": "Read PR #11 CI results",
+      "kind": "read",
+      "difficulty": "discovery",
+      "persona": "reviewer",
+      "brief": "Read the latest CI run on PR #11 (gh pr checks 11, gh run view --log-failed). List failing tests and mark each as pre-existing on main (compare with run 38367783854) or new. Report only.",
+      "paths": ["docs/plans/"],
+      "locked_tests": [],
+      "accept": ["gh pr checks 11 || true"],
+      "deps": [],
+      "token_estimate": 4000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T1.2",
+      "milestone": "M1",
+      "title": "fix new failures on feat/maze-hero-final",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "Fix only the failures T1.1 marks as new, on branch feat/maze-hero-final. Root cause first; never weaken a test.",
+      "paths": ["src/components/sections/hero.tsx", "e2e/", "tests/"],
+      "locked_tests": [],
+      "accept": ["pnpm typecheck", "pnpm exec vitest run --project 'unit*'"],
+      "deps": ["T1.1"],
+      "token_estimate": 12000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T1.3",
+      "milestone": "M1",
+      "title": "merge and deploy PR #11",
+      "kind": "read",
+      "difficulty": "easy",
+      "persona": "reviewer",
+      "brief": "After the owner merges PR #11, confirm the deploy workflow is green and the live / references hero-maze-run.mp4.",
+      "paths": ["docs/plans/"],
+      "locked_tests": [],
+      "accept": ["gh run list --workflow Deploy --limit 1"],
+      "deps": ["T1.2"],
+      "token_estimate": 2000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T2.1",
+      "milestone": "M2",
+      "title": "header and footer logo sizing",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "On feat/brand-logo: screenshot the header at 1440, 390, 360 and stuck, and the footer, from a CI-like build. Tune classes in src/components/ui/brand-mark.tsx so the header logo is legible, nothing overflows at 360 and the footer logo sits well. Report screenshots paths.",
+      "paths": [
+        "src/components/ui/brand-mark.tsx",
+        "src/components/layout/footer.tsx"
+      ],
+      "locked_tests": [],
+      "accept": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/components/ui/brand-mark.tsx"
+      ],
+      "deps": [],
+      "token_estimate": 10000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T2.2",
+      "milestone": "M2",
+      "title": "brand unit tests",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "Rewrite tests/components/ui/brand-mark.test.tsx for BrandLockup and BrandLogo: sr-only name, aria-hidden SVGs, sprite ids trees/wordmark/full/full-arc, gold arc class, icon.svg tile #081A3A.",
+      "paths": ["tests/components/ui/brand-mark.test.tsx"],
+      "locked_tests": [],
+      "accept": ["pnpm exec vitest run --project 'unit*'"],
+      "deps": ["T2.1"],
+      "token_estimate": 8000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T2.3",
+      "milestone": "M2",
+      "title": "brand e2e tests",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "Update e2e/structure.spec.ts (header and footer lockups) and e2e/zoom.spec.ts (360px and stuck header) to target [data-brand-mark], [data-brand-wordmark] and [data-brand-logo]; keep the no-overflow and same-name checks.",
+      "paths": ["e2e/structure.spec.ts", "e2e/zoom.spec.ts"],
+      "locked_tests": [],
+      "accept": [
+        "pnpm exec playwright test e2e/structure.spec.ts e2e/zoom.spec.ts --project desktop --project mobile"
+      ],
+      "deps": ["T2.1"],
+      "token_estimate": 10000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T2.4",
+      "milestone": "M2",
+      "title": "favicon regenerate",
+      "kind": "edit",
+      "difficulty": "easy",
+      "persona": "asset-designer",
+      "brief": "Regenerate src/app/favicon.ico (16, 32, 48) from src/app/icon.svg.",
+      "paths": ["src/app/favicon.ico"],
+      "locked_tests": [],
+      "accept": ["test -s src/app/favicon.ico"],
+      "deps": [],
+      "token_estimate": 2000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T2.5",
+      "milestone": "M2",
+      "title": "design review of the logo",
+      "kind": "review",
+      "difficulty": "medium",
+      "persona": "reviewer",
+      "brief": "Gemini design and WCAG review of the header and footer screenshots from T2.1.",
+      "paths": ["docs/plans/"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": ["T2.1"],
+      "token_estimate": 4000,
+      "route": "agy",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T2.6",
+      "milestone": "M2",
+      "title": "CLAUDE.md media table update",
+      "kind": "edit",
+      "difficulty": "easy",
+      "persona": "reviewer",
+      "brief": "Propose the CLAUDE.md media table lines for public/media/logo/ and brand/logo/; owner approves before the edit.",
+      "paths": ["CLAUDE.md"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": ["T2.2", "T2.3"],
+      "token_estimate": 2000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T3.1",
+      "milestone": "M3",
+      "title": "Draft bio options",
+      "kind": "edit",
+      "difficulty": "hard",
+      "persona": "frontend-design",
+      "brief": "Write 2-3 bio options mentioning volleyball, his daughter, his dogs Doyle and Mitka, basketball and the family cabin in Wisconsin. Owner picks one.",
+      "paths": ["docs/plans/nate-site-updates.md"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": [],
+      "token_estimate": 3000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T3.2",
+      "milestone": "M3",
+      "title": "Apply the chosen bio",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "Put the approved bio (volleyball, daughter, Doyle and Mitka, basketball, cabin in Wisconsin) in src/content/team.ts; update tests/content/content.test.ts; check /team at 1440 and 390.",
+      "paths": ["src/content/team.ts", "tests/content/content.test.ts"],
+      "locked_tests": [],
+      "accept": ["pnpm typecheck", "pnpm exec vitest run --project 'unit*'"],
+      "deps": ["T3.1"],
+      "token_estimate": 6000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T4.1",
+      "milestone": "M4",
+      "title": "Edit the 8 carriers lines",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "Per owner decision D1, change the home stat in src/content/site.ts, the noise heading in src/content/home.ts and the FAQ line in src/content/faq.tsx; set TPMO counts compliance.orgCount and planCount to the owner's numbers.",
+      "paths": [
+        "src/content/site.ts",
+        "src/content/home.ts",
+        "src/content/faq.tsx"
+      ],
+      "locked_tests": [],
+      "accept": ["pnpm typecheck", "pnpm exec vitest run --project 'unit*'"],
+      "deps": [],
+      "token_estimate": 6000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T4.2",
+      "milestone": "M4",
+      "title": "Update count tests",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "Update tests/content/content.test.ts and any e2e reading the stats, noise heading or FAQ.",
+      "paths": ["tests/content/content.test.ts", "e2e/"],
+      "locked_tests": [],
+      "accept": ["pnpm exec vitest run --project 'unit*'"],
+      "deps": ["T4.1"],
+      "token_estimate": 5000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T5.1",
+      "milestone": "M5",
+      "title": "inventory of home pictures",
+      "kind": "read",
+      "difficulty": "discovery",
+      "persona": "frontend-design",
+      "brief": "List every picture on /: block, component, media slot, file and the tests that reference it.",
+      "paths": ["src/content/home.ts", "src/components/sections/"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": [],
+      "token_estimate": 5000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T5.2",
+      "milestone": "M5",
+      "title": "remove pictures from home",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "Per owner decision D2, remove pictures from src/content/home.ts blocks and components; every band stays readable with reduced motion, no JS and print.",
+      "paths": [
+        "src/content/home.ts",
+        "src/components/sections/",
+        "src/components/blocks/render-blocks.tsx"
+      ],
+      "locked_tests": [],
+      "accept": ["pnpm typecheck", "pnpm exec vitest run --project 'unit*'"],
+      "deps": ["T5.1"],
+      "token_estimate": 14000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T5.3",
+      "milestone": "M5",
+      "title": "update tests for removed pictures",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "frontend-design",
+      "brief": "Update tests/ and e2e/ (structure, motion, parity, budget) for the removed pictures.",
+      "paths": ["tests/", "e2e/"],
+      "locked_tests": [],
+      "accept": [
+        "pnpm exec playwright test e2e/structure.spec.ts e2e/parity.spec.ts --project desktop --project mobile"
+      ],
+      "deps": ["T5.2"],
+      "token_estimate": 12000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T5.4",
+      "milestone": "M5",
+      "title": "unused media cleanup",
+      "kind": "read",
+      "difficulty": "easy",
+      "persona": "reviewer",
+      "brief": "List media files now unused after T5.2 and ask the owner before deleting.",
+      "paths": ["public/media/", "media-manifest.json"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": ["T5.3"],
+      "token_estimate": 2000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T6.1",
+      "milestone": "M6",
+      "title": "Fix team email",
+      "kind": "edit",
+      "difficulty": "easy",
+      "persona": "frontend-design",
+      "brief": "Set the confirmed address (D3) in src/content/team.ts; grep for the other spelling; update tests.",
+      "paths": ["src/content/team.ts", "tests/"],
+      "locked_tests": [],
+      "accept": ["pnpm exec vitest run --project 'unit*'"],
+      "deps": [],
+      "token_estimate": 2000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T7.1",
+      "milestone": "M7",
+      "title": "trace submit path",
+      "kind": "read",
+      "difficulty": "discovery",
+      "persona": "api-backend",
+      "brief": "Trace the contact submit path: src/lib/leads/service.ts, src/lib/email/index.ts, src/lib/business.ts and the API route; confirm tests cover the leads insert and the notification email.",
+      "paths": ["src/lib/", "src/app/api/"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": [],
+      "token_estimate": 6000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T7.2",
+      "milestone": "M7",
+      "title": "1Password values",
+      "kind": "read",
+      "difficulty": "easy",
+      "persona": "terraform-aws",
+      "brief": "Owner sets lead_notification_email and ses_from_address in 1Password Development/legacy-benefits-mn-infra.",
+      "paths": ["infra/terraform.env"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": [],
+      "token_estimate": 1000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T7.3",
+      "milestone": "M7",
+      "title": "terraform plan",
+      "kind": "read",
+      "difficulty": "hard",
+      "persona": "terraform-aws",
+      "brief": "Run terraform plan with the new values and report the diff for the Lambda env and the SES identity.",
+      "paths": ["infra/"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": ["T7.2"],
+      "token_estimate": 8000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T7.4",
+      "milestone": "M7",
+      "title": "apply",
+      "kind": "edit",
+      "difficulty": "hard",
+      "persona": "terraform-aws",
+      "brief": "Apply after the owner approves the plan (D5); verify the SES identity and DKIM status.",
+      "paths": ["infra/"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": ["T7.3"],
+      "token_estimate": 6000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    },
+    {
+      "id": "T7.5",
+      "milestone": "M7",
+      "title": "live test submission",
+      "kind": "read",
+      "difficulty": "hard",
+      "persona": "api-backend",
+      "brief": "Send one live test submission; confirm the row in leads, the email arrives and the CRM outbox drains.",
+      "paths": ["docs/plans/"],
+      "locked_tests": [],
+      "accept": ["true"],
+      "deps": ["T7.4"],
+      "token_estimate": 4000,
+      "route": "claude",
+      "status": "planned",
+      "model": null
+    }
+  ]
+}

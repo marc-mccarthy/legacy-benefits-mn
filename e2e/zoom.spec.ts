@@ -32,32 +32,32 @@ for (const { label, width, height } of ZOOMS) {
   }
 }
 
-test("the header lockup wraps without overflow or shrinking the mark at 360px", async ({
+test("the header logo keeps its mark and never overflows at 360px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 360, height: 640 });
   await page.goto("/");
 
-  const text = page.locator("header [data-brand-lockup] > span");
+  const name = page.locator("header [data-brand-lockup] > .sr-only");
   const mark = page.locator("header [data-brand-mark]");
 
-  for (const name of [
+  for (const value of [
     "Northern Lights Medicare Benefits Advisors LLC",
-    "x".repeat(40),
+    "x".repeat(400),
   ]) {
-    await text.evaluate((el, value) => {
-      el.textContent = value;
-    }, name);
+    await name.evaluate((el, text) => {
+      el.textContent = text;
+    }, value);
 
     const { scrollW, clientW } = await page.evaluate(() => ({
       scrollW: document.documentElement.scrollWidth,
       clientW: document.documentElement.clientWidth,
     }));
-    expect(scrollW, name).toBeLessThanOrEqual(clientW);
+    expect(scrollW, value).toBeLessThanOrEqual(clientW);
 
     const box = await mark.boundingBox();
-    expect(box?.width, name).toBeGreaterThanOrEqual(20);
-    expect(box?.height, name).toBeGreaterThanOrEqual(20);
+    expect(box?.width, value).toBeGreaterThanOrEqual(20);
+    expect(box?.height, value).toBeGreaterThanOrEqual(20);
   }
 });
 
@@ -74,7 +74,7 @@ for (const width of [360, 390]) {
     );
 
     const box = await page
-      .locator("header [data-brand-lockup] > span")
+      .locator("header [data-brand-wordmark]")
       .boundingBox();
     expect(box?.width).toBeGreaterThan(80);
     expect(box?.height).toBeGreaterThan(12);

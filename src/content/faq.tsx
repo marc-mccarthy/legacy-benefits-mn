@@ -14,9 +14,8 @@ export const faq: FaqItem[] = [
     question: "Do you sell every plan available in my area?",
     answer: (
       <p>
-        No, and no agent does. We represent 8 organizations offering 42 products
-        locally. You can always compare every option at Medicare.gov or by
-        calling 1-800-MEDICARE.
+        No, and no agent does. You can always compare every option at
+        Medicare.gov or by calling 1-800-MEDICARE.
       </p>
     ),
   },

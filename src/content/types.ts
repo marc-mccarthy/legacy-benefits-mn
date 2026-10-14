@@ -51,6 +51,8 @@ export type TeamMember = {
   licenses: string[];
   highlights: string[];
   bio: string;
+  about: string[];
+  interests: string[];
   photo: MediaAsset | null;
 };
 

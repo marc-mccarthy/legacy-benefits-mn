@@ -27,7 +27,7 @@ export function TeamMember({ member }: { member: Member }) {
             <p className="text-action text-base font-semibold tracking-widest uppercase">
               {member.role}
             </p>
-            <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
+            <h1 className="font-display text-(length:--text-display-lg) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
               <PersonName name={member.name} credential={member.credential} />
             </h1>
             {member.highlights.length ? (
@@ -64,6 +64,25 @@ export function TeamMember({ member }: { member: Member }) {
           ) : null}
           <Reveal className="space-y-6 md:col-start-1 md:row-start-2">
             <p className="lead text-xl md:text-2xl">{member.bio}</p>
+            {member.about.length ? (
+              <div data-about className="space-y-4 text-lg">
+                {member.about.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            ) : null}
+            {member.interests.length ? (
+              <div data-interests className="space-y-3">
+                <h2 className="font-display text-2xl font-semibold">
+                  Outside the office
+                </h2>
+                <ul className="list-disc space-y-1 pl-6 text-lg">
+                  {member.interests.map((interest) => (
+                    <li key={interest}>{interest}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <Button asChild>
               <Link href="/contact">Request a call back</Link>
             </Button>

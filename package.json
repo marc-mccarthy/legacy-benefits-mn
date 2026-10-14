@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "sh scripts/with-env.sh vitest run",
     "test:unit": "vitest run --project 'unit*'",
     "test:integration": "sh scripts/with-env.sh vitest run --project integration",
     "test:coverage": "vitest run --project 'unit*' --coverage",

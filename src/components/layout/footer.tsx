@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BrandLockup } from "@/components/ui/brand-mark";
+import { BrandLogo } from "@/components/ui/brand-mark";
 import { Container } from "@/components/ui/section";
 import { FooterComplianceBlock } from "@/components/compliance/disclosures";
 
@@ -62,7 +62,7 @@ export function Footer({
 
       <Container className="grid grid-cols-2 gap-x-6 gap-y-6 py-6 md:grid-cols-3 md:gap-x-10 md:gap-y-10 md:py-(--spacing-large)">
         <div className="space-y-2">
-          <BrandLockup name={brand} />
+          <BrandLogo name={brand} />
           {address ? (
             <p
               data-footer-address

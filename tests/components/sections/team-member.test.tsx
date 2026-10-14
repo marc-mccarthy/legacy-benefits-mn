@@ -55,6 +55,43 @@ test("the Meet Nate structured data names the CMIP credential", () => {
   );
 });
 
+test("the Meet Nate page renders each about paragraph after the bio", () => {
+  const member = { ...team[0]!, about: ["First paragraph.", "Second one."] };
+  const html = renderToStaticMarkup(<TeamMember member={member} />);
+  const about = html.slice(html.indexOf("data-about"));
+
+  expect(html.indexOf("data-about")).toBeGreaterThan(html.indexOf(member.bio));
+  expect(about).toMatch(/<p>First paragraph\.<\/p><p>Second one\.<\/p>/);
+});
+
+test("the Meet Nate page renders no about block when it is empty", () => {
+  const html = renderToStaticMarkup(
+    <TeamMember member={{ ...team[0]!, about: [] }} />,
+  );
+
+  expect(html).not.toContain("data-about");
+});
+
+test("the Meet Nate page lists his interests after the about block", () => {
+  const member = { ...team[0]!, interests: ["Plays volleyball", "Dogs"] };
+  const html = renderToStaticMarkup(<TeamMember member={member} />);
+  const interests = html.slice(html.indexOf("data-interests"));
+
+  expect(html.indexOf("data-interests")).toBeGreaterThan(
+    html.indexOf("data-about"),
+  );
+  expect(interests).toMatch(/<h2[^>]*>Outside the office<\/h2>/);
+  expect(interests).toMatch(/<li>Plays volleyball<\/li><li>Dogs<\/li><\/ul>/);
+});
+
+test("the Meet Nate page renders no interests block when there are none", () => {
+  const html = renderToStaticMarkup(
+    <TeamMember member={{ ...team[0]!, interests: [] }} />,
+  );
+
+  expect(html).not.toContain("data-interests");
+});
+
 test("a member with no credential and no licences shows no credentials block", () => {
   const html = renderToStaticMarkup(
     <TeamMember member={{ ...team[0]!, credential: null, licenses: [] }} />,

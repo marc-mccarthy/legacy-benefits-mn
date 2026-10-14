@@ -1,21 +1,12 @@
-# Updates to Nate's Website
+# Updates to Nate's Website (created 2026-10-13, updated 2026-10-14)
 
 Execution plan: `docs/plans/nate-site-updates.md`.
 
 ## To do
 
-- [ ] **Nate's bio**: add personal details
-  - Plays volleyball
-  - Active father with his daughter
-  - Spends time with his dogs, Doyle and Mitka
-  - Basketball fan
-  - Family cabin in Wisconsin
 - [ ] **TPMO disclaimer counts**: give the correct number of organizations and products. The disclaimer stays; the count sentence is hidden until then
-- [ ] **Contact form**: send form submissions to Nate's email and save them in Postgres. The code already saves leads to Postgres and emails `LEAD_NOTIFICATION_EMAILS` through SES. Left: set `nbest@legacybenefitsmn.com` in 1Password (`lead_notification_email`), confirm the SES sender, deploy, and send one test submission
-- [ ] **Home page hero**: final maze (your GIF, transparent, plays once) is PR #11; merge it
-- [ ] **Logo**: Legacy Benefits Group logo from Nate's flyer in the header, footer and browser tab _(built on `feat/brand-logo`, PR pending)_
-- [ ] **"8 carriers" lines**: removed the home stat, the home band numbers and the FAQ sentence _(on `feat/brand-logo`, PR pending)_
-- [ ] **Nate's email**: `nbest@legacybenefitsmn.com` on the site _(on `feat/brand-logo`, PR pending)_
+- [ ] **Contact form live test**: send one real submission on the live site and confirm the lead is saved and the email reaches Nate
+- [ ] **Contact form bot check**: `turnstile_secret` is empty in 1Password (`legacy-benefits-mn-infra`), so the live form skips the Cloudflare Turnstile check. Add the secret key and redeploy
 
 ## Done
 
@@ -34,3 +25,10 @@ Execution plan: `docs/plans/nate-site-updates.md`.
   - Insurance Company of North America (INA)
 - [x] **Meet Nate headshot**: updated to his new photo
 - [x] **Workshops**: removed from all pages
+- [x] **Nate's bio**: about paragraphs plus an "Outside the office" list: volleyball, his daughter, his dogs Doyle and Mitka, basketball, the family cabin in Wisconsin
+- [x] **Home page hero**: the gold maze from your GIF, transparent, light runs once and holds (PR #11)
+- [x] **Logo**: Legacy Benefits Group logo in the header, footer and browser tab (PR #12)
+- [x] **"8 carriers" lines**: removed the home stat and the FAQ sentence (PR #12)
+- [x] **Nate's email**: `nbest@legacybenefitsmn.com` on the site (PR #12)
+- [x] **Contact form email**: leads email `nbest@legacybenefitsmn.com` through SES and are saved in Postgres. Subject "Legacy Benefits Group - New Lead: {name}", every form field plus consent, reply goes to the customer (PRs #13, #15; tested locally)
+- [x] **Home page photo**: the photo of Nate with his daughter stays

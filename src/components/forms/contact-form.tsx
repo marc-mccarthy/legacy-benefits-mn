@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { postJson } from "@/lib/post-json";
 import { leadInputSchema, type LeadInput } from "@/lib/leads/schema";
+import { caretInFormatted, formatUsPhone } from "@/lib/phone-format";
 import { Field, FormStatus, Input, Select, Textarea } from "./fields";
 import { Turnstile } from "./turnstile";
 
@@ -39,6 +40,8 @@ export function ContactForm({
     defaultValues: { consent: false },
   });
 
+  const phone = register("phone");
+
   const onSubmit = handleSubmit(async (values) => {
     setStatus("sending");
     setErrorMessage(null);
@@ -66,9 +69,10 @@ export function ContactForm({
 
   if (status === "sent") {
     return (
-      <FormStatus tone="success" title="Thanks — we have your request.">
-        A licensed agent will reach out. If you need help sooner, call us and
-        ask for a licensed agent.
+      <FormStatus tone="success" title="Successfully sent." large>
+        A licensed agent will reach out soon.
+        <br />
+        If you need help sooner, call us and ask for Nate Best.
       </FormStatus>
     );
   }
@@ -96,6 +100,7 @@ export function ContactForm({
           required
           aria-required
           autoComplete="name"
+          placeholder="Jane Smith"
           {...register("name")}
         />
       </Field>
@@ -113,25 +118,54 @@ export function ContactForm({
             required
             aria-required
             autoComplete="email"
+            placeholder="jane@example.com"
             {...register("email")}
           />
         </Field>
-        <Field label="Phone" htmlFor="phone" error={errors.phone?.message}>
+        <Field
+          label="Phone"
+          htmlFor="phone"
+          error={errors.phone?.message}
+          required
+        >
           <Input
             id="phone"
             type="tel"
+            required
+            aria-required
             autoComplete="tel"
-            {...register("phone")}
+            placeholder="(651) 555-0123"
+            {...phone}
+            onChange={(event) => {
+              const input = event.target;
+              const raw = input.value;
+              const caret = input.selectionStart ?? raw.length;
+              const formatted = formatUsPhone(raw);
+              input.value = formatted;
+              if (caret < raw.length) {
+                const at = caretInFormatted(raw, caret, formatted);
+                input.setSelectionRange(at, at);
+              }
+              return phone.onChange(event);
+            }}
           />
         </Field>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="ZIP code" htmlFor="zip" error={errors.zip?.message}>
+        <Field
+          label="ZIP code"
+          htmlFor="zip"
+          error={errors.zip?.message}
+          required
+        >
           <Input
             id="zip"
+            required
+            aria-required
             inputMode="numeric"
             autoComplete="postal-code"
+            placeholder="55301"
             {...register("zip")}
           />
         </Field>
@@ -139,8 +173,14 @@ export function ContactForm({
           label="What can we help with?"
           htmlFor="interest"
           error={errors.interest?.message}
+          required
         >
-          <Select id="interest" {...register("interest")}>
+          <Select
+            id="interest"
+            required
+            aria-required
+            {...register("interest")}
+          >
             <option value="">Select an option</option>
             {INTERESTS.map((i) => (
               <option key={i.value} value={i.value}>
@@ -156,7 +196,12 @@ export function ContactForm({
         htmlFor="message"
         error={errors.message?.message}
       >
-        <Textarea id="message" rows={4} {...register("message")} />
+        <Textarea
+          id="message"
+          rows={4}
+          placeholder="Questions about plans, prescriptions or enrollment dates"
+          {...register("message")}
+        />
       </Field>
 
       <Field htmlFor="consent" error={errors.consent?.message}>

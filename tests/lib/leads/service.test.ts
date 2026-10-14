@@ -124,7 +124,6 @@ describe("captureLead lead row", () => {
       ...lead,
       phone: "",
       zip: "   ",
-      interest: "",
       message: "",
       sourcePath: "",
     });
@@ -132,7 +131,6 @@ describe("captureLead lead row", () => {
     expect(leadRow()).toMatchObject({
       phone: undefined,
       zip: undefined,
-      interest: undefined,
       message: undefined,
       sourcePath: undefined,
     });

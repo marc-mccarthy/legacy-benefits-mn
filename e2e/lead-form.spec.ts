@@ -2,6 +2,68 @@ import { expect, test } from "@playwright/test";
 import { luminance } from "./support/contrast";
 
 test.describe("contact form", () => {
+  test("the phone field formats the number as it is typed or pasted", async ({
+    page,
+  }) => {
+    await page.goto("/contact");
+    const phone = page.locator("main #phone");
+
+    await phone.pressSequentially("6515550123");
+    await expect(phone).toHaveValue("(651) 555-0123");
+
+    await phone.fill("");
+    await phone.fill("+1 651.555.0123");
+    await expect(phone).toHaveValue("(651) 555-0123");
+
+    await phone.evaluate((element: HTMLInputElement) =>
+      element.setSelectionRange(8, 8),
+    );
+    await page.keyboard.press("Backspace");
+    await expect(phone).toHaveValue("(651) 550-123");
+    await page.keyboard.type("5");
+    await expect(phone).toHaveValue("(651) 555-0123");
+  });
+
+  test("every text field shows a readable example placeholder", async ({
+    page,
+  }) => {
+    await page.goto("/contact");
+
+    const expected: Record<string, string> = {
+      name: "Jane Smith",
+      email: "jane@example.com",
+      phone: "(651) 555-0123",
+      zip: "55301",
+      message: "Questions about plans, prescriptions or enrollment dates",
+    };
+
+    for (const [id, placeholder] of Object.entries(expected)) {
+      const field = page.locator(`main #${id}`);
+      await expect(field).toHaveAttribute("placeholder", placeholder);
+
+      const colours = await field.evaluate((element) => {
+        const toHex = (value: string) =>
+          `#${value
+            .match(/\d+/g)!
+            .slice(0, 3)
+            .map((v) => Number(v).toString(16).padStart(2, "0"))
+            .join("")}`;
+        return {
+          text: toHex(getComputedStyle(element, "::placeholder").color),
+          background: toHex(getComputedStyle(element).backgroundColor),
+        };
+      });
+      const [light, dark] = [
+        luminance(colours.text),
+        luminance(colours.background),
+      ].sort((a, b) => b - a);
+      expect(
+        (light + 0.05) / (dark + 0.05),
+        `${id} placeholder ${colours.text} on ${colours.background}`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   test("shows the full TCPA consent text, not a summary", async ({ page }) => {
     await page.goto("/contact");
 
@@ -24,6 +86,39 @@ test.describe("contact form", () => {
     await page.getByRole("button", { name: /Request a call/ }).click();
 
     await expect(page.getByText("Please agree to be contacted")).toBeVisible();
+  });
+
+  test("requires a phone, a ZIP code and a choice of what we can help with", async ({
+    page,
+  }) => {
+    await page.goto("/contact");
+
+    await page.getByRole("textbox", { name: "Full name" }).fill("Jane Doe");
+    await page
+      .getByRole("textbox", { name: "Email", exact: true })
+      .fill("jane@example.com");
+    await page.getByRole("textbox", { name: "Phone" }).fill("651555");
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: /Request a call/ }).click();
+
+    await expect(
+      page.getByText("Please enter a 10-digit phone number"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Please enter a 5-digit ZIP code"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Please choose what we can help with"),
+    ).toBeVisible();
+    for (const id of ["phone", "zip", "interest"]) {
+      await expect(page.locator(`main #${id}`)).toHaveAttribute(
+        "aria-required",
+        "true",
+      );
+    }
+    await expect(page.locator("main #message")).not.toHaveAttribute(
+      "aria-required",
+    );
   });
 
   test("reports field errors accessibly", async ({ page }) => {
@@ -51,10 +146,21 @@ test.describe("contact form", () => {
       .fill("e2e-jane@example.com");
     await page.getByRole("textbox", { name: "Phone" }).fill("5555550142");
     await page.getByRole("textbox", { name: "ZIP code" }).fill("55101");
+    await page
+      .getByRole("combobox", { name: "What can we help with?" })
+      .selectOption("supplement");
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: /Request a call/ }).click();
 
-    await expect(page.getByText(/Thanks — we have your request/)).toBeVisible();
+    const status = page.getByRole("status").filter({
+      hasText: "Successfully sent.",
+    });
+    await expect(status).toBeVisible();
+    await expect(status).toBeFocused();
+    await expect(status).toHaveAttribute("data-size", "large");
+    await expect(status).toContainText(
+      "If you need help sooner, call us and ask for Nate Best.",
+    );
   });
 });
 

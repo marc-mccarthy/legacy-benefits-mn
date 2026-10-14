@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const controlClasses =
   "border-border-control rounded-(--radius-control) bg-surface text-on-surface w-full border px-4 py-3 text-base " +
-  "aria-[invalid=true]:border-red-600 user-invalid:border-red-600";
+  "placeholder:text-muted aria-[invalid=true]:border-red-600 user-invalid:border-red-600";
 
 export function Field({
   label,
@@ -84,10 +84,12 @@ export function Select({
 export function FormStatus({
   tone,
   title,
+  large = false,
   children,
 }: {
   tone: "success" | "error";
   title: string;
+  large?: boolean;
   children?: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -102,15 +104,30 @@ export function FormStatus({
       tabIndex={-1}
       role="status"
       aria-live="polite"
+      data-size={large ? "large" : undefined}
       className={cn(
-        "rounded-(--radius-card) border p-5",
+        "scroll-mt-[calc(var(--header-stack)+1.5rem)] rounded-(--radius-card) border",
+        large
+          ? "flex min-h-80 flex-col justify-center border-2 p-8 md:p-10"
+          : "p-5",
         tone === "success"
           ? "border-green-700/30 bg-green-50 text-green-900"
           : "border-red-700/30 bg-red-50 text-red-900",
       )}
     >
-      <p className="font-semibold">{title}</p>
-      {children ? <p className="mt-1 text-base">{children}</p> : null}
+      <p
+        className={cn(
+          "font-semibold",
+          large && "font-display text-2xl leading-tight md:text-3xl",
+        )}
+      >
+        {title}
+      </p>
+      {children ? (
+        <p className={cn(large ? "mt-4 text-lg md:text-xl" : "mt-1 text-base")}>
+          {children}
+        </p>
+      ) : null}
     </div>
   );
 }

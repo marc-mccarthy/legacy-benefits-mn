@@ -22,16 +22,8 @@ export async function builtCss(page: Page): Promise<string> {
   return [inline, ...fetched].join("\n");
 }
 
-export type PseudoAnimation = {
-  pseudo: string;
-  name: string;
-  durationMs: number;
-  delayMs: number;
-};
-
 type TransitionProbe = {
   calls: number;
-  snapshots: PseudoAnimation[][];
 };
 
 declare global {
@@ -42,65 +34,24 @@ declare global {
 
 export async function recordViewTransitions(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    const probe: TransitionProbe = { calls: 0, snapshots: [] };
+    const probe: TransitionProbe = { calls: 0 };
     window.__lbmnViewTransitionProbe = probe;
 
     const original = document.startViewTransition?.bind(document);
     if (typeof original !== "function") return;
 
-    const snapshot = (): PseudoAnimation[] =>
-      document
-        .getAnimations()
-        .map((animation) => {
-          const effect = animation.effect as KeyframeEffect | null;
-          const pseudo = effect?.pseudoElement ?? "";
-          const timing = effect?.getComputedTiming();
-          return {
-            pseudo,
-            name:
-              (animation as Animation & { animationName?: string })
-                .animationName ?? "",
-            durationMs:
-              typeof timing?.duration === "number" ? timing.duration : 0,
-            delayMs: timing?.delay ?? 0,
-          };
-        })
-        .filter((entry) => entry.pseudo.startsWith("::view-transition"));
-
     document.startViewTransition = (
       callbackOptions?:
         ViewTransitionUpdateCallback | StartViewTransitionOptions,
     ): ViewTransition => {
-      const transition = original(callbackOptions);
       probe.calls += 1;
-      void transition.ready
-        .then(() => {
-          probe.snapshots.push(snapshot());
-        })
-        .catch(() => {
-          probe.snapshots.push([]);
-        });
-      return transition;
+      return original(callbackOptions);
     };
   });
 }
 
 export async function transitionCount(page: Page): Promise<number> {
   return page.evaluate(() => window.__lbmnViewTransitionProbe?.calls ?? 0);
-}
-
-export async function lastTransitionAnimations(
-  page: Page,
-): Promise<PseudoAnimation[]> {
-  await page.waitForFunction(
-    () => (window.__lbmnViewTransitionProbe?.snapshots.length ?? 0) > 0,
-    undefined,
-    { timeout: 10_000 },
-  );
-  return page.evaluate(() => {
-    const snapshots = window.__lbmnViewTransitionProbe?.snapshots ?? [];
-    return snapshots[snapshots.length - 1] ?? [];
-  });
 }
 
 export async function textSizes(

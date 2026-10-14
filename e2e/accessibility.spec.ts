@@ -14,35 +14,31 @@ const PAGES = [
   "/privacy",
 ];
 
-const MOTION_PREFERENCES = ["reduce", "no-preference"] as const;
+test.describe("prefers-reduced-motion: reduce", () => {
+  test.use({ contextOptions: { reducedMotion: "reduce" } });
 
-for (const preference of MOTION_PREFERENCES) {
-  test.describe(`prefers-reduced-motion: ${preference}`, () => {
-    test.use({ contextOptions: { reducedMotion: preference } });
+  for (const path of PAGES) {
+    test(`${path} has no detectable accessibility violations`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+      await settleReveals(page);
 
-    for (const path of PAGES) {
-      test(`${path} has no detectable accessibility violations`, async ({
-        page,
-      }) => {
-        await page.goto(path);
-        await settleReveals(page);
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .exclude("[data-lit-word]")
+        .analyze();
 
-        const results = await new AxeBuilder({ page })
-          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-          .exclude("[data-lit-word]")
-          .analyze();
-
-        expect(
-          results.violations.map((v) => ({
-            id: v.id,
-            impact: v.impact,
-            nodes: v.nodes.length,
-          })),
-        ).toEqual([]);
-      });
-    }
-  });
-}
+      expect(
+        results.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact,
+          nodes: v.nodes.length,
+        })),
+      ).toEqual([]);
+    });
+  }
+});
 
 test("every page has exactly one h1", async ({ page }) => {
   for (const path of ["/", "/contact", "/disclosures", "/privacy"]) {

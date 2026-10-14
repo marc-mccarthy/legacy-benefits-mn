@@ -190,10 +190,17 @@ describe("successful capture", () => {
       zip: "55101",
       interest: "medicare-advantage",
       message: "Please call me.",
-      sourcePath: "/contact",
+      consent: true,
     });
     expect(notify).toHaveBeenCalledWith(summary, business);
     expect(confirm).toHaveBeenCalledWith(summary, business);
+  });
+
+  it("does not pass the page the form was sent from into the emails", async () => {
+    await POST(post(valid));
+
+    expect(notify.mock.calls[0]![0]).not.toHaveProperty("sourcePath");
+    expect(confirm.mock.calls[0]![0]).not.toHaveProperty("sourcePath");
   });
 
   it("never emails the honeypot or turnstile fields to the agency", async () => {
@@ -202,7 +209,6 @@ describe("successful capture", () => {
     const summary = notify.mock.calls[0][0];
     expect(summary).not.toHaveProperty("turnstileToken");
     expect(summary).not.toHaveProperty("company");
-    expect(summary).not.toHaveProperty("consent");
   });
 });
 

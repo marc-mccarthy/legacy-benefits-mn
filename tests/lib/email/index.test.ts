@@ -33,7 +33,7 @@ const lead = {
   zip: "55101",
   interest: "medicare-advantage",
   message: "Please call me about my October enrollment.",
-  sourcePath: "/contact",
+  consent: true,
 };
 
 type Charsetted = { Data: string; Charset: string };
@@ -265,7 +265,7 @@ describe("sendLeadNotification content", () => {
     await sendLeadNotification(lead, { name: "Legacy Benefits Group" });
 
     expect(sentSubject()).toEqual({
-      Data: "Legacy Benefits Group - Contact Form filled by Jane Doe",
+      Data: "Legacy Benefits Group - New Lead: Jane Doe",
       Charset: "UTF-8",
     });
     expect(sentCommand().ReplyToAddresses).toEqual(["jane@example.com"]);
@@ -274,15 +274,13 @@ describe("sendLeadNotification content", () => {
   it("falls back to BUSINESS_NAME, then a generic name, in the title", async () => {
     vi.stubEnv("BUSINESS_NAME", "Env Agency");
     await sendLeadNotification(lead);
-    expect(sentSubject().Data).toBe(
-      "Env Agency - Contact Form filled by Jane Doe",
-    );
+    expect(sentSubject().Data).toBe("Env Agency - New Lead: Jane Doe");
 
     sesSend.mockClear();
     vi.stubEnv("BUSINESS_NAME", undefined);
     await sendLeadNotification(lead);
     expect(sentSubject().Data).toBe(
-      "Legacy Benefits Group - Contact Form filled by Jane Doe",
+      "Legacy Benefits Group - New Lead: Jane Doe",
     );
   });
 
@@ -293,12 +291,12 @@ describe("sendLeadNotification content", () => {
       [
         "New contact form from Jane Doe",
         "",
-        "Name:            Jane Doe",
-        "Email:           jane@example.com",
-        "Phone:           612-555-0100",
-        "ZIP code:        55101",
-        "Interested in:   Medicare Advantage (Part C)",
-        "Sent from page:  /contact",
+        "Name:                Jane Doe",
+        "Email:               jane@example.com",
+        "Phone:               612-555-0100",
+        "ZIP code:            55101",
+        "Interested in:       Medicare Advantage (Part C)",
+        "Consent to contact:  Yes",
         "",
         "Message:",
         "Please call me about my October enrollment.",
@@ -308,15 +306,19 @@ describe("sendLeadNotification content", () => {
     );
   });
 
-  it("omits the optional lines a minimal lead leaves blank", async () => {
+  it("shows every field of a minimal lead, marking the blank ones", async () => {
     await sendLeadNotification({ name: "Cher", email: "cher@example.com" });
 
     expect(sentBody()).toBe(
       [
         "New contact form from Cher",
         "",
-        "Name:   Cher",
-        "Email:  cher@example.com",
+        "Name:                Cher",
+        "Email:               cher@example.com",
+        "Phone:               Not provided",
+        "ZIP code:            Not provided",
+        "Interested in:       Not provided",
+        "Consent to contact:  Not recorded",
         "",
         "Message:",
         "(no message)",
@@ -326,13 +328,30 @@ describe("sendLeadNotification content", () => {
     );
   });
 
+  it("treats empty strings from the form as not provided", async () => {
+    await sendLeadNotification({
+      ...lead,
+      phone: "",
+      zip: "",
+      interest: "",
+      message: "",
+    });
+    const body = sentBody();
+
+    expect(body).toContain("Phone:               Not provided");
+    expect(body).toContain("ZIP code:            Not provided");
+    expect(body).toContain("Interested in:       Not provided");
+    expect(body).toContain("Message:\n(no message)");
+    expect(sentHtml()).not.toContain('href="tel:');
+  });
+
   it("no longer claims the lead was queued to MedicarePRO", async () => {
     await sendLeadNotification(lead);
     expect(sentBody()).not.toContain("MedicarePRO");
     expect(sentHtml()).not.toContain("MedicarePRO");
   });
 
-  it("sends an HTML table with a row per filled field and linked email and phone", async () => {
+  it("sends an HTML table with a row per form field and linked email and phone", async () => {
     await sendLeadNotification(lead);
     const html = sentHtml();
 
@@ -345,7 +364,7 @@ describe("sendLeadNotification content", () => {
       "Phone",
       "ZIP code",
       "Interested in",
-      "Sent from page",
+      "Consent to contact",
     ]);
     expect(html).toContain('href="mailto:jane@example.com"');
     expect(html).toContain('href="tel:6125550100"');
@@ -375,13 +394,13 @@ describe("sendLeadNotification content", () => {
     ["other", "Something else"],
   ])("renders the human label for %s", async (value, label) => {
     await sendLeadNotification({ ...lead, interest: value });
-    expect(sentBody()).toContain(`Interested in:   ${label}`);
+    expect(sentBody()).toContain(`Interested in:       ${label}`);
     expect(sentHtml()).toContain(label);
   });
 
   it("falls back to the raw value for an unmapped interest", async () => {
     await sendLeadNotification({ ...lead, interest: "dental" });
-    expect(sentBody()).toContain("Interested in:   dental");
+    expect(sentBody()).toContain("Interested in:       dental");
   });
 
   it("marks a lead that left no message", async () => {

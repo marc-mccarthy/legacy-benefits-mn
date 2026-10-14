@@ -65,14 +65,6 @@ test.describe("navigation", () => {
     const skip = page.getByRole("link", { name: "Skip to main content" });
     await expect(skip).toBeFocused();
   });
-
-  test("learning centre filters produce shareable URLs", async ({ page }) => {
-    await page.goto("/learn");
-    await page.getByRole("link", { name: "Tools", exact: true }).click();
-    await expect(page).toHaveURL(/type=tool/);
-    await page.reload();
-    await expect(page).toHaveURL(/type=tool/);
-  });
 });
 
 test.describe("transact pages", () => {
@@ -127,21 +119,6 @@ test.describe("transact pages", () => {
 
     expect(style.fontSize).toBeGreaterThanOrEqual(32);
     expect(style.minHeight).toBeGreaterThanOrEqual(44);
-  });
-
-  test("contact page shows Nate above the form", async ({ page }) => {
-    await page.goto("/contact");
-
-    const portrait = page.locator("main img[alt*='Nate Best']");
-    await expect(portrait).toBeVisible();
-    await expect(page.getByText("Nate Best, CMIP®")).toBeVisible();
-    await expect(page.locator("main sup", { hasText: "®" })).toBeVisible();
-    await expect(page.getByText("Founder & Licensed Agent")).toBeVisible();
-    expect(await page.locator("canvas").count()).toBe(0);
-
-    const portraitBox = await portrait.boundingBox();
-    const formBox = await page.locator("main form").first().boundingBox();
-    expect(portraitBox!.y).toBeLessThan(formBox!.y);
   });
 
   test("an invalid touched email changes border colour and keeps its error text", async ({

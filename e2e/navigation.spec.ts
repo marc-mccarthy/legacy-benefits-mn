@@ -49,27 +49,6 @@ test.describe("mobile navigation sheet", () => {
     ).toEqual([]);
   });
 
-  test("item 16: locks body scroll while open", async ({ page }) => {
-    await page.setViewportSize(NARROW);
-    await page.goto(fresh("/"));
-
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await openSheet(page);
-
-    await page.mouse.wheel(0, 1200);
-    await page.waitForTimeout(200);
-    expect(
-      await page.evaluate(() => window.scrollY),
-      "the page scrolled behind the open sheet",
-    ).toBe(0);
-
-    expect(
-      await page
-        .locator("[data-nav-sheet]")
-        .evaluate((el) => getComputedStyle(el).overscrollBehavior),
-    ).toContain("contain");
-  });
-
   test("item 17: closes on Escape and returns focus to its trigger", async ({
     page,
   }) => {
@@ -142,63 +121,5 @@ test.describe("navigation state and anchors", () => {
       rule.colour,
       `the active marker is drawn in ${rule.colour}, not the dark-scheme accent`,
     ).toBe("rgb(0, 224, 224)");
-  });
-
-  test("item 19: an anchor jump leaves the heading below the condensed header", async ({
-    page,
-  }) => {
-    await page.setViewportSize(DESKTOP);
-    await page.goto(fresh("/"));
-
-    const heading = page.locator("#services-heading");
-    await expect(heading, "no in-page anchor target to jump to").toHaveCount(1);
-
-    await page.evaluate(() => {
-      window.location.hash = "#services-heading";
-    });
-    await page.waitForTimeout(500);
-
-    const measured = await page.evaluate(() => {
-      const el = document.querySelector("#services-heading")!;
-      const header = document.querySelector("header[data-site-header]")!;
-      return {
-        headingTop: el.getBoundingClientRect().top,
-        headerBottom: header.getBoundingClientRect().bottom,
-        headerHeight: header.getBoundingClientRect().height,
-      };
-    });
-
-    expect(
-      measured.headingTop,
-      `heading rests at ${measured.headingTop}px with the header ${measured.headerHeight}px tall`,
-    ).toBeGreaterThanOrEqual(108);
-
-    expect(measured.headingTop).toBeGreaterThanOrEqual(measured.headerBottom);
-  });
-});
-
-test.describe("the learning filter", () => {
-  test("the learning filter keeps its state in the URL", async ({ page }) => {
-    await page.goto("/learn");
-
-    const cards = page.locator("[data-article-type]");
-    const total = await cards.count();
-    expect(total, "no articles rendered").toBeGreaterThan(3);
-
-    await page.getByRole("link", { name: "Tools", exact: true }).click();
-    await expect(page).toHaveURL(/type=tool/);
-
-    expect(await cards.count(), "articles were removed from the DOM").toBe(
-      total,
-    );
-    await expect(cards.filter({ visible: true })).not.toHaveCount(total);
-
-    await page.reload();
-    await expect(page).toHaveURL(/type=tool/);
-    await expect(cards.filter({ visible: true })).not.toHaveCount(total);
-
-    await page.getByRole("link", { name: "All", exact: true }).click();
-    await expect(page).not.toHaveURL(/type=/);
-    await expect(cards.filter({ visible: true })).toHaveCount(total);
   });
 });

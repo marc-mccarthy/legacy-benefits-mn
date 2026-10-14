@@ -1,5 +1,4 @@
 import { faq } from "./faq";
-import { site } from "./site";
 import type { PageBlock } from "./types";
 
 export const homeBlocks: PageBlock[] = [
@@ -15,7 +14,7 @@ export const homeBlocks: PageBlock[] = [
   {
     blockType: "noise",
     scheme: "black",
-    heading: `${site.compliance.orgCount} carriers. ${site.compliance.planCount} plans. One deadline.`,
+    heading: "Dozens of plans. One deadline.",
     body: "Medicare comes at you from every direction. Nate's job is to turn it into one clear answer you can act on.",
   },
   {

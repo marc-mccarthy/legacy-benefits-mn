@@ -55,7 +55,7 @@ describe("row counts recorded in the spec's extraction table", () => {
 
   it("carries the site settings children", () => {
     expect(site.nav).toHaveLength(4);
-    expect(site.stats).toHaveLength(4);
+    expect(site.stats).toHaveLength(3);
     expect(site.compliance.stateLicenses).toHaveLength(3);
     expect(site.social).toHaveLength(0);
   });

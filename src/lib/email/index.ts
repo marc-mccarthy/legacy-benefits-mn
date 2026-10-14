@@ -15,6 +15,7 @@ type Email = {
   to: string[];
   subject: string;
   text: string;
+  html?: string;
   replyTo?: string;
 };
 
@@ -22,6 +23,7 @@ export async function sendEmail({
   to,
   subject,
   text,
+  html,
   replyTo,
 }: Email): Promise<{ sent: boolean; reason?: string }> {
   const from = process.env["SES_FROM_ADDRESS"];
@@ -43,7 +45,10 @@ export async function sendEmail({
         Content: {
           Simple: {
             Subject: { Data: subject, Charset: "UTF-8" },
-            Body: { Text: { Data: text, Charset: "UTF-8" } },
+            Body: {
+              Text: { Data: text, Charset: "UTF-8" },
+              ...(html ? { Html: { Data: html, Charset: "UTF-8" } } : {}),
+            },
           },
         },
       }),
@@ -73,6 +78,84 @@ const INTEREST_LABELS: Record<string, string> = {
   other: "Something else",
 };
 
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]!);
+}
+
+type LeadRow = { label: string; value: string; href?: string };
+
+function leadRows(lead: LeadSummary): LeadRow[] {
+  const rows: (LeadRow | null)[] = [
+    { label: "Name", value: lead.name },
+    { label: "Email", value: lead.email, href: `mailto:${lead.email}` },
+    lead.phone
+      ? {
+          label: "Phone",
+          value: lead.phone,
+          href: `tel:${lead.phone.replace(/[^\d+]/g, "")}`,
+        }
+      : null,
+    lead.zip ? { label: "ZIP code", value: lead.zip } : null,
+    lead.interest
+      ? {
+          label: "Interested in",
+          value: INTEREST_LABELS[lead.interest] ?? lead.interest,
+        }
+      : null,
+    lead.sourcePath
+      ? { label: "Sent from page", value: lead.sourcePath }
+      : null,
+  ];
+  return rows.filter((row) => row !== null);
+}
+
+function leadText(lead: LeadSummary, rows: LeadRow[]): string {
+  const width = Math.max(...rows.map((row) => row.label.length)) + 3;
+  return [
+    `New contact form from ${lead.name}`,
+    "",
+    ...rows.map((row) => `${`${row.label}:`.padEnd(width)}${row.value}`),
+    "",
+    "Message:",
+    lead.message ?? "(no message)",
+    "",
+    `Reply to this email to answer ${lead.name} directly.`,
+  ].join("\n");
+}
+
+function leadHtml(lead: LeadSummary, rows: LeadRow[]): string {
+  const cell = "padding:10px 12px;border:1px solid #DDE2E8;";
+  const body = rows
+    .map((row) => {
+      const value = escapeHtml(row.value);
+      const shown = row.href
+        ? `<a href="${escapeHtml(row.href)}" style="color:#081A3A;">${value}</a>`
+        : value;
+      return `<tr><th align="left" style="${cell}background:#F7F9FA;width:35%;font-weight:600;">${row.label}</th><td style="${cell}">${shown}</td></tr>`;
+    })
+    .join("");
+  const message = lead.message
+    ? escapeHtml(lead.message)
+    : '<span style="color:#5B6472;">(no message)</span>';
+  return [
+    '<div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#0A1128;max-width:600px;">',
+    `<h1 style="font-size:20px;margin:0 0 16px;color:#081A3A;">New contact form from ${escapeHtml(lead.name)}</h1>`,
+    `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;">${body}</table>`,
+    '<h2 style="font-size:16px;margin:24px 0 8px;color:#081A3A;">Message</h2>',
+    `<p style="margin:0;white-space:pre-wrap;">${message}</p>`,
+    `<p style="margin:24px 0 0;color:#5B6472;font-size:14px;">Reply to this email to answer ${escapeHtml(lead.name)} directly.</p>`,
+    "</div>",
+  ].join("");
+}
+
 export async function sendLeadNotification(
   lead: LeadSummary,
   business?: { name?: string; notificationEmails?: string[] },
@@ -83,28 +166,16 @@ export async function sendLeadNotification(
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
+  const businessName =
+    business?.name ?? process.env["BUSINESS_NAME"] ?? "Legacy Benefits Group";
+  const rows = leadRows(lead);
 
   return sendEmail({
     to,
     replyTo: lead.email,
-    subject: `New website lead: ${lead.name}`,
-    text: [
-      `${lead.name} requested a call.`,
-      "",
-      `Email:    ${lead.email}`,
-      lead.phone ? `Phone:    ${lead.phone}` : null,
-      lead.zip ? `ZIP:      ${lead.zip}` : null,
-      lead.interest
-        ? `Interest: ${INTEREST_LABELS[lead.interest] ?? lead.interest}`
-        : null,
-      lead.sourcePath ? `Page:     ${lead.sourcePath}` : null,
-      "",
-      lead.message ? `Message:\n${lead.message}` : "(no message)",
-      "",
-      "This lead is saved and queued to MedicarePRO.",
-    ]
-      .filter((line) => line !== null)
-      .join("\n"),
+    subject: `${businessName} - Contact Form filled by ${lead.name}`,
+    text: leadText(lead, rows),
+    html: leadHtml(lead, rows),
   });
 }
 

@@ -529,6 +529,11 @@ describe("sendLeadConfirmation", () => {
     expect(sentCommand().Content.Simple.Body.Html?.Charset).toBe("UTF-8");
   });
 
+  it("keeps a phone that is not ten digits as given in the signature", async () => {
+    await sendLeadConfirmation(lead, { phone: "555-0100" });
+    expect(sentBody()).toContain("Legacy Benefits Group, LLC.\n555-0100\n");
+  });
+
   it("sets the message body at 18px for easier reading", async () => {
     await sendLeadConfirmation(lead);
     expect(sentHtml()).toContain("font-size:18px");

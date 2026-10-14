@@ -245,7 +245,7 @@ export async function sendLeadConfirmation(
   const business =
     identity?.name ?? process.env["BUSINESS_NAME"] ?? "Legacy Benefits Group";
   const phone = identity?.phone ?? process.env["BUSINESS_PHONE"];
-  const firstName = lead.name.split(" ")[0];
+  const firstName = lead.name.split(" ")[0]!;
   const removal =
     "If you did not fill in a form on our website, reply to this message and we will remove your details.";
   const body = (p: string) => `<p style="margin:0 0 16px;">${p}</p>`;
@@ -271,7 +271,7 @@ export async function sendLeadConfirmation(
       .join("\n"),
     html: [
       '<div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:1.6;color:#0A1128;max-width:600px;">',
-      body(`Hi ${escapeHtml(firstName ?? "")},`),
+      body(`Hi ${escapeHtml(firstName)},`),
       body(
         `Thank you for reaching out to ${escapeHtml(business)}. <b>Nate Best, CMIP®</b>, will call you soon.`,
       ),

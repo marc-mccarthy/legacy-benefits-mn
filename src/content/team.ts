@@ -12,7 +12,7 @@ export const team: TeamMember[] = [
     },
     role: "Founder & Licensed Agent",
     order: 1,
-    email: "nateb@legacybenefitsmn.com",
+    email: "nbest@legacybenefitsmn.com",
     phone: "(651) 260-1003",
     linkedin: null,
     licenses: ["Licensed in MN, WI, IA", "AHIP certified", "NPN 17742895"],

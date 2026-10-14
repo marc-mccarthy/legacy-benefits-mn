@@ -67,7 +67,7 @@ type LeadSummary = {
   zip?: string;
   interest?: string;
   message?: string;
-  sourcePath?: string;
+  consent?: boolean;
 };
 
 const INTEREST_LABELS: Record<string, string> = {
@@ -92,8 +92,10 @@ function escapeHtml(value: string): string {
 
 type LeadRow = { label: string; value: string; href?: string };
 
+const NOT_PROVIDED = "Not provided";
+
 function leadRows(lead: LeadSummary): LeadRow[] {
-  const rows: (LeadRow | null)[] = [
+  return [
     { label: "Name", value: lead.name },
     { label: "Email", value: lead.email, href: `mailto:${lead.email}` },
     lead.phone
@@ -102,19 +104,19 @@ function leadRows(lead: LeadSummary): LeadRow[] {
           value: lead.phone,
           href: `tel:${lead.phone.replace(/[^\d+]/g, "")}`,
         }
-      : null,
-    lead.zip ? { label: "ZIP code", value: lead.zip } : null,
-    lead.interest
-      ? {
-          label: "Interested in",
-          value: INTEREST_LABELS[lead.interest] ?? lead.interest,
-        }
-      : null,
-    lead.sourcePath
-      ? { label: "Sent from page", value: lead.sourcePath }
-      : null,
+      : { label: "Phone", value: NOT_PROVIDED },
+    { label: "ZIP code", value: lead.zip || NOT_PROVIDED },
+    {
+      label: "Interested in",
+      value: lead.interest
+        ? (INTEREST_LABELS[lead.interest] ?? lead.interest)
+        : NOT_PROVIDED,
+    },
+    {
+      label: "Consent to contact",
+      value: lead.consent ? "Yes" : "Not recorded",
+    },
   ];
-  return rows.filter((row) => row !== null);
 }
 
 function leadText(lead: LeadSummary, rows: LeadRow[]): string {
@@ -125,7 +127,7 @@ function leadText(lead: LeadSummary, rows: LeadRow[]): string {
     ...rows.map((row) => `${`${row.label}:`.padEnd(width)}${row.value}`),
     "",
     "Message:",
-    lead.message ?? "(no message)",
+    lead.message || "(no message)",
     "",
     `Reply to this email to answer ${lead.name} directly.`,
   ].join("\n");
@@ -173,7 +175,7 @@ export async function sendLeadNotification(
   return sendEmail({
     to,
     replyTo: lead.email,
-    subject: `${businessName} - Contact Form filled by ${lead.name}`,
+    subject: `${businessName} - New Lead: ${lead.name}`,
     text: leadText(lead, rows),
     html: leadHtml(lead, rows),
   });

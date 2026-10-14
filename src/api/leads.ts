@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     zip: input.zip,
     interest: input.interest,
     message: input.message,
-    sourcePath: input.sourcePath,
+    consent: input.consent,
   };
   await Promise.allSettled([
     sendLeadNotification(summary, business),

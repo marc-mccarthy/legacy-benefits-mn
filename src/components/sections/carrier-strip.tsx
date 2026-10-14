@@ -86,7 +86,7 @@ export function CarrierStrip({
         {note ? (
           <p
             data-carrier-note
-            className="text-muted mx-auto max-w-3xl text-center text-sm"
+            className="text-muted mx-auto max-w-3xl text-center text-base"
           >
             <WithMarks text={note} />
           </p>

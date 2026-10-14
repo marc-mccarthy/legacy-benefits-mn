@@ -1,16 +1,18 @@
 # Playwright Test Triage (created 2026-10-14, updated 2026-10-14)
 
-Which end-to-end tests in `e2e/` to keep and which to remove. Remove boxes are ticked once the test is gone. Keep boxes are ticked once the test passed locally after the trim (229 of 233 runs). The two unticked Keep tests fail on `main` too, because of the ® mark under 16px; PR #11 fixes them.
+Which end-to-end tests in `e2e/` to keep and which to remove. Remove boxes are ticked once the test is gone. Keep boxes are ticked once the test passed locally: all 235 runs pass after PR #11 is merged in.
 
 ## Totals
 
 |           | Unique tests | Runs (unique tests x browser setups) |
 | --------- | ------------ | ------------------------------------ |
-| Keep      | 113          | 233                                  |
+| Keep      | 114          | 235                                  |
 | Remove    | 245          | 548                                  |
-| **Total** | **358**      | **781**                              |
+| **Total** | **359**      | **783**                              |
 
 A "run" is one test in one setup (`desktop`, `mobile`, `reduced-motion`). Many tests are one check repeated per page, so 169 `test()` calls in the source expand to 358 tests.
+
+PR #11 added one Keep test after the trim (the lone ®, ℠ or ™ check), taking Keep from 113 to 114.
 
 ## How the counts were verified
 
@@ -142,18 +144,19 @@ Removed tests check how animations, canvases, videos, pixel sizes and layout det
 
 - [x] `targets:7` / has tap targets of at least 44x44 at 390x844
 
-### 16px minimum text size (senior readability; disclosures) (10)
+### 16px minimum text size (senior readability; disclosures) (11)
 
-- [ ] `typography:24` the 16px floor › item 20: no text on / computes below 16px
+- [x] `typography:24` the 16px floor › item 20: no text on / computes below 16px
 - [x] `typography:24` the 16px floor › item 20: no text on /services computes below 16px
 - [x] `typography:24` the 16px floor › item 20: no text on /learn computes below 16px
-- [ ] `typography:24` the 16px floor › item 20: no text on /contact computes below 16px
+- [x] `typography:24` the 16px floor › item 20: no text on /contact computes below 16px
 - [x] `typography:24` the 16px floor › item 20: no text on /scope-of-appointment computes below 16px
 - [x] `typography:24` the 16px floor › item 20: no text on /do-not-contact computes below 16px
 - [x] `typography:24` the 16px floor › item 20: no text on /disclosures computes below 16px
 - [x] `typography:24` the 16px floor › item 20: no text on /accessibility computes below 16px
 - [x] `typography:24` the 16px floor › item 20: no text on /privacy computes below 16px
 - [x] `typography:40` the 16px floor › item 20: the excluded disclosures are above the floor too
+- [x] `typography:34` the 16px floor › item 20: the only text exempt as a legal mark is a lone ®, ℠ or ™
 
 ### No sideways scrolling at 400% zoom (WCAG 1.4.10 Reflow) (13)
 

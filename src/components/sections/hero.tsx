@@ -37,6 +37,8 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
   const moving = mounted && !reduced && !paused;
   const showRun = moving && resolved;
   const runPlaying = showRun && onscreen && tabVisible;
+  const [runStarted, setRunStarted] = useState(false);
+  if (!showRun && runStarted) setRunStarted(false);
 
   useEffect(() => {
     const video = runRef.current;
@@ -64,9 +66,10 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
         <motion.div
           data-hero-stage=""
           data-resolved={resolved}
+          data-run-started={runStarted}
           onAnimationEnd={() => setResolved(true)}
           style={moving ? { y: stageY } : undefined}
-          className="bg-ground-dark relative mt-(--header-stack) mb-6 min-h-0 flex-1 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] [--hero-hold:calc(var(--duration-converge)+var(--duration-stage))] md:absolute md:top-(--header-stack) md:right-0 md:bottom-0 md:left-1/2 md:m-0 md:[mask-image:none] print:transform-none! print:bg-transparent [&_canvas]:mix-blend-screen"
+          className="bg-ground-dark relative mt-(--header-stack) mb-6 min-h-0 flex-1 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] [--hero-hold:calc(var(--duration-converge)+var(--duration-stage))] md:absolute md:top-(--header-stack) md:right-0 md:bottom-0 md:left-1/2 md:m-0 md:[mask-image:none] print:transform-none! print:bg-transparent [&_canvas]:mix-blend-screen [&_img]:transition-opacity [&_img]:duration-(--duration-stage) [&[data-run-started=true]_img]:opacity-0"
         >
           <ThreeStage
             scene="signal-hero"
@@ -95,6 +98,7 @@ export function Hero({ heading, subheading, ctaLabel, ctaHref }: HeroProps) {
               muted
               playsInline
               preload="auto"
+              onPlaying={() => setRunStarted(true)}
               className="pointer-events-none absolute inset-0 h-full w-full animate-[page-fade-in_var(--duration-stage)_var(--ease-fade)_both] object-contain mix-blend-screen print:hidden"
             >
               <source

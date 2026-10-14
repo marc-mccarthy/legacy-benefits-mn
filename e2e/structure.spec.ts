@@ -204,6 +204,7 @@ for (const viewport of [
     page,
   }) => {
     await page.setViewportSize(viewport);
+    await page.emulateMedia({ reducedMotion: "reduce" });
 
     for (const path of ["/services", "/learn", "/team", "/contact"]) {
       await page.goto(path);

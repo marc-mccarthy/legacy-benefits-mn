@@ -44,7 +44,7 @@ export function SoaForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
     return (
       <FormStatus tone="success" title="Scope of Appointment recorded.">
         We have saved a copy. You can ask us for it at any time. This does not
-        enrol you in a plan or change your current coverage.
+        enroll you in a plan or change your current coverage.
       </FormStatus>
     );
   }

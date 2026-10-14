@@ -73,7 +73,7 @@ describe("row counts recorded in the spec's extraction table", () => {
   it("gives Nate his CMIP registered credential", () => {
     expect(team[0]?.credential).toEqual({
       short: "CMIP®",
-      full: "Certified Medicare Insurance Planner",
+      full: "Certified Medicare Insurance Planner™",
     });
   });
 

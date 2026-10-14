@@ -243,6 +243,7 @@
     [data-reveal] {
       opacity: 1 !important;
       transform: none !important;
+      clip-path: none !important;
     }
 
     [data-lit-words] [data-lit-word] {

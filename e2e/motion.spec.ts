@@ -29,6 +29,26 @@ test.describe("scroll reveal", () => {
     await context.close();
   });
 
+  test("with reduced motion, no revealed block stays clipped on /services", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("/services");
+
+    const clipped = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-reveal]")]
+        .map((el) => getComputedStyle(el).clipPath)
+        .filter((clip) => clip !== "none"),
+    );
+    expect(clipped).toEqual([]);
+    await expect(
+      page.locator('section[aria-labelledby="services-heading"] li').first(),
+    ).toBeVisible();
+
+    await context.close();
+  });
+
   test("content is visible with JavaScript disabled", async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();

@@ -31,9 +31,9 @@ export function ServiceGrid({
     <Section
       scheme={scheme}
       aria-labelledby="services-heading"
-      className="py-0"
+      className="py-0 md:pt-0"
     >
-      <Container className="bg-surface sticky top-0 z-10 max-w-2xl space-y-4 pt-(--spacing-large) pb-(--spacing-medium) md:pt-(--spacing-big)">
+      <Container className="bg-surface sticky top-0 z-10 max-w-2xl space-y-4 pt-(--spacing-medium) pb-(--spacing-medium) md:pt-16">
         <h2
           id="services-heading"
           className="font-display text-(length:--text-display-lg)"

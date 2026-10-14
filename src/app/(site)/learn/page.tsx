@@ -22,6 +22,7 @@ export default function LearnPage() {
             heading="Medicare, explained"
             intro="Straight answers to the questions we get asked most."
             articles={articles as never}
+            className="pt-(--spacing-medium) md:pt-16"
           />
         }
       >
@@ -31,6 +32,7 @@ export default function LearnPage() {
             heading="Medicare, explained"
             intro="Straight answers to the questions we get asked most."
             articles={articles as never}
+            className="pt-(--spacing-medium) md:pt-(--spacing-medium)"
           />
         </LearningFilter>
       </Suspense>

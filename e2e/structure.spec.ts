@@ -67,14 +67,14 @@ test.describe("the team page is Nate", () => {
     await page.goto("/team");
     expect(await page.title()).toMatch(/^Nate Best, CMIP® \| /);
     await expect(
-      page.locator('h1 abbr[title="Certified Medicare Insurance Planner"]'),
+      page.locator('h1 abbr[title="Certified Medicare Insurance Planner™"]'),
     ).toHaveText("CMIP");
     await expect(page.locator("h1 sup")).toHaveText("®");
     await expect(
       page.getByRole("heading", { level: 2, name: "Credentials & licences" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Certified Medicare Insurance Planner (CMIP®)"),
+      page.getByText("Certified Medicare Insurance Planner™ (CMIP®)"),
     ).toBeVisible();
     await expect(page.getByText("Licensed since 2015")).toBeVisible();
     await expect(page.getByText("1,400+ clients served")).toBeVisible();
@@ -194,4 +194,48 @@ test.describe("the header: one dark bar, Nate's chip and the gold phone", () => 
       expect(overflow, `${route}: horizontal scroll`).toBeLessThanOrEqual(0);
     }
   });
+});
+
+for (const viewport of [
+  { width: 1440, height: 900, gap: 64 },
+  { width: 390, height: 844, gap: 40 },
+]) {
+  test(`content starts ${viewport.gap}px below the band or header on every inner page at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+
+    for (const path of ["/services", "/learn", "/team", "/contact"]) {
+      await page.goto(path);
+      const gap = await page.evaluate(() => {
+        const band = document.querySelector("[data-page-band]");
+        const header = document.querySelector("header[data-site-header]")!;
+        const top = (band ?? header).getBoundingClientRect().bottom;
+        const first = [
+          ...document.querySelectorAll<HTMLElement>(
+            "main h1, main h2, main nav, main section p",
+          ),
+        ]
+          .map((el) => el.getBoundingClientRect().top)
+          .filter((y) => y > top + 1)
+          .sort((a, b) => a - b)[0]!;
+        return Math.round(first - top);
+      });
+      expect(gap, path).toBe(viewport.gap);
+    }
+  });
+}
+
+test("the learning filter pills line up with the page content", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/learn");
+
+  const pills = page.locator('nav[aria-label="Filter resources by type"]');
+  await expect(pills).toBeVisible();
+  const pillsLeft = (await pills.boundingBox())!.x;
+  const headingLeft = (await page.locator("#learn-heading").boundingBox())!.x;
+  expect(pillsLeft).toBeGreaterThan(0);
+  expect(Math.abs(pillsLeft - headingLeft)).toBeLessThanOrEqual(1);
 });

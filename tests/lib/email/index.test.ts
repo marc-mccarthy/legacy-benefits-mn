@@ -434,7 +434,9 @@ describe("sendLeadConfirmation", () => {
     await sendLeadConfirmation(lead, { name: "Caller Agency" });
 
     expect(sentSubject().Data).toBe("We got your request — Caller Agency");
-    expect(sentBody()).toContain("A licensed agent at Caller Agency");
+    expect(sentBody()).toContain(
+      "Thank you for reaching out to Caller Agency.",
+    );
   });
 
   it("falls back to BUSINESS_NAME", async () => {
@@ -448,7 +450,9 @@ describe("sendLeadConfirmation", () => {
     expect(sentSubject().Data).toBe(
       "We got your request — Legacy Benefits Group",
     );
-    expect(sentBody()).toContain("A licensed agent at Legacy Benefits Group");
+    expect(sentBody()).toContain(
+      "Thank you for reaching out to Legacy Benefits Group.",
+    );
   });
 
   it("prefers the phone passed in and pairs it with the TTY number", async () => {
@@ -457,19 +461,21 @@ describe("sendLeadConfirmation", () => {
     await sendLeadConfirmation(lead, { phone: "612-555-9999" });
 
     expect(sentBody()).toContain(
-      "If you need us sooner, call 612-555-9999 (TTY 711).",
+      "Need help sooner? Call 612-555-9999 (TTY 711) and ask for Nate.",
     );
   });
 
   it("falls back to BUSINESS_PHONE", async () => {
     vi.stubEnv("BUSINESS_PHONE", "612-555-0000");
     await sendLeadConfirmation(lead);
-    expect(sentBody()).toContain("call 612-555-0000 (TTY 711).");
+    expect(sentBody()).toContain(
+      "Call 612-555-0000 (TTY 711) and ask for Nate.",
+    );
   });
 
   it("omits the call line entirely when no phone is known", async () => {
     await sendLeadConfirmation(lead);
-    expect(sentBody()).not.toContain("If you need us sooner");
+    expect(sentBody()).not.toContain("Need help sooner");
   });
 
   it("tells the visitor how to get their details removed", async () => {
@@ -477,5 +483,64 @@ describe("sendLeadConfirmation", () => {
     expect(sentBody()).toContain(
       "If you did not fill in a form on our website, reply to this message and we will remove your details.",
     );
+  });
+
+  it("names Nate and spells enroll the American way", async () => {
+    await sendLeadConfirmation(lead);
+    const body = sentBody();
+    expect(body).toContain("Nate Best, CMIP®, will call you soon.");
+    expect(body).toContain("no obligation to enroll in anything");
+    expect(body).not.toContain("enrol ");
+  });
+
+  it("signs off with Nate's signature and both of its notices", async () => {
+    await sendLeadConfirmation(lead, { phone: "(651) 260-1003" });
+    const body = sentBody();
+
+    expect(body).toContain(
+      [
+        "Nate Best, CMIP®",
+        "Certified Medicare Insurance Planner™",
+        "Legacy Benefits Group, LLC.",
+        "651-260-1003",
+        "Nbest@legacybenefitsmn.com",
+        "",
+        "We do not offer every plan available in your area. Any information we provide is limited to those plans we do offer in your area. Please contact Medicare.gov or 1-800-MEDICARE to get information on all your options.",
+        "",
+        "Certified Medicare Insurance Planner™, DBA, authorizes the use of its trademarks CMIP®",
+      ].join("\n"),
+    );
+    expect(body).toContain("which includes the CMIP® designation.");
+  });
+
+  it("styles the signature like Nate's own: bold name, italic title, grey italic notices", async () => {
+    await sendLeadConfirmation(lead, { phone: "(651) 260-1003" });
+    const html = sentHtml();
+
+    expect(html).toContain("<b>Nate Best, CMIP®</b>");
+    expect(html).toContain("<i>Certified Medicare Insurance Planner™</i>");
+    expect(html).toContain('href="tel:+16512601003"');
+    expect(html).toContain('href="mailto:Nbest@legacybenefitsmn.com"');
+    expect(html).toContain(
+      '<a href="https://www.medicare.gov/" style="color:#2a85e8;">Medicare.gov</a>',
+    );
+    expect(html).toContain('<b style="color:#000000;">1-800-MEDICARE</b>');
+    expect(html.match(/font-style:italic;color:#8a8a8a;/g)).toHaveLength(2);
+    expect(sentCommand().Content.Simple.Body.Html?.Charset).toBe("UTF-8");
+  });
+
+  it("keeps a phone that is not ten digits as given in the signature", async () => {
+    await sendLeadConfirmation(lead, { phone: "555-0100" });
+    expect(sentBody()).toContain("Legacy Benefits Group, LLC.\n555-0100\n");
+  });
+
+  it("sets the message body at 18px for easier reading", async () => {
+    await sendLeadConfirmation(lead);
+    expect(sentHtml()).toContain("font-size:18px");
+  });
+
+  it("escapes a visitor's name in the HTML greeting", async () => {
+    await sendLeadConfirmation({ ...lead, name: "<b>Eve</b> Smith" });
+    expect(sentHtml()).toContain("Hi &lt;b&gt;Eve&lt;/b&gt;,");
   });
 });

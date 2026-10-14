@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CMIP_DESIGNATION_NOTICE,
   DISCLOSURE_VERSION,
   ENROLLMENT_DISCLAIMER,
   GOVERNMENT_DISCLAIMER,
@@ -156,6 +157,12 @@ describe("the version travels with the text", () => {
   it("pins the enrollment disclaimer", () => {
     expect(ENROLLMENT_DISCLAIMER).toBe(
       "Enrollment in a plan depends on the plan's contract renewal with Medicare. Plan availability, benefits, premiums, and cost sharing vary by plan and by county.",
+    );
+  });
+
+  it("pins the CMIP designation notice word for word from Nate's signature", () => {
+    expect(CMIP_DESIGNATION_NOTICE).toBe(
+      "Certified Medicare Insurance Planner™, DBA, authorizes the use of its trademarks CMIP®, and Certified Medicare Insurance Planner™ to agents that have met Certified Medicare Insurance Planner™, DBA administration's initial and ongoing certification requirements. The Federal Government, CMS, and Medicare do not affiliate with or endorse ANY professional designation, which includes the CMIP® designation.",
     );
   });
 

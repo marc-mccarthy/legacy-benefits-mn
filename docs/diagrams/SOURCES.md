@@ -418,7 +418,7 @@ accDescr {
   and the one that decides whether a person may be contacted are drawn as gates, because their
   job is to reject. The database schema is drawn as regulated data, because that is what it
   declares. Test files are excluded: a test importing a module says nothing about how the
-  application is wired. 41 modules and 56 imports are drawn.
+  application is wired. 41 modules and 57 imports are drawn.
 }
 
 subgraph Routehandlers ["Route handlers"]
@@ -504,6 +504,7 @@ dncRoute --> dnc
 dncRoute --> dncSchema
 dncRoute --> request
 dncSchema --> phone
+email --> disclosures
 healthRoute --> db
 jobsRoute --> env
 jobsRoute --> outbox

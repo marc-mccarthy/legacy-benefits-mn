@@ -21,6 +21,9 @@ export const GOVERNMENT_DISCLAIMER =
 export const ENROLLMENT_DISCLAIMER =
   "Enrollment in a plan depends on the plan's contract renewal with Medicare. Plan availability, benefits, premiums, and cost sharing vary by plan and by county.";
 
+export const CMIP_DESIGNATION_NOTICE =
+  "Certified Medicare Insurance Planner™, DBA, authorizes the use of its trademarks CMIP®, and Certified Medicare Insurance Planner™ to agents that have met Certified Medicare Insurance Planner™, DBA administration's initial and ongoing certification requirements. The Federal Government, CMS, and Medicare do not affiliate with or endorse ANY professional designation, which includes the CMIP® designation.";
+
 export function tcpaConsentText(businessName: string, phone?: string): string {
   return [
     `By checking this box and submitting this form, I give my prior express written consent for ${businessName}`,

@@ -21,7 +21,10 @@ export function TeamMember({ member }: { member: Member }) {
           slug: member.slug,
         })}
       />
-      <Section scheme="dark" className="py-8 md:py-12">
+      <Section
+        scheme="dark"
+        className="pt-(--spacing-medium) pb-8 md:pt-16 md:pb-12"
+      >
         <Container className="grid items-start gap-6 md:grid-cols-[1fr_auto] md:grid-rows-[auto_1fr] md:gap-x-16 md:gap-y-8">
           <div>
             <p className="text-action text-base font-semibold tracking-widest uppercase">
@@ -99,7 +102,7 @@ export function TeamMember({ member }: { member: Member }) {
               <ul className="space-y-1 text-base">
                 {member.credential ? (
                   <li className="font-semibold">
-                    {member.credential.full} (
+                    <WithMarks text={member.credential.full} /> (
                     <WithMarks text={member.credential.short} />)
                   </li>
                 ) : null}

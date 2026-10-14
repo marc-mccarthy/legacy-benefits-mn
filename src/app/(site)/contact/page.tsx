@@ -30,7 +30,7 @@ export default async function ContactPage() {
     <Section>
       <Container className="grid gap-12 lg:grid-cols-[1.1fr_1fr]">
         <Prose className="fade-in space-y-5">
-          <h1 className="font-display text-(length:--text-display-page) leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
+          <h1 className="font-display text-[clamp(2.5rem,1.25rem+4.5vw,5rem)] leading-[1.05] font-bold tracking-[-0.04em] [font-stretch:112%]">
             Talk to a licensed agent
           </h1>
           <div className="flex items-center gap-4">

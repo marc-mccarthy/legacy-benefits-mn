@@ -9,6 +9,7 @@ import { backoffMs, drainOutbox, MAX_ATTEMPTS } from "@/lib/leads/outbox";
 const lead = {
   name: "Jane Doe",
   email: "jane@example.com",
+  phone: "(612) 555-0100",
   zip: "55101",
   interest: "medicare-advantage" as const,
   message: "Please call me about my October enrollment.",

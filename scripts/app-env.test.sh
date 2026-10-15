@@ -18,33 +18,13 @@ mkstub() {
   cat >"$tmp/bin/op" <<'EOF'
 #!/bin/sh
 for a in "$@"; do
-  case "$a" in --env-file=*) f="${a#--env-file=}"; cp "$f" "$OP_CAPTURE" ;; esac
+  case "$a" in --env-file=*) cp "${a#--env-file=}" "$OP_CAPTURE" ;; esac
 done
-while IFS= read -r line; do
-  k="${line%%=*}"
-  if [ "$k" = "${OP_BLANK:-}" ]; then export "$k="; else export "$k=resolved"; fi
-done <"$f"
 while [ "$1" != "--" ]; do shift; done
 shift
 exec "$@"
 EOF
-  printf '#!/bin/sh\necho "$*" >>"%s"\n' "$tmp/tf-calls" >"$tmp/bin/terraform"
-  chmod +x "$tmp/bin/op" "$tmp/bin/terraform"
-}
-
-tf_sh() {
-  set +e
-  env -u CI PATH="$tmp/bin:$PATH" OP_CAPTURE="$tmp/captured" OP_BLANK="${BLANK:-}" TMPDIR="$tmp/t" bash "$tmp/w/infra/tf.sh" "$@" >/dev/null 2>&1
-  code=$?
-  set -e
-  echo "$code"
-}
-
-fresh_infra() {
-  fresh
-  mkdir -p "$tmp/w/infra"
-  cp "$repo/infra/tf.sh" "$tmp/w/infra/tf.sh"
-  rm -f "$tmp/tf-calls"
+  chmod +x "$tmp/bin/op"
 }
 
 fresh() {
@@ -96,25 +76,6 @@ set +e
 code=$?
 set -e
 assert "CI skips op and env checks" "$code" 0
-
-fresh_infra
-assert "tf.sh plan runs" "$(tf_sh plan)" 0
-assert "tf.sh runs init then plan" "$(cut -d' ' -f2 "$tmp/tf-calls" | tr '\n' ' ')" "init plan "
-assert "tf.sh passes only TF_VAR_ and AWS credentials" "$(grep -cvE '^(TF_VAR_|AWS_ACCESS_KEY_ID=|AWS_SECRET_ACCESS_KEY=)' "$tmp/captured" || true)" 0
-assert "tf.sh temp env file removed" "$(find "$tmp/t" -type f | wc -l | tr -d ' ')" 0
-
-fresh_infra
-assert "tf.sh refuses apply" "$(tf_sh apply)" 1
-
-fresh_infra
-touch "$tmp/w/infra/terraform.tfvars"
-assert "tf.sh refuses tfvars" "$(tf_sh plan)" 1
-
-fresh_infra
-assert "tf.sh fails on a blank required key" "$(BLANK=TF_VAR_NAME tf_sh plan)" 1
-
-fresh_infra
-assert "tf.sh allows a blank optional key" "$(BLANK=TF_VAR_GTM_ID tf_sh plan)" 0
 
 # EXECUTION
 echo "ℹ️ app-env.test.sh passed"

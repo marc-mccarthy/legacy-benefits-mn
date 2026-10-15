@@ -41,7 +41,8 @@ pnpm dev
 
 Env comes only from the committed `app.env`, which holds `op://` references.
 `scripts/with-env.sh` resolves them with `op run` and refuses to start if any
-`.env*` file exists. `infra/tf.sh` runs `terraform plan` from the same file.
+`.env*` file exists. Terraform reads the same file:
+`op run --env-file=app.env -- terraform -chdir=infra plan`.
 
 No database is needed to run or build the site. One is needed only to submit a
 form locally:

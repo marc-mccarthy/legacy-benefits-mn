@@ -66,7 +66,7 @@ function envBlock() {
         ? 3
         : 2;
   return [...groups.keys()]
-    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+    .sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0))
     .map((group) => {
       const names = groups
         .get(group)

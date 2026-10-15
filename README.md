@@ -95,6 +95,16 @@ Test projects have different needs. `pnpm test:unit` needs no database.
 against the static export in `out/` and the API bundle. `pnpm test`
 runs every Vitest project.
 
+## Keeping docs correct
+
+The pre-commit fix step runs `docs-generate` on every commit (`pnpm docs:generate`, then it stages exactly the files it rewrote) and `diagrams-build` when `src/lib`, `src/api`, the `docs/diagrams` sources or the diagram scripts change (`pnpm diagrams:build`, which stages `D5-module-map.mmd`, `SOURCES.md` and `diagrams.manifest.json`). Both run before prettier and eslint. The commit is blocked if `package.json`, `app.env` or a rewritten file has unstaged edits.
+
+The verify step runs `pnpm docs:check` (references, plus generated blocks compared byte for byte) and `pnpm diagrams:check`. Pre-push and CI run both.
+
+A generated block sits between an opening marker and a closing marker. The opening marker is the word `generated:NAME` inside an HTML comment, `NAME` being `scripts`, `env` or `layout`. The closing marker adds a slash before `generated`. Never edit between them.
+
+`pnpm docs:sync [ref]` (default `main`) is an on-demand `claude -p` pass over docs and diagrams. No hook runs it. It ends by running the generators and checks. Hand-written prose and hand-drawn diagrams are checked for references only, not for truth.
+
 ## Commands
 
 <!-- generated:scripts -->

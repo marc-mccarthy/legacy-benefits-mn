@@ -34,6 +34,7 @@
     "reference:check": "node scripts/capture-reference-site.mjs --check",
     "docs:check": "node scripts/check-doc-references.mjs && node scripts/generate-doc-sections.mjs --check",
     "docs:generate": "node scripts/generate-doc-sections.mjs",
+    "docs:sync": "bash scripts/docs-sync.sh",
     "check": "lefthook run verify-all",
     "prepare": "lefthook install"
   },

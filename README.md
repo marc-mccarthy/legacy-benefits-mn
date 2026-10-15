@@ -131,6 +131,7 @@ runs every Vitest project.
 | `pnpm reference:check`   | `node scripts/capture-reference-site.mjs --check`                                                  |
 | `pnpm docs:check`        | `node scripts/check-doc-references.mjs && node scripts/generate-doc-sections.mjs --check`          |
 | `pnpm docs:generate`     | `node scripts/generate-doc-sections.mjs`                                                           |
+| `pnpm docs:sync`         | `bash scripts/docs-sync.sh`                                                                        |
 | `pnpm check`             | `lefthook run verify-all`                                                                          |
 | `pnpm prepare`           | `lefthook install`                                                                                 |
 

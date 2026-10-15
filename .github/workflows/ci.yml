@@ -68,6 +68,7 @@ jobs:
         run: pnpm docs:check
 
       - run: bash scripts/app-env.test.sh
+      - run: bash scripts/docs-sync.test.sh
 
       - run: pnpm test:coverage
       - run: pnpm test:integration

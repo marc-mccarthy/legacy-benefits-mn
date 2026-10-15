@@ -50,9 +50,12 @@ next-env.d.ts
 
 # scratch from the sourcing-media skill's brief scan. It records the framework,
 # the asset dir and the candidate slots it detected — an input to
-# docs/ui-reference/MEDIA-PLAN.md, not a record worth keeping, and regenerated
+# a media plan, not a record worth keeping, and regenerated
 # by re-running the brief.
 .media-work/
+
+# reference-site captures from `pnpm reference:capture`; local only, too large for git
+.reference/
 
 # playwright run artifacts
 test-results/

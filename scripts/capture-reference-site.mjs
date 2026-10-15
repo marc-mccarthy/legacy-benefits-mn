@@ -12,7 +12,7 @@ import { relative, resolve } from "node:path";
 import { chromium, devices } from "@playwright/test";
 
 const root = resolve(import.meta.dirname, "..");
-const outRoot = resolve(root, "docs", "ui-reference");
+const outRoot = resolve(root, ".reference", "ui-reference");
 
 const CHECK = process.argv.includes("--check");
 const CLEAN = process.argv.includes("--clean");
@@ -1203,7 +1203,7 @@ async function fullPageShot(page, run, { route, viewport, pass, baseName }) {
     run.warn(
       "FULLPAGE_BANDS_TRUNCATED",
       `${route} ${viewport} is ${geometry.scrollHeight}px; captured ${bandCount} bands covering ${bandCount * BAND_CSS_PX}px`,
-      [`docs/ui-reference/${run.siteKey}/shots/${baseName}-band*.jpg`],
+      [`.reference/ui-reference/${run.siteKey}/shots/${baseName}-band*.jpg`],
     );
   }
   return {

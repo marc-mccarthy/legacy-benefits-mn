@@ -9,11 +9,11 @@ terraform {
 }
 
 provider "aws" {
-  region = var.region
+  region = var.REGION
 
   default_tags {
     tags = {
-      Project   = var.name
+      Project   = var.NAME
       ManagedBy = "terraform"
     }
   }
@@ -30,9 +30,9 @@ data "aws_kms_alias" "rds" {
 }
 
 locals {
-  db_name    = replace(var.name, "-", "_")
-  use_domain = var.domain_name != ""
-  site_url   = local.use_domain ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.this.domain_name}"
+  db_name    = replace(var.NAME, "-", "_")
+  use_domain = var.DOMAIN_NAME != ""
+  site_url   = local.use_domain ? "https://${var.DOMAIN_NAME}" : "https://${aws_cloudfront_distribution.this.domain_name}"
 }
 
 resource "aws_vpc" "this" {
@@ -41,7 +41,7 @@ resource "aws_vpc" "this" {
   enable_dns_support               = true
   enable_dns_hostnames             = true
 
-  tags = { Name = var.name }
+  tags = { Name = var.NAME }
 }
 
 resource "aws_subnet" "private" {
@@ -53,12 +53,12 @@ resource "aws_subnet" "private" {
   assign_ipv6_address_on_creation = true
   availability_zone               = data.aws_availability_zones.available.names[count.index]
 
-  tags = { Name = "${var.name}-${count.index + 1}" }
+  tags = { Name = "${var.NAME}-${count.index + 1}" }
 }
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.this.id
-  tags   = { Name = var.name }
+  tags   = { Name = var.NAME }
 }
 
 resource "aws_route_table_association" "private" {
@@ -70,7 +70,7 @@ resource "aws_route_table_association" "private" {
 
 resource "aws_egress_only_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
-  tags   = { Name = var.name }
+  tags   = { Name = var.NAME }
 }
 
 resource "aws_route" "private_ipv6_egress" {
@@ -81,23 +81,23 @@ resource "aws_route" "private_ipv6_egress" {
 
 resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.this.id
-  service_name      = "com.amazonaws.${var.region}.s3"
+  service_name      = "com.amazonaws.${var.REGION}.s3"
   vpc_endpoint_type = "Gateway"
   route_table_ids   = [aws_route_table.private.id]
 
-  tags = { Name = var.name }
+  tags = { Name = var.NAME }
 }
 
 resource "aws_security_group" "lambda" {
-  name   = "${var.name}-lambda"
+  name   = "${var.NAME}-lambda"
   vpc_id = aws_vpc.this.id
-  tags   = { Name = "${var.name}-lambda" }
+  tags   = { Name = "${var.NAME}-lambda" }
 }
 
 resource "aws_security_group" "db" {
-  name   = "${var.name}-db"
+  name   = "${var.NAME}-db"
   vpc_id = aws_vpc.this.id
-  tags   = { Name = "${var.name}-db" }
+  tags   = { Name = "${var.NAME}-db" }
 }
 
 resource "aws_vpc_security_group_egress_rule" "lambda_all" {
@@ -123,7 +123,7 @@ resource "aws_vpc_security_group_ingress_rule" "db_from_lambda" {
 }
 
 resource "aws_db_subnet_group" "this" {
-  name       = var.name
+  name       = var.NAME
   subnet_ids = aws_subnet.private[*].id
 }
 
@@ -143,7 +143,7 @@ resource "random_password" "outbox_token" {
 }
 
 resource "aws_rds_cluster" "this" {
-  cluster_identifier = var.name
+  cluster_identifier = var.NAME
   engine             = "aurora-postgresql"
   engine_mode        = "provisioned"
   engine_version     = "16.8"
@@ -158,14 +158,14 @@ resource "aws_rds_cluster" "this" {
 
   serverlessv2_scaling_configuration {
     min_capacity             = 0
-    max_capacity             = var.db_max_acu
-    seconds_until_auto_pause = var.db_seconds_until_auto_pause
+    max_capacity             = var.DB_MAX_ACU
+    seconds_until_auto_pause = var.DB_SECONDS_UNTIL_AUTO_PAUSE
   }
 
   deletion_protection       = true
   backup_retention_period   = 7
   skip_final_snapshot       = false
-  final_snapshot_identifier = "${var.name}-final"
+  final_snapshot_identifier = "${var.NAME}-final"
   apply_immediately         = true
 
   lifecycle {
@@ -174,7 +174,7 @@ resource "aws_rds_cluster" "this" {
 }
 
 resource "aws_rds_cluster_instance" "this" {
-  identifier         = var.name
+  identifier         = var.NAME
   cluster_identifier = aws_rds_cluster.this.id
   instance_class     = "db.serverless"
   engine             = aws_rds_cluster.this.engine
@@ -186,7 +186,7 @@ resource "aws_rds_cluster_instance" "this" {
 }
 
 resource "aws_s3_bucket" "assets" {
-  bucket        = "${var.name}-assets-${data.aws_caller_identity.current.account_id}"
+  bucket        = "${var.NAME}-assets-${data.aws_caller_identity.current.account_id}"
   force_destroy = true
 }
 

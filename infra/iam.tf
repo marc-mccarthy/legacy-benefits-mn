@@ -9,7 +9,7 @@ data "aws_iam_policy_document" "lambda_assume" {
 }
 
 resource "aws_iam_role" "lambda" {
-  name               = "${var.name}-lambda"
+  name               = "${var.NAME}-lambda"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "lambda" {
 }
 
 resource "aws_iam_role_policy" "lambda" {
-  name   = "${var.name}-lambda"
+  name   = "${var.NAME}-lambda"
   role   = aws_iam_role.lambda.id
   policy = data.aws_iam_policy_document.lambda.json
 }
@@ -81,13 +81,13 @@ data "aws_iam_policy_document" "github_main_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["${var.github_subject_prefix}:ref:refs/heads/main"]
+      values   = ["${var.GITHUB_SUBJECT_PREFIX}:ref:refs/heads/main"]
     }
   }
 }
 
 resource "aws_iam_role" "deploy" {
-  name               = "${var.name}-github-deploy"
+  name               = "${var.NAME}-github-deploy"
   assume_role_policy = data.aws_iam_policy_document.github_main_assume.json
 }
 
@@ -119,13 +119,13 @@ data "aws_iam_policy_document" "deploy" {
 }
 
 resource "aws_iam_role_policy" "deploy" {
-  name   = "${var.name}-github-deploy"
+  name   = "${var.NAME}-github-deploy"
   role   = aws_iam_role.deploy.id
   policy = data.aws_iam_policy_document.deploy.json
 }
 
 resource "aws_iam_role" "terraform" {
-  name                 = "${var.name}-github-terraform"
+  name                 = "${var.NAME}-github-terraform"
   assume_role_policy   = data.aws_iam_policy_document.github_main_assume.json
   max_session_duration = 7200
 }

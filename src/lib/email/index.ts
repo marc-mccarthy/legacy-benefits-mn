@@ -165,7 +165,7 @@ export async function sendLeadNotification(
 ) {
   const to = business?.notificationEmails?.length
     ? business.notificationEmails
-    : (process.env["LEAD_NOTIFICATION_EMAILS"] ?? "")
+    : (process.env["LEAD_NOTIFICATION_EMAIL"] ?? "")
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);

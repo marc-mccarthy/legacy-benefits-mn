@@ -1,5 +1,5 @@
 locals {
-  site_hostnames = local.use_domain ? [var.domain_name, "www.${var.domain_name}"] : []
+  site_hostnames = local.use_domain ? [var.DOMAIN_NAME, "www.${var.DOMAIN_NAME}"] : []
 
   cert_validation = {
     for dvo in flatten(aws_acm_certificate.this[*].domain_validation_options) : dvo.domain_name => dvo
@@ -16,7 +16,7 @@ locals {
 resource "aws_route53_zone" "this" {
   count = local.use_domain ? 1 : 0
 
-  name = var.domain_name
+  name = var.DOMAIN_NAME
 }
 
 resource "terraform_data" "name_servers" {
@@ -25,7 +25,7 @@ resource "terraform_data" "name_servers" {
   triggers_replace = aws_route53_zone.this[0].name_servers
 
   provisioner "local-exec" {
-    command = "echo 'Set these nameservers for ${var.domain_name} at Squarespace: ${join(" ", aws_route53_zone.this[0].name_servers)}'"
+    command = "echo 'Set these nameservers for ${var.DOMAIN_NAME} at Squarespace: ${join(" ", aws_route53_zone.this[0].name_servers)}'"
   }
 }
 
@@ -33,8 +33,8 @@ resource "aws_acm_certificate" "this" {
   count = local.use_domain ? 1 : 0
 
   region                    = "us-east-1"
-  domain_name               = var.domain_name
-  subject_alternative_names = ["www.${var.domain_name}"]
+  domain_name               = var.DOMAIN_NAME
+  subject_alternative_names = ["www.${var.DOMAIN_NAME}"]
   validation_method         = "DNS"
 
   lifecycle {
@@ -80,10 +80,10 @@ resource "aws_route53_record" "site" {
 }
 
 resource "aws_route53_record" "extra" {
-  for_each = local.use_domain ? var.dns_extra_records : {}
+  for_each = local.use_domain ? var.DNS_EXTRA_RECORDS : {}
 
   zone_id = aws_route53_zone.this[0].zone_id
-  name    = each.value.name == "" ? var.domain_name : "${each.value.name}.${var.domain_name}"
+  name    = each.value.name == "" ? var.DOMAIN_NAME : "${each.value.name}.${var.DOMAIN_NAME}"
   type    = each.value.type
   ttl     = each.value.ttl
   records = each.value.records

@@ -8,10 +8,6 @@ const git = (args) =>
     .split("\n")
     .filter(Boolean);
 
-const EXCLUDED = [/^docs\/ui-reference\//, /^technomancy_artifacts\//];
-
-const GENERATED = ["docs/diagrams/SOURCES.md"];
-
 const scripts = new Set(
   Object.keys(
     JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")).scripts,
@@ -28,11 +24,10 @@ const trackedRoots = new Set(
   git(["ls-files"]).map((path) => path.split("/")[0]),
 );
 
+const DOC = /^(docs\/)?[^/]+\.md$/;
+
 const files = git(["ls-files", "*.md"]).filter(
-  (path) =>
-    !EXCLUDED.some((rule) => rule.test(path)) &&
-    !GENERATED.includes(path) &&
-    existsSync(resolve(root, path)),
+  (path) => DOC.test(path) && existsSync(resolve(root, path)),
 );
 
 const findings = [];
@@ -43,9 +38,11 @@ function candidatePath(token) {
   if (/\s/.test(token) || !token.includes("/")) return null;
   if (/^[/@~]|^https?:/.test(token)) return null;
   if (/[*{}<>]/.test(token)) return null;
-  const path = token.replace(/:[A-Za-z_$][\w$]*$/, "").replace(/\/+$/, "");
+  const path = token
+    .replace(/:[A-Za-z_$][\w$]*$/, "")
+    .replace(/:[\d,-]+$/, "")
+    .replace(/\/+$/, "");
   if (!trackedRoots.has(path.split("/")[0])) return null;
-  if (EXCLUDED.some((rule) => rule.test(path))) return null;
   return path;
 }
 
@@ -78,7 +75,6 @@ for (const file of files) {
       const path = posix.normalize(
         posix.join(dirname(file), target.split("#")[0]),
       );
-      if (EXCLUDED.some((rule) => rule.test(path))) continue;
       if (!existsSync(resolve(root, path))) {
         report(file, number, target, "link target does not exist");
       }

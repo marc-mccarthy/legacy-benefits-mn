@@ -44,10 +44,9 @@ next-env.d.ts
 .playwright-mcp/
 .playwright/
 
-# env — real values never ship, but the documented template must.
+# env — app.env holds op:// references only; any other .env* file may hold real values.
 .env
-.env*.local
-!.env.example
+.env.*
 
 # scratch from the sourcing-media skill's brief scan. It records the framework,
 # the asset dir and the candidate slots it detected — an input to

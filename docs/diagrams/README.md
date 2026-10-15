@@ -10,7 +10,7 @@ Eight figures describing this site.
 | `D3-lead-lifecycle`  | What happens to a form submission, from the click to the CRM      |
 | `D4-compliance-data` | The four regulated tables, what each proves, and what links them  |
 | `D5-module-map`      | Every server module and its imports — **derived from the code**   |
-| `D7-pipeline`        | What runs between a push and the new release serving              |
+| `D7-pipeline`        | What runs on a pull request, and between a merge and the release  |
 | `D8-dnc-suppression` | How a stop request is taken, stored, and enforced afterwards      |
 
 ## Reading them
@@ -37,8 +37,20 @@ pnpm diagrams:build    # derive, then rewrite the manifest and SOURCES.md
 pnpm diagrams:check    # fail if either is stale
 ```
 
-All three only read and write files. Nothing needs installing.
+All three only read and write files, and need only the repository's own dependencies
+(`pnpm install`): the build parses every source with `mermaid` under `jsdom`, so a
+source that does not parse fails it. `pnpm diagrams:check` also runs in the CI
+`quality` job (`.github/workflows/ci.yml`) and in the lefthook `docs` step.
 
-A module added under `src/lib` without being placed in a group in
-`scripts/generate-derived-diagrams.mjs` is a **hard error**, not a warning: a map that
-silently omits a module still reads as complete.
+A module added under `src/lib` or `src/api` without being placed in a group in
+`scripts/generate-derived-diagrams.mjs`, or a group entry whose file no longer exists, is
+a **hard error**, not a warning: a map that silently omits a module still reads as
+complete.
+
+## What `diagrams:check` guards
+
+It cannot tell whether a figure is true. It checks that every source parses, that the
+`%%{init}%%` line and the `classDef` block match `D1-system-context.mmd`, that each
+hand-authored figure still contains the sentinel strings listed under `mustContain` in
+`scripts/generate-diagrams.mjs`, and that the manifest and `SOURCES.md` are current. When
+the code or `infra/` changes, re-read the figures against it.

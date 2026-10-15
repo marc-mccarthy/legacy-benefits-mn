@@ -7,7 +7,8 @@ accDescr {
   It reads the client address from the first hop of the forwarded-for header. A
   filled honeypot field is accepted with a success status and nothing is stored,
   so a bot learns nothing from the response. Turnstile is asked whether the
-  submitter is human and a failure is rejected. The business identity is read from
+  submitter is human and a failure is rejected; when no Turnstile secret is
+  configured the check is skipped. The business identity is read from
   the environment, because the consent text has to name the specific business, and
   a missing BUSINESS_NAME throws rather than resolving to a default. The
   capture step checks the suppression list first, then opens one transaction: the
@@ -15,19 +16,22 @@ accDescr {
   disclosure version, a hashed address and a retention date ten years out. Only if
   the person is not suppressed is an outbox row inserted in that same transaction.
   Email is best effort and its failures are swallowed, because the lead is already
-  committed. The visitor gets a created response either way. Delivery happens
-  later: a host timer posts to the job route once a minute, which claims due rows
-  and sends them to the CRM.
+  committed; it is skipped when no sender address is configured. The visitor gets a
+  created response either way, and its body carries the lead id and a suppressed
+  flag. Delivery happens later and off the request: a caller posts to the job route
+  with the bearer token, and the route claims due rows and sends them to the CRM
+  transport. Nothing in infra/ schedules that call, and the deployed function sets
+  the transport to mock.
 }
 
 participant V as Visitor
 participant R as Lead route
 participant T as Turnstile
 participant S as Suppression list
-participant DB as Postgres
+participant DB as Aurora PostgreSQL
 participant M as SES
 participant J as Outbox drain
-participant C as MedicarePRO
+participant C as CRM transport
 
 V->>R: POST the form as JSON
 alt body will not parse
@@ -55,16 +59,17 @@ alt not suppressed
   R->>DB: insert outbox row with idempotency key
 end
 DB-->>R: lead id
-R->>M: notify the agency
+R->>M: notify the agency, in parallel with the acknowledgement
 alt not suppressed
   R->>M: acknowledge the visitor
 end
-Note over R,M: failures are logged, never returned
-R-->>V: 201 with the lead id
-Note over J,C: a minute later, off the visitor's request
-J->>DB: claim due rows, skip locked
+Note over R,M: failures never reach the visitor
+R-->>V: 201 with the lead id and a suppressed flag
+Note over J,C: later, off the visitor's request, when the job route is called
+J->>J: check the bearer token
+J->>DB: claim due rows, skip locked, lease five minutes
 DB-->>J: up to 25 rows
-J->>C: send with the idempotency key
+J->>C: send with the idempotency key, transport is mock when deployed
 alt delivered
   C-->>J: ok
   J->>DB: mark sent
@@ -72,5 +77,5 @@ else retryable
   C-->>J: error
   J->>DB: back off and try again
 else gave up
-  J->>DB: mark failed for a human
+  J->>DB: mark failed for a human, after 8 attempts or a fatal error
 end

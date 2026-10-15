@@ -3,58 +3,62 @@ flowchart TB
 accTitle: How a visitor reaches the site and where their answer comes from
 accDescr {
   A top-to-bottom map of one visit. Someone looking for Medicare help opens the
-  site in a browser. The request arrives at CloudFront, which is the only way in:
-  the instance security group admits CloudFront's managed prefix list and nothing
-  else, so the public address cannot be dialled directly. CloudFront forwards to
-  Caddy on the single instance, which terminates origin TLS using a certificate it
-  renews over DNS-01, and proxies inward to the Next.js application container.
-  The application renders content authored in src/content and writes lead, Scope
-  of Appointment and do-not-contact records to the Postgres container, whose
-  data directory is a bind mount on a separate EBS volume that outlives the
-  instance. Images are served from an S3 bucket. Three outbound dependencies sit
-  to the side: Cloudflare Turnstile verifies that a form submitter is human, SES
-  sends the acknowledgement and the agency notification, and the MedicarePRO CRM
-  receives leads. The CRM is never called during the visitor's request; a host
-  timer posts to a local job route once a minute and that is what delivers. Every
-  secret the application needs is rendered from SSM Parameter Store into a file on
-  the box at boot, and none of it is reachable from the browser.
+  site in a browser. The name resolves through Route 53 to CloudFront, which is the
+  only way in. A viewer-request function redirects www to the apex host and maps a
+  path such as /services to /services.html. Pages, /_next/static, /media and /video
+  are read from a private S3 bucket; /api/* goes to the API Lambda function URL
+  with caching disabled. Both origins sit behind origin access control: requests are
+  signed with SigV4, the bucket policy admits only this distribution, and the
+  function URL uses AWS_IAM authorization, so neither can be called directly. The
+  API Lambda runs in private subnets and talks to Aurora PostgreSQL Serverless v2,
+  whose security group admits only the Lambda's security group on 5432. It writes
+  lead, Scope of Appointment and do-not-contact records there. Two outbound
+  dependencies sit to the side: Cloudflare Turnstile verifies that a form submitter
+  is human, and SES sends the acknowledgement and the agency notification when a
+  sender address is configured. The MedicarePRO CRM is never called during the
+  visitor's request. The job route that would deliver to it needs a bearer token,
+  nothing in infra/ schedules a caller, and the deployed function sets
+  CRM_TRANSPORT to mock, so nothing is sent. The Lambda's environment, including
+  the database password, the PAYLOAD_SECRET salt and the job token, is generated and
+  set by Terraform and never reaches the browser.
 }
 
 visitor([Someone looking for Medicare help])
 browser[Browser]
+dns[Route 53 alias records]
 edge{{CloudFront}}
-originSg{{"Security group: CloudFront prefix list only"}}
-caddy[["Caddy, origin TLS"]]
-app["Next.js 16, static export"]
-postgres[("Postgres container")]
-ebs[("EBS data volume")]
-mediaBucket[("S3 media bucket")]
+rewrite["Viewer-request function: www to apex, path to .html"]
+oac{{"Origin access control: SigV4, private bucket, function URL AWS_IAM"}}
+bucket[("S3 assets bucket: pages, static files, media, video")]
+api[["API Lambda, src/api, in private subnets"]]
+jobRoute["/api/jobs/outbox, bearer token"]
+db[("Aurora PostgreSQL Serverless v2")]
 turnstile{{Cloudflare Turnstile}}
 ses[Amazon SES]
 crm[MedicarePRO CRM]
-timer[/"systemd timer, every minute"/]
-jobRoute["/api/jobs/outbox"]
-ssm[("SSM Parameter Store")]
-appEnv[("/etc/legacybenefitsmn/app.env")]
+trigger[/"Scheduled caller of the job route, none defined in infra/"/]
+lambdaEnv[("Lambda environment set by Terraform")]
 
 visitor -->|opens the site| browser
+browser -->|resolves the name| dns
+dns -->|A and AAAA alias| edge
 browser -->|HTTPS| edge
-edge -->|the only admitted source| originSg
-originSg -->|port 443| caddy
-originSg --x|any other source| browser
-caddy -->|proxies to app:3000| app
-app -->|content, leads, consent| postgres
-postgres -->|data directory is a bind mount| ebs
-app -->|images and uploads| mediaBucket
-app -->|is this a human| turnstile
+edge -->|pages| rewrite
+rewrite -->|signed request| oac
+edge -->|/api/*, /_next/static, /media, /video| oac
+oac -->|static files| bucket
+oac -->|API calls| api
+oac --x|any other caller| browser
+api -->|leads, consent, suppression, outbox| db
+api -->|is this a human| turnstile
 turnstile --x|verification failed| browser
-app -->|acknowledgement and notification| ses
-timer -->|POST with bearer token| jobRoute
-jobRoute -->|claims due rows| postgres
-jobRoute -->|delivers queued leads| crm
-ssm -.->|rendered at boot| appEnv
-appEnv -.->|read by the container| app
-appEnv --x|never reaches the browser| browser
+api -->|acknowledgement and notification| ses
+api -->|routes by path| jobRoute
+trigger --x|no schedule exists| jobRoute
+jobRoute -->|claims due rows| db
+jobRoute --x|deployed transport is mock| crm
+lambdaEnv -.->|set at deploy| api
+lambdaEnv --x|never reaches the browser| browser
 
 classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
 classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
@@ -66,9 +70,9 @@ classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
 class visitor human
 class browser client
-class edge,originSg,turnstile guard
-class caddy,app,jobRoute,timer ours
-class postgres,ebs phi
-class mediaBucket,ssm,appEnv artifact
-class ses,crm vendor
-linkStyle 4,10,17 stroke:#B91C1C,stroke-width:3px
+class edge,oac,turnstile guard
+class rewrite,api,jobRoute,trigger ours
+class db phi
+class bucket,lambdaEnv artifact
+class dns,ses,crm vendor
+linkStyle 9,12,15,17,19 stroke:#B91C1C,stroke-width:3px

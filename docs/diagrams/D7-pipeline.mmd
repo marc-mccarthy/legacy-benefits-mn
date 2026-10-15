@@ -1,77 +1,107 @@
 %%{init: {"theme":"base","themeVariables":{"fontFamily":"Helvetica Neue, Helvetica, Arial, sans-serif","fontSize":"16px","textColor":"#0F172A","background":"#FFFFFF","lineColor":"#475569","mainBkg":"#EFF6FF","nodeBorder":"#1D4ED8","primaryColor":"#EFF6FF","primaryBorderColor":"#1D4ED8","primaryTextColor":"#0F172A","secondaryColor":"#F1F5F9","secondaryBorderColor":"#475569","secondaryTextColor":"#0F172A","tertiaryColor":"#F8FAFC","tertiaryBorderColor":"#CBD5E1","tertiaryTextColor":"#0F172A","clusterBkg":"#F8FAFC","clusterBorder":"#CBD5E1","edgeLabelBackground":"#FFFFFF","actorBkg":"#EEF2FF","actorBorder":"#4338CA","actorTextColor":"#0F172A","signalColor":"#475569","signalTextColor":"#0F172A","noteBkgColor":"#FEF3C7","noteBorderColor":"#B45309","noteTextColor":"#0F172A","activationBkgColor":"#ECFDF5","activationBorderColor":"#047857","labelBoxBkgColor":"#FEF3C7","labelBoxBorderColor":"#B45309","sequenceNumberColor":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"basis","nodeSpacing":45,"rankSpacing":60,"padding":12},"sequence":{"useMaxWidth":false,"htmlLabels":false,"mirrorActors":false,"wrap":true,"width":190}}}%%
 flowchart TB
-accTitle: What runs between a push and the new release serving
+accTitle: What runs between a pull request, a merge to main and the new release serving
 accDescr {
-  A push to main starts two workflows. The checks workflow runs three jobs against
-  a throwaway Postgres: quality applies the migrations and then lints, checks
-  formatting, type checks and runs unit and integration tests; the end-to-end job
-  applies the migrations and runs the Playwright suite, whose
-  accessibility and compliance specs are release gates; the Terraform job checks
-  formatting and validates the stack. The deploy workflow runs on a native arm64
-  runner because the instance is Graviton. It assumes a role over OIDC rather than
-  using stored keys, builds and pushes the runtime image, then builds and pushes a
-  second image from the same commit's migrate stage, which is a cache hit because
-  the runtime build already exported the shared layers. It then sends one Systems
-  Manager command carrying those two image references. On the box the deploy script
-  pulls first so a failure changes nothing, brings Postgres up and waits for it to
-  be healthy, runs the migrate container once, and only then brings the application
-  up and waits on its health check. It probes the health route and then fetches a
-  real page, because the health route runs one query and never renders React.
-  Nothing downstream runs unless that command succeeded: the edge is invalidated
-  only afterwards, and the last step fetches the health route through the public
-  site URL.
+  Two things happen at different times. On a pull request the CI workflow runs two
+  jobs, each against a throwaway Postgres 17 service. Quality applies the migrations
+  with drizzle-kit migrate and then lints, checks formatting, type checks, checks
+  that the diagrams match their sources, tests the app.env guard script and runs the
+  unit tests with coverage and the integration tests. The end-to-end job applies the
+  migrations, builds the site and the API bundle and runs the Playwright suite, which
+  includes the accessibility and compliance specs. When a pull request touches
+  infra/, the Terraform workflow also checks formatting, runs the plan guard test,
+  validates the stack without a backend, runs tflint and scans for misconfiguration
+  with Trivy. A push to main, or a manual run naming a commit, starts the deploy
+  workflow, which does not wait for those checks and does not repeat them. Its build
+  job runs on an arm64 runner, matching the Lambda architecture. It refuses a commit
+  that is not an ancestor of main, builds the static site with the environment read
+  from app.env through op run, bundles src/api with esbuild into the API package, and
+  packs a second package for the migrate function. The terraform job assumes a role
+  over OIDC rather than using stored keys, plans with the variables from app.env, and
+  a plan guard fails the run if the plan deletes or replaces anything outside the
+  allowlist; only then does it apply. The deploy job first checks that the site URL
+  it built with equals the one Terraform applied, assumes a second OIDC role, and
+  uploads both packages to the releases prefix of the assets bucket. It updates and
+  invokes the migrate Lambda, which runs the drizzle migrator, and a migration
+  failure stops the run before the API function is touched. It then updates the API
+  function, syncs the static site, media and video to S3, and invalidates the edge.
+  Last it polls the health route until it answers 200, fetches the home page and
+  requires the business name in it, and sends a signed POST to the do-not-contact
+  route that must be rejected with 400 or 422. Nothing is rolled back when a later
+  step fails.
 }
 
-push([Push to main])
+pr([Pull request])
+merge([Push to main, or a manual run naming a commit])
 
-subgraph checks ["Checks workflow"]
-  quality["Quality job: both migrators, lint, format, types, unit, integration"]
-  e2eJob["End-to-end job: both migrators, seed, Playwright"]
-  tfJob["Terraform job: format check, init, validate"]
+subgraph ci ["CI workflow, on a pull request"]
+  quality["Quality job: drizzle-kit migrate, lint, format, types, diagrams, unit, integration"]
+  e2eJob["End-to-end job: migrate, build, API bundle, Playwright"]
 end
 
-subgraph build ["Deploy workflow, arm64 runner"]
-  oidc{{"Assume role over OIDC"}}
-  runtimeImage["Build and push the runtime image"]
-  migrateImage["Build and push the migrate image, same commit"]
-  sendCommand[["Send one Systems Manager command, two image references"]]
+subgraph tfPr ["Terraform workflow, when infra/ changes"]
+  tfChecks["Format, plan guard test, validate, tflint, Trivy"]
 end
 
-subgraph box ["On the instance, deploy script"]
-  pull["Pull both images first"]
-  pgUp["Bring Postgres up and wait for healthy"]
-  migrateRun{{"Run the migrate container: drizzle-kit migrate"}}
-  appUp["Bring the application up and wait for healthy"]
-  healthProbe{{"Probe the health route"}}
-  pageProbe{{"Fetch a real page"}}
+subgraph build ["Deploy workflow, build job, arm64 runner"]
+  ancestor{{"Commit must be an ancestor of main"}}
+  siteBuild["Build the static site, environment from app.env through op run"]
+  packApi["Bundle src/api with esbuild, size guard, zip"]
+  packMigrate["Pack the migrate function: drizzle-orm, pg, migrations"]
 end
 
-invalidate["Invalidate the edge"]
-smoke{{"Fetch the health route through the public site URL"}}
+subgraph tf ["Deploy workflow, terraform job"]
+  oidcTf{{"Assume the terraform role over OIDC"}}
+  plan["terraform plan, variables from app.env"]
+  planGuard{{"Plan guard: deletes only from the allowlist"}}
+  apply["terraform apply"]
+end
+
+subgraph rel ["Deploy workflow, deploy job, arm64 runner"]
+  urlCheck{{"Built site URL equals applied site URL"}}
+  oidcDeploy{{"Assume the deploy role over OIDC"}}
+  upload["Upload both packages to S3 releases/"]
+  migrateRun{{"Update and invoke the migrate Lambda"}}
+  updateFn["Update the API function code"]
+  syncSite["Sync the static site, media and video to S3"]
+  invalidate["Invalidate the edge"]
+  healthProbe{{"Poll /api/health until 200"}}
+  pageProbe{{"Fetch the home page, require the business name"}}
+  postProbe{{"Signed POST to /api/do-not-contact answers 400 or 422"}}
+end
+
 serving([New release serving])
-stop([Deploy fails, previous release still serving])
+stop([Run fails, nothing is rolled back])
 
-push --> quality
-push --> e2eJob
-push --> tfJob
-push --> oidc
-oidc --> runtimeImage
-runtimeImage -->|shared layers already cached| migrateImage
-migrateImage --> sendCommand
-sendCommand --> pull
-pull --x|pull failed, nothing changed| stop
-pull --> pgUp
-pgUp --> migrateRun
+pr --> quality
+pr --> e2eJob
+pr --> tfChecks
+merge --> ancestor
+ancestor --x|not an ancestor| stop
+ancestor --> siteBuild
+siteBuild --> packApi
+packApi --> packMigrate
+packMigrate --> oidcTf
+oidcTf --> plan
+plan --> planGuard
+planGuard --x|deletes outside the allowlist| stop
+planGuard --> apply
+apply --> urlCheck
+urlCheck --x|URLs differ| stop
+urlCheck --> oidcDeploy
+oidcDeploy --> upload
+upload --> migrateRun
 migrateRun --x|a migration failed| stop
-migrateRun --> appUp
-appUp --> healthProbe
-healthProbe --x|no database| stop
+migrateRun --> updateFn
+updateFn --> syncSite
+syncSite --> invalidate
+invalidate --> healthProbe
+healthProbe --x|never 200| stop
 healthProbe --> pageProbe
-pageProbe --x|renders but will not serve| stop
-pageProbe -->|command succeeded| invalidate
-invalidate --> smoke
-smoke --> serving
-smoke --x|not 200| stop
+pageProbe --x|not 200 or name missing| stop
+pageProbe --> postProbe
+postProbe --x|any other status| stop
+postProbe --> serving
 
 classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
 classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
@@ -81,8 +111,8 @@ classDef vendor   fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
 classDef phi      fill:#FEE2E2,stroke:#B91C1C,stroke-width:2px,color:#0F172A
 classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
-class push,serving human
+class pr,merge,serving human
 class stop phi
-class quality,e2eJob,tfJob,runtimeImage,migrateImage,pull,pgUp,appUp,invalidate ours
-class oidc,sendCommand,migrateRun,healthProbe,pageProbe,smoke guard
-linkStyle 8,11,14,16,20 stroke:#B91C1C,stroke-width:3px
+class quality,e2eJob,tfChecks,siteBuild,packApi,packMigrate,plan,apply,upload,updateFn,syncSite,invalidate ours
+class ancestor,oidcTf,planGuard,urlCheck,oidcDeploy,migrateRun,healthProbe,pageProbe,postProbe guard
+linkStyle 4,11,14,18,23,25,27 stroke:#B91C1C,stroke-width:3px

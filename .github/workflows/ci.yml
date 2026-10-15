@@ -64,6 +64,8 @@ jobs:
       - name: Diagrams match their sources
         run: pnpm diagrams:check
 
+      - run: bash scripts/app-env.test.sh
+
       - run: pnpm test:coverage
       - run: pnpm test:integration
 

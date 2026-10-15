@@ -65,9 +65,6 @@ pnpm drizzle:migrate
 | `pnpm test:e2e`           | Playwright against `out/` and the API bundle |
 | `pnpm drizzle:migrate`    | Apply the lead-table migrations              |
 
-`docs/DEVELOPMENT.md` covers the build-time environment variables, the API
-bundle, and the Turnstile failure mode.
-
 ## Lead capture
 
 A submission to `/api/leads` writes one row to `leads` and one to `crm_outbox`

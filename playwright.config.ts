@@ -31,5 +31,7 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
+    // with-env.sh injects the real secret locally; CI has none, so match CI and skip Cloudflare.
+    env: { TURNSTILE_SECRET: "" },
   },
 });

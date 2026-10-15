@@ -18,6 +18,31 @@ CloudFront, with the lead pipeline on Lambda behind `/api/*`.
 | Email     | AWS SES — see the note on network reachability below    |
 | IaC       | Terraform 1.16, AWS provider 6.x — one root at `infra/` |
 
+## Repository layout
+
+<!-- generated:layout -->
+
+```text
+.github/
+.vscode/
+brand/
+docs/
+drizzle/
+e2e/
+infra/
+public/
+scripts/
+src/
+├── api/
+├── app/
+├── components/
+├── content/
+└── lib/
+tests/
+```
+
+<!-- /generated:layout -->
+
 ## Content
 
 Every page is authored in `src/content/` and rendered to static HTML at build
@@ -44,6 +69,19 @@ Env comes only from the committed `app.env`, which holds `op://` references.
 `.env*` file exists. Terraform reads the same file:
 `op run --env-file=app.env -- terraform -chdir=infra plan`.
 
+Keys declared in `app.env` (names only):
+
+<!-- generated:env -->
+
+- **NEXT_PUBLIC_**: `NEXT_PUBLIC_CALENDLY_URL`, `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_MEDIA_HOST`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+- **TF_VAR_**: `TF_VAR_BUSINESS_ADDRESS`, `TF_VAR_BUSINESS_EMAIL`, `TF_VAR_BUSINESS_NAME`, `TF_VAR_BUSINESS_PHONE`, `TF_VAR_CALENDLY_URL`, `TF_VAR_DB_MAX_ACU`, `TF_VAR_DB_SECONDS_UNTIL_AUTO_PAUSE`, `TF_VAR_DNS_EXTRA_RECORDS`, `TF_VAR_DOMAIN_NAME`, `TF_VAR_GITHUB_SUBJECT_PREFIX`, `TF_VAR_GTM_ID`, `TF_VAR_LAMBDA_MEMORY_MB`, `TF_VAR_LEAD_NOTIFICATION_EMAIL`, `TF_VAR_MEDIA_HOST`, `TF_VAR_NAME`, `TF_VAR_REGION`, `TF_VAR_SES_FROM_ADDRESS`, `TF_VAR_TURNSTILE_SECRET`, `TF_VAR_TURNSTILE_SITE_KEY`
+- **AWS**: `AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY`
+- **BUSINESS**: `BUSINESS_ADDRESS`, `BUSINESS_EMAIL`, `BUSINESS_NAME`, `BUSINESS_PHONE`
+- **MEDICAREPRO**: `MEDICAREPRO_WEBHOOK_URL`, `MEDICAREPRO_ZAPIER_HOOK_URL`
+- **Other**: `CRM_TRANSPORT`, `DATABASE_URL`, `DOMAIN_NAME`, `LEAD_NOTIFICATION_EMAIL`, `OUTBOX_JOB_TOKEN`, `PAYLOAD_SECRET`, `PGPOOL_MAX`, `SES_FROM_ADDRESS`, `TURNSTILE_SECRET`
+
+<!-- /generated:env -->
+
 No database is needed to run or build the site. One is needed only to submit a
 form locally:
 
@@ -52,18 +90,51 @@ pnpm db:create
 pnpm drizzle:migrate
 ```
 
+Test projects have different needs. `pnpm test:unit` needs no database.
+`pnpm test:integration` requires `DATABASE_URL`. `pnpm test:e2e` runs Playwright
+against the static export in `out/` and the API bundle. `pnpm test`
+runs every Vitest project.
+
 ## Commands
 
-| Command                   | What it does                                 |
-| ------------------------- | -------------------------------------------- |
-| `pnpm dev`                | Development server                           |
-| `pnpm build`              | Static export to `out/`                      |
-| `pnpm lint` / `typecheck` | ESLint / `tsc --noEmit`                      |
-| `pnpm test`               | Vitest, all projects                         |
-| `pnpm test:unit`          | Vitest, no database required                 |
-| `pnpm test:integration`   | Vitest, requires `DATABASE_URL`              |
-| `pnpm test:e2e`           | Playwright against `out/` and the API bundle |
-| `pnpm drizzle:migrate`    | Apply the lead-table migrations              |
+<!-- generated:scripts -->
+
+| Command                  | Runs                                                                                               |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `pnpm dev`               | `sh scripts/with-env.sh next dev`                                                                  |
+| `pnpm build`             | `sh scripts/with-env.sh next build`                                                                |
+| `pnpm start`             | `next start`                                                                                       |
+| `pnpm lint`              | `eslint`                                                                                           |
+| `pnpm format`            | `prettier --write .`                                                                               |
+| `pnpm format:check`      | `prettier --check .`                                                                               |
+| `pnpm typecheck`         | `tsc --noEmit`                                                                                     |
+| `pnpm test`              | `sh scripts/with-env.sh vitest run`                                                                |
+| `pnpm test:unit`         | `vitest run --project 'unit*'`                                                                     |
+| `pnpm test:integration`  | `sh scripts/with-env.sh vitest run --project integration`                                          |
+| `pnpm test:coverage`     | `vitest run --project 'unit*' --coverage`                                                          |
+| `pnpm test:watch`        | `vitest --project 'unit*'`                                                                         |
+| `pnpm test:e2e`          | `sh scripts/with-env.sh playwright test`                                                           |
+| `pnpm drizzle:generate`  | `drizzle-kit generate`                                                                             |
+| `pnpm drizzle:migrate`   | `sh scripts/with-env.sh drizzle-kit migrate`                                                       |
+| `pnpm db:status`         | `pg_isready`                                                                                       |
+| `pnpm db:create`         | `createdb legacybenefitsmn`                                                                        |
+| `pnpm db:drop`           | `dropdb --if-exists legacybenefitsmn`                                                              |
+| `pnpm db:psql`           | `psql -d legacybenefitsmn`                                                                         |
+| `pnpm db:reset`          | `pnpm db:drop && pnpm db:create && pnpm drizzle:migrate`                                           |
+| `pnpm db:server:init`    | `initdb -D .pgdata`                                                                                |
+| `pnpm db:server:start`   | `pg_ctl -D .pgdata -l .pgdata/server.log start`                                                    |
+| `pnpm db:server:stop`    | `pg_ctl -D .pgdata stop`                                                                           |
+| `pnpm diagrams:derive`   | `node scripts/generate-derived-diagrams.mjs`                                                       |
+| `pnpm diagrams:build`    | `node scripts/generate-derived-diagrams.mjs && node scripts/generate-diagrams.mjs`                 |
+| `pnpm diagrams:check`    | `node scripts/generate-derived-diagrams.mjs --check && node scripts/generate-diagrams.mjs --check` |
+| `pnpm reference:capture` | `node scripts/capture-reference-site.mjs`                                                          |
+| `pnpm reference:check`   | `node scripts/capture-reference-site.mjs --check`                                                  |
+| `pnpm docs:check`        | `node scripts/check-doc-references.mjs && node scripts/generate-doc-sections.mjs --check`          |
+| `pnpm docs:generate`     | `node scripts/generate-doc-sections.mjs`                                                           |
+| `pnpm check`             | `lefthook run verify-all`                                                                          |
+| `pnpm prepare`           | `lefthook install`                                                                                 |
+
+<!-- /generated:scripts -->
 
 ## Lead capture
 

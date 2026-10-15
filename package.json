@@ -32,7 +32,8 @@
     "diagrams:check": "node scripts/generate-derived-diagrams.mjs --check && node scripts/generate-diagrams.mjs --check",
     "reference:capture": "node scripts/capture-reference-site.mjs",
     "reference:check": "node scripts/capture-reference-site.mjs --check",
-    "docs:check": "node scripts/check-doc-references.mjs",
+    "docs:check": "node scripts/check-doc-references.mjs && node scripts/generate-doc-sections.mjs --check",
+    "docs:generate": "node scripts/generate-doc-sections.mjs",
     "check": "lefthook run verify-all",
     "prepare": "lefthook install"
   },

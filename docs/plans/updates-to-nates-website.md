@@ -4,7 +4,6 @@ Execution plan: `docs/plans/nate-site-updates.md`.
 
 ## To Do
 
-- [ ] **TPMO disclaimer counts**: give the correct number of organizations and products. The disclaimer stays; the count sentence is hidden until then
 - [x] **Contact form live test**: send one real submission on the live site and confirm the lead is saved and the email reaches Nate
 - [ ] **Contact form bot check**: `TURNSTILE_SECRET` is empty in 1Password (`legacy-benefits-mn`), so the live form skips the Cloudflare Turnstile check. Add the secret key and redeploy
 
@@ -32,3 +31,4 @@ Execution plan: `docs/plans/nate-site-updates.md`.
 - [x] **Nate's email**: `nbest@legacybenefitsmn.com` on the site (PR #12)
 - [x] **Contact form email**: leads email `nbest@legacybenefitsmn.com` through SES and are saved in Postgres. Subject "Legacy Benefits Group - New Lead: {name}", every form field plus consent, reply goes to the customer (PRs #13, #15; tested locally)
 - [x] **Home page photo**: the photo of Nate with his daughter stays
+- [ ] **Remove uneeded Terraform**: check to see if in the current UI, are all the Terraform resources we have in IaC needed? If not, we need to remove

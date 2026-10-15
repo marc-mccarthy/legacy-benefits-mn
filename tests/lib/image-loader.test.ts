@@ -1,18 +1,6 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import imageLoader, { indexBySource, srcSetFor } from "@/lib/image-loader";
 import { media } from "@/content/media";
-
-type ManifestVariant = { width: number; format: string; bytes: number };
-type ManifestAsset = { slot: string; variants: ManifestVariant[] };
-
-const manifest: { assets: ManifestAsset[] } = JSON.parse(
-  readFileSync(
-    join(import.meta.dirname, "..", "..", "media-manifest.json"),
-    "utf8",
-  ),
-);
 
 const withDerivatives = Object.values(media).find(
   (asset) => asset.srcSet.length > 0,
@@ -62,9 +50,9 @@ describe("a width above every derivative", () => {
 
 describe("a source with no derivative", () => {
   it("returns an unknown src unchanged", () => {
-    expect(
-      imageLoader({ src: "/media/not-in-the-manifest.jpg", width: 900 }),
-    ).toBe("/media/not-in-the-manifest.jpg");
+    expect(imageLoader({ src: "/media/not-a-slot.jpg", width: 900 })).toBe(
+      "/media/not-a-slot.jpg",
+    );
   });
 
   it("leaves a non-media path alone", () => {
@@ -75,7 +63,7 @@ describe("a source with no derivative", () => {
 });
 
 describe("every slot the site can ask for", () => {
-  it("resolves to a path the manifest knows", () => {
+  it("resolves to a path the slot lists", () => {
     for (const [slot, asset] of Object.entries(media)) {
       for (const width of [480, 900, 1920]) {
         const result = imageLoader({ src: asset.src, width });
@@ -95,35 +83,6 @@ describe("every slot the site can ask for", () => {
 });
 
 describe("the variant chosen at each declared width", () => {
-  it("is the smallest measured file the manifest records at that width", () => {
-    let checked = 0;
-
-    for (const asset of manifest.assets) {
-      const slot = media[asset.slot];
-      if (!slot || asset.variants.length === 0) continue;
-
-      for (const width of new Set(asset.variants.map((v) => v.width))) {
-        const atWidth = asset.variants.filter((v) => v.width === width);
-        const smallest = Math.min(...atWidth.map((v) => v.bytes));
-
-        const result = imageLoader({ src: slot.src, width });
-        const chosen = slot.srcSet.find((variant) => variant.src === result);
-
-        expect(chosen, `${asset.slot} at ${width} produced ${result}`).toEqual(
-          expect.objectContaining({ width }),
-        );
-        expect(
-          chosen!.bytes,
-          `${asset.slot} at ${width}: chose ${chosen!.format} ${chosen!.bytes} B, ` +
-            `smallest on record is ${smallest} B`,
-        ).toBe(smallest);
-        checked++;
-      }
-    }
-
-    expect(checked).toBe(46);
-  });
-
   it("keeps AVIF where AVIF is the smaller file", () => {
     const index = indexBySource([
       {

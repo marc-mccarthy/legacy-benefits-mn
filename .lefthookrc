@@ -1,4 +1,0 @@
-# Sourced by lefthook before every job. Git hooks inherit the launching process's
-# PATH, which does not carry the entries `mise activate` adds to interactive shells,
-# so terraform and tflint resolve through the shims instead.
-export PATH="${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims:$PATH"

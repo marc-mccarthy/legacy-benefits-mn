@@ -34,7 +34,7 @@ Claude Code exclusively owns all application source code (`.ts`, `.tsx`, `.css`)
 
 ### Media Library Inventory & Location
 
-All visual assets reside under `public/`. Master metadata and responsive variants are tracked in `media-manifest.json`:
+All visual assets reside under `public/`:
 
 | Path                        | Accepted files (verified 2026-10-03; the SDD ledger is the record)                                                                                                                                                                                                                                                                                                                                                                                         |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -43,7 +43,6 @@ All visual assets reside under `public/`. Master metadata and responsive variant
 | `public/media/env/`         | `studio-cool-gold.jpg` (Task 17 reflections).                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `public/media/silhouettes/` | `paper-{envelope,torn-envelope,form,card,folder-v2}.svg` (Task 14).                                                                                                                                                                                                                                                                                                                                                                                        |
 | `public/video/`             | `mn-lake-dawn-dusk-mobile.mp4` (980 KB, Task 19 below 700 px), `mn-blue-hour-loop.mp4` (609 KB seamless loop, Task 25). Sources `mn-lake-dawn-dusk-source.mp4` and `mn-blue-hour-source.mp4` (CC0 plate, graded) stay untracked.                                                                                                                                                                                                                           |
-| `media-manifest.json`       | Every shipped file has an entry and a matching `src/content/media.ts` slot.                                                                                                                                                                                                                                                                                                                                                                                |
 
 **Asset Rules:**
 

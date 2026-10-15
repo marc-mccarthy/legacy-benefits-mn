@@ -1,12 +1,12 @@
-# Updates to Nate's Website (created 2026-10-13, updated 2026-10-14)
+# Updates to Nate's Website
 
 Execution plan: `docs/plans/nate-site-updates.md`.
 
-## To do
+## To Do
 
 - [ ] **TPMO disclaimer counts**: give the correct number of organizations and products. The disclaimer stays; the count sentence is hidden until then
-- [ ] **Contact form live test**: send one real submission on the live site and confirm the lead is saved and the email reaches Nate
-- [ ] **Contact form bot check**: `turnstile_secret` is empty in 1Password (`legacy-benefits-mn-infra`), so the live form skips the Cloudflare Turnstile check. Add the secret key and redeploy
+- [x] **Contact form live test**: send one real submission on the live site and confirm the lead is saved and the email reaches Nate
+- [ ] **Contact form bot check**: `TURNSTILE_SECRET` is empty in 1Password (`legacy-benefits-mn`), so the live form skips the Cloudflare Turnstile check. Add the secret key and redeploy
 
 ## Done
 

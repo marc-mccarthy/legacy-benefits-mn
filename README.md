@@ -28,7 +28,7 @@ redeploying.
 - `home.ts` — the home page block list, rendered by `RenderBlocks`
 - `services.ts`, `team.ts`, `articles.ts`, `events.ts`, `testimonials.ts`,
   `carriers.ts`, `faq.tsx`
-- `media.ts` — the eight image slots, built from `media-manifest.json`
+- `media.ts` — the image slots
 - `articles/<slug>.tsx`, `services/<slug>.tsx` — one body component each
 
 ## Getting started

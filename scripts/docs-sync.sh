@@ -5,7 +5,7 @@ set -euo pipefail
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 ref="${1:-main}"
 max_budget_usd="2"
-allowed_tools="Read,Glob,Grep,Edit,Write,Bash(git diff *),Bash(git log *),Bash(git show *),Bash(git status *)"
+allowed_tools="Read,Glob,Grep,Edit(README.md),Write(README.md),Edit(CLAUDE.md),Write(CLAUDE.md),Edit(AGENTS.md),Write(AGENTS.md),Edit(docs/*.md),Write(docs/*.md),Edit(docs/diagrams/*.mmd),Write(docs/diagrams/*.mmd),Bash(git diff *),Bash(git log *),Bash(git show *),Bash(git status *)"
 denied_tools="Edit(docs/plans/**),Write(docs/plans/**),Edit(docs/diagrams/D5-module-map.mmd),Write(docs/diagrams/D5-module-map.mmd),Edit(docs/diagrams/SOURCES.md),Write(docs/diagrams/SOURCES.md)"
 
 # LOGGING
@@ -25,11 +25,12 @@ require_inputs() {
 }
 
 build_prompt() {
-  local stat files
-  stat="$(git diff --stat "${ref}...HEAD")"
-  files="$(git diff --name-only "${ref}...HEAD")"
+  local base stat files
+  base="$(git merge-base "$ref" HEAD)"
+  stat="$(git diff --stat "$base")"
+  files="$(git diff --name-only "$base")"
   cat <<PROMPT
-You are updating documentation so it matches the code changes between ${ref} and HEAD.
+You are updating documentation so it matches the code changes since ${ref}, including uncommitted work.
 
 Bring these files in line with the changes: README.md, CLAUDE.md, AGENTS.md (only if it exists), the top-level docs/*.md files, and the hand-authored docs/diagrams/*.mmd files.
 
@@ -40,7 +41,7 @@ Rules:
 - Never invent facts. Read the code and the diff before you write; change a doc only where the diff makes it wrong or incomplete, and leave everything else byte-identical.
 - Edit no file outside the list above.
 
-Diff stat (${ref}...HEAD):
+Diff stat (since ${ref}, working tree):
 ${stat}
 
 Changed files:
@@ -50,7 +51,7 @@ PROMPT
 
 run_claude() {
   build_prompt | claude -p \
-    --permission-mode acceptEdits \
+    --permission-mode dontAsk \
     --permission-prompts none \
     --allowedTools "$allowed_tools" \
     --disallowedTools "$denied_tools" \

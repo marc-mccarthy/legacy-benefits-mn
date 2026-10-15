@@ -72,25 +72,26 @@ mkstubs
 
 fresh
 assert "default ref run succeeds" "$(sync)" 0
-assert "prompt names default ref" "$(grep -c 'between main and HEAD' "$tmp/stdin")" 1
+assert "prompt names default ref" "$(grep -c 'changes since main,' "$tmp/stdin")" 1
 assert "prompt lists changed file" "$(grep -c '^b.txt$' "$tmp/stdin")" 1
 assert "prompt forbids generated markers" "$(grep -c 'Never edit anything between <!-- generated:NAME -->' "$tmp/stdin")" 1
 assert "prompt forbids docs/plans" "$(grep -c 'Never edit anything under docs/plans' "$tmp/stdin")" 1
 assert "prompt forbids derived diagrams" "$(grep -c 'D5-module-map.mmd or docs/diagrams/SOURCES.md' "$tmp/stdin")" 1
 assert "prompt forbids inventing" "$(grep -c 'Never invent facts' "$tmp/stdin")" 1
 
-for flag in -p --permission-mode acceptEdits --permission-prompts none --allowedTools --disallowedTools --no-session-persistence --max-budget-usd; do
+for flag in -p --permission-mode dontAsk --permission-prompts none --allowedTools --disallowedTools --no-session-persistence --max-budget-usd; do
   has_line "$tmp/args" "$flag" || die "claude flag missing: $flag"
 done
 assert "no bypass flag" "$(grep -c 'dangerously' "$tmp/args" || true)" 0
 assert "docs/plans edits denied" "$(grep -c 'Edit(docs/plans/\*\*),Write(docs/plans/\*\*)' "$tmp/args")" 1
 assert "no Bash wildcard allowed" "$(grep -c 'Bash(\*' "$tmp/args" || true)" 0
+assert "edits scoped to doc paths" "$(grep -cE '(^|,)(Edit|Write)(,|$)' "$tmp/args" || true)" 0
 
 assert "call order" "$(paste -sd, "$tmp/calls")" "claude,pnpm docs:generate,pnpm diagrams:build,pnpm docs:check,pnpm diagrams:check"
 
 fresh
 assert "ref override succeeds" "$(sync alt)" 0
-assert "prompt names overridden ref" "$(grep -c 'between alt and HEAD' "$tmp/stdin")" 1
+assert "prompt names overridden ref" "$(grep -c 'changes since alt,' "$tmp/stdin")" 1
 
 fresh
 assert "missing ref refused" "$(sync nope)" 1

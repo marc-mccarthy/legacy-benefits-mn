@@ -66,7 +66,9 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           set -euo pipefail
-          op run --no-masking --env-file=infra/build.env -- env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '
+          if grep -Evq '^[A-Z][A-Z0-9_]*="op://[^"]+"$' app.env; then echo "::error::app.env must hold only op:// references" >&2; exit 1; fi
+          grep -E '^(BUSINESS_|DOMAIN_NAME=|NEXT_PUBLIC_)' app.env >"$RUNNER_TEMP/build.env"
+          op run --no-masking --env-file="$RUNNER_TEMP/build.env" -- env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '
             set -euo pipefail
             test -n "$DOMAIN_NAME"
             export NEXT_PUBLIC_SITE_URL="https://$DOMAIN_NAME"
@@ -200,7 +202,8 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           set -euo pipefail
-          grep '^TF_VAR_' infra/terraform.env >"$RUNNER_TEMP/tf.env"
+          if grep -Evq '^[A-Z][A-Z0-9_]*="op://[^"]+"$' app.env; then echo "::error::app.env must hold only op:// references" >&2; exit 1; fi
+          grep '^TF_VAR_' app.env >"$RUNNER_TEMP/tf.env"
           op run --no-masking --env-file="$RUNNER_TEMP/tf.env" -- env -u OP_SERVICE_ACCOUNT_TOKEN \
             terraform -chdir=infra plan -lock-timeout=10m -out="$RUNNER_TEMP/tfplan"
 

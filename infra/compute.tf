@@ -9,12 +9,12 @@ data "archive_file" "bootstrap" {
 }
 
 resource "aws_lambda_function" "app" {
-  function_name = var.name
+  function_name = var.NAME
   role          = aws_iam_role.lambda.arn
   architectures = ["arm64"]
   runtime       = "nodejs24.x"
   handler       = "index.handler"
-  memory_size   = var.lambda_memory_mb
+  memory_size   = var.LAMBDA_MEMORY_MB
   timeout       = 60
 
   filename         = data.archive_file.bootstrap.output_path
@@ -33,17 +33,17 @@ resource "aws_lambda_function" "app" {
       DATABASE_URL                   = "postgres://postgres:${random_password.db.result}@${aws_rds_cluster.this.endpoint}:5432/${local.db_name}"
       PAYLOAD_SECRET                 = random_password.payload_secret.result
       OUTBOX_JOB_TOKEN               = random_password.outbox_token.result
-      TURNSTILE_SECRET               = var.turnstile_secret
-      NEXT_PUBLIC_SITE_URL           = local.use_domain ? "https://${var.domain_name}" : ""
-      BUSINESS_NAME                  = var.business_name
-      BUSINESS_PHONE                 = var.business_phone
-      BUSINESS_EMAIL                 = var.business_email
-      BUSINESS_ADDRESS               = var.business_address
+      TURNSTILE_SECRET               = var.TURNSTILE_SECRET
+      NEXT_PUBLIC_SITE_URL           = local.use_domain ? "https://${var.DOMAIN_NAME}" : ""
+      BUSINESS_NAME                  = var.BUSINESS_NAME
+      BUSINESS_PHONE                 = var.BUSINESS_PHONE
+      BUSINESS_EMAIL                 = var.BUSINESS_EMAIL
+      BUSINESS_ADDRESS               = var.BUSINESS_ADDRESS
       CRM_TRANSPORT                  = "mock"
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY = var.turnstile_site_key
-      NEXT_PUBLIC_GTM_ID             = var.gtm_id
-      NEXT_PUBLIC_CALENDLY_URL       = var.calendly_url
-      LEAD_NOTIFICATION_EMAILS       = var.lead_notification_email
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY = var.TURNSTILE_SITE_KEY
+      NEXT_PUBLIC_GTM_ID             = var.GTM_ID
+      NEXT_PUBLIC_CALENDLY_URL       = var.CALENDLY_URL
+      LEAD_NOTIFICATION_EMAIL        = var.LEAD_NOTIFICATION_EMAIL
     }, local.ses_env)
   }
 
@@ -59,26 +59,26 @@ resource "aws_lambda_function_url" "app" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
-  name              = "/aws/lambda/${var.name}"
+  name              = "/aws/lambda/${var.NAME}"
   retention_in_days = 14
 }
 
 resource "aws_cloudfront_origin_access_control" "s3" {
-  name                              = "${var.name}-s3"
+  name                              = "${var.NAME}-s3"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_origin_access_control" "lambda" {
-  name                              = "${var.name}-lambda"
+  name                              = "${var.NAME}-lambda"
   origin_access_control_origin_type = "lambda"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_function" "rewrite" {
-  name    = "${var.name}-rewrite"
+  name    = "${var.NAME}-rewrite"
   runtime = "cloudfront-js-2.0"
   publish = true
 
@@ -130,11 +130,11 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
 }
 
 locals {
-  media_origin = var.media_host != "" ? " https://${var.media_host}" : ""
+  media_origin = var.MEDIA_HOST != "" ? " https://${var.MEDIA_HOST}" : ""
 }
 
 resource "aws_cloudfront_response_headers_policy" "security" {
-  name = "${var.name}-security"
+  name = "${var.NAME}-security"
 
   security_headers_config {
     strict_transport_security {
@@ -170,11 +170,11 @@ resource "aws_cloudfront_response_headers_policy" "security" {
 resource "aws_cloudfront_distribution" "this" {
   enabled             = true
   is_ipv6_enabled     = true
-  comment             = var.name
+  comment             = var.NAME
   price_class         = "PriceClass_100"
   default_root_object = "index.html"
 
-  aliases = local.use_domain ? [var.domain_name, "www.${var.domain_name}"] : []
+  aliases = local.use_domain ? [var.DOMAIN_NAME, "www.${var.DOMAIN_NAME}"] : []
 
   origin {
     origin_id                = "s3"
@@ -277,7 +277,7 @@ resource "aws_cloudfront_distribution" "this" {
 }
 
 resource "aws_lambda_function" "migrate" {
-  function_name = "${var.name}-migrate"
+  function_name = "${var.NAME}-migrate"
   role          = aws_iam_role.lambda.arn
   architectures = ["arm64"]
   runtime       = "nodejs24.x"
@@ -307,6 +307,6 @@ resource "aws_lambda_function" "migrate" {
 }
 
 resource "aws_cloudwatch_log_group" "migrate" {
-  name              = "/aws/lambda/${var.name}-migrate"
+  name              = "/aws/lambda/${var.NAME}-migrate"
   retention_in_days = 14
 }

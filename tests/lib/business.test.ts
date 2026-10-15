@@ -7,7 +7,7 @@ const VARS = [
   "BUSINESS_PHONE",
   "BUSINESS_EMAIL",
   "BUSINESS_ADDRESS",
-  "LEAD_NOTIFICATION_EMAILS",
+  "LEAD_NOTIFICATION_EMAIL",
 ] as const;
 
 beforeEach(() => {
@@ -24,7 +24,7 @@ describe("the environment is the only source", () => {
     vi.stubEnv("BUSINESS_PHONE", "612-555-9999");
     vi.stubEnv("BUSINESS_EMAIL", "env@agency.example");
     vi.stubEnv("BUSINESS_ADDRESS", "9 Env Rd, Saint Paul MN");
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "env@agency.example");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", "env@agency.example");
 
     await expect(getBusinessIdentity()).resolves.toEqual({
       name: "Env Agency",
@@ -89,7 +89,7 @@ describe("notification recipients", () => {
   });
 
   it("splits a comma-separated list", async () => {
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "a@x.example,b@x.example");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", "a@x.example,b@x.example");
 
     await expect(getBusinessIdentity()).resolves.toMatchObject({
       notificationEmails: ["a@x.example", "b@x.example"],
@@ -97,7 +97,7 @@ describe("notification recipients", () => {
   });
 
   it("trims whitespace around each address", async () => {
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", " a@x.example ,  b@x.example ");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", " a@x.example ,  b@x.example ");
 
     await expect(getBusinessIdentity()).resolves.toMatchObject({
       notificationEmails: ["a@x.example", "b@x.example"],
@@ -105,7 +105,7 @@ describe("notification recipients", () => {
   });
 
   it("drops empty entries from a trailing or doubled comma", async () => {
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "a@x.example,,b@x.example,");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", "a@x.example,,b@x.example,");
 
     await expect(getBusinessIdentity()).resolves.toMatchObject({
       notificationEmails: ["a@x.example", "b@x.example"],

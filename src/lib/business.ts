@@ -16,7 +16,7 @@ export async function getBusinessIdentity(): Promise<BusinessIdentity> {
     );
   }
 
-  const notificationEmails = (env("LEAD_NOTIFICATION_EMAILS") ?? "")
+  const notificationEmails = (env("LEAD_NOTIFICATION_EMAIL") ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);

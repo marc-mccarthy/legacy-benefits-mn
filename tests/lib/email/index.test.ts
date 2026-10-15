@@ -73,7 +73,7 @@ beforeEach(() => {
   sesSend.mockReset().mockResolvedValue({ MessageId: "abc" });
   clientConfigs.length = 0;
   vi.stubEnv("SES_FROM_ADDRESS", "hello@agency.example");
-  vi.stubEnv("LEAD_NOTIFICATION_EMAILS", undefined);
+  vi.stubEnv("LEAD_NOTIFICATION_EMAIL", undefined);
   vi.stubEnv("BUSINESS_NAME", undefined);
   vi.stubEnv("BUSINESS_PHONE", undefined);
   info = vi.spyOn(console, "info").mockImplementation(() => {});
@@ -207,7 +207,7 @@ describe("sendEmail client construction", () => {
 
 describe("sendLeadNotification recipients", () => {
   it("prefers the addresses the caller passed in", async () => {
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "env@agency.example");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", "env@agency.example");
 
     await sendLeadNotification(lead, {
       notificationEmails: ["caller@agency.example"],
@@ -219,7 +219,7 @@ describe("sendLeadNotification recipients", () => {
   });
 
   it("falls back to the env var when the caller lists none", async () => {
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "env@agency.example");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", "env@agency.example");
 
     await sendLeadNotification(lead, { notificationEmails: [] });
 
@@ -229,7 +229,7 @@ describe("sendLeadNotification recipients", () => {
   });
 
   it("falls back to the env var when no business is passed at all", async () => {
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "env@agency.example");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", "env@agency.example");
 
     await sendLeadNotification(lead);
 
@@ -239,7 +239,7 @@ describe("sendLeadNotification recipients", () => {
   });
 
   it("splits, trims and drops blanks in the env var", async () => {
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", " a@x.example , ,b@x.example,");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", " a@x.example , ,b@x.example,");
 
     await sendLeadNotification(lead);
 
@@ -258,7 +258,7 @@ describe("sendLeadNotification recipients", () => {
 
 describe("sendLeadNotification content", () => {
   beforeEach(() => {
-    vi.stubEnv("LEAD_NOTIFICATION_EMAILS", "agent@agency.example");
+    vi.stubEnv("LEAD_NOTIFICATION_EMAIL", "agent@agency.example");
   });
 
   it("titles the email with the business and the lead's name and replies to them", async () => {

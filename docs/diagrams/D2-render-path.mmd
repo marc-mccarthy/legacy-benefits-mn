@@ -5,24 +5,26 @@ accDescr {
   A top-to-bottom map of one page render. Content is authored as TypeScript
   modules under src/content. At build time the route's server component imports
   the modules it needs, resolves the business identity from the environment, and
-  gathers the collections into a single data bundle. The home page's block list
-  comes from home.ts. The renderer switches on each block's type and returns the
-  matching section component; ten block types are defined and all ten are
-  handled. Because next.config sets output export, every route is rendered once
-  during the build into out/ and deployed as static files — no request reaches a
+  gathers the collections into a single data bundle. The environment at build time
+  comes from app.env through op run. The home page's block list comes from home.ts.
+  The renderer switches on each block's type and returns the matching section
+  component; twelve block types are handled and the home page uses eleven of them.
+  An unknown type renders nothing. Because next.config sets output export, every
+  route is rendered once during the build into out/ and the deploy workflow syncs
+  it to S3, where CloudFront serves it as static files. No request reaches a
   database, and there is no runtime content fetch to cache.
 }
 
 author([Author])
 contentModules[("src/content/*.ts")]
 homeBlocks[("home.ts, the block list")]
-env[/"BUSINESS_NAME and friends"/]
+env[/"BUSINESS_NAME and friends, from app.env at build"/]
 build["next build, output: export"]
 route["Server component for the route"]
 identity["getBusinessIdentity"]
 blockData[/"One data bundle"/]
 renderBlocks{{"RenderBlocks, switch on blockType"}}
-sections["Ten section components"]
+sections["Twelve section components"]
 out[("out/, static HTML")]
 visitor([Visitor])
 cdn["CloudFront and S3"]
@@ -40,7 +42,7 @@ homeBlocks -->|layout| renderBlocks
 blockData -->|passed whole| renderBlocks
 renderBlocks -->|one per block| sections
 sections ==>|written to| out
-out -->|synced by deploy| cdn
+out -->|aws s3 sync, then invalidate| cdn
 visitor -->|requests a route| cdn
 cdn ==>|serves| html
 identity --x|BUSINESS_NAME unset| build

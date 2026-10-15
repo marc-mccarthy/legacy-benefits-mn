@@ -2,14 +2,14 @@
 flowchart TB
 accTitle: What every shape, colour and line style in this atlas means
 accDescr {
-  The key to the other eight figures. Colour carries who owns a thing: indigo for
+  The key to the other seven figures. Colour carries who owns a thing: indigo for
   a person, blue for something in the visitor's browser or at the edge, green for
   code this repository owns and runs, amber for a check that is allowed to reject,
   grey for a third party, red for regulated data under the ten-year retention
-  obligation, violet for a stored artifact such as a secret, a parameter or a
+  obligation, violet for a stored artifact such as a secret, a setting or a
   bucket. Shape carries what kind of thing it is: a rounded stadium is a person, a
   rectangle is a process or a component, a hexagon is a gate, a double rectangle
-  is a container or a document that runs, a cylinder is stored data, and a
+  is a function or a document that runs, a cylinder is stored data, and a
   parallelogram is a scheduled or external trigger. Line style carries what
   happens: a plain arrow is normal flow, a thick arrow is the answer coming back,
   a crossed arrow is a path that is refused or deliberately absent, and a dotted
@@ -24,14 +24,14 @@ subgraph colours ["Colour: who owns it"]
   cGuard{{A check that can reject}}
   cVendor[A third party]
   cPhi[("Regulated data, ten-year retention")]
-  cArtifact[("A stored secret, parameter or bucket")]
+  cArtifact[("A stored secret, setting or bucket")]
 end
 
 subgraph shapes ["Shape: what kind of thing"]
   sPerson([Stadium: a person])
   sProcess[Rectangle: a process or component]
   sGate{{Hexagon: a gate}}
-  sContainer[[Double rectangle: a container or running document]]
+  sContainer[[Double rectangle: a function or running document]]
   sStore[("Cylinder: stored data")]
   sTrigger[/"Parallelogram: a scheduled or external trigger"/]
 end

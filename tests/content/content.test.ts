@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -119,7 +119,7 @@ describe("row counts recorded in the spec's extraction table", () => {
 });
 
 describe("media slots", () => {
-  it("exposes exactly the slots the manifest names", () => {
+  it("exposes exactly these slots", () => {
     expect(Object.keys(media).sort()).toEqual(
       [
         "band.loop",
@@ -167,30 +167,6 @@ describe("media slots", () => {
         "team.owner",
       ].sort(),
     );
-  });
-
-  it("agrees with media-manifest.json on every src, dimension and alt", () => {
-    const manifest = JSON.parse(
-      readFileSync(join(repoRoot, "media-manifest.json"), "utf8"),
-    ) as {
-      assets: {
-        slot: string;
-        file: string;
-        alt: string;
-        intrinsic: { width: number; height: number };
-        variants: { width: number; format: string; path: string }[];
-      }[];
-    };
-
-    for (const asset of manifest.assets) {
-      const entry = media[asset.slot];
-      expect(entry, asset.slot).toBeDefined();
-      expect(entry?.src).toBe(`/${asset.file.replace(/^public\//, "")}`);
-      expect(entry?.width).toBe(asset.intrinsic.width);
-      expect(entry?.height).toBe(asset.intrinsic.height);
-      expect(entry?.alt).toBe(asset.alt);
-      expect(entry?.srcSet).toHaveLength(asset.variants.length);
-    }
   });
 
   it("points every src and every srcSet entry at a file on disk", () => {

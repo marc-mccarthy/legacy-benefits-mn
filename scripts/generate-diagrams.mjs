@@ -18,7 +18,7 @@ const DIAGRAMS = [
   {
     id: "D1-system-context",
     summary: "D1 — how a visitor reaches the site",
-    mustContain: ["CloudFront", "Caddy", "Turnstile"],
+    mustContain: ["CloudFront", "Aurora", "Turnstile"],
   },
   {
     id: "D2-render-path",
@@ -47,7 +47,7 @@ const DIAGRAMS = [
   {
     id: "D7-pipeline",
     summary: "D7 — push to serving release",
-    mustContain: ["drizzle-kit migrate", "Systems Manager", "Invalidate"],
+    mustContain: ["drizzle-kit migrate", "plan guard", "Invalidate"],
   },
   {
     id: "D8-dnc-suppression",

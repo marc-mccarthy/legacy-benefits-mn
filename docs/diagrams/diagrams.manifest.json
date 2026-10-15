@@ -3,27 +3,27 @@
     {
       "id": "LEGEND",
       "summary": "The key — shapes, colours and line styles",
-      "mmd_sha256": "3c0f626c002b470437f53cedf5151de2a0a42935a6cbc1a9cca090aa2853ae13"
+      "mmd_sha256": "b63adc519678e59166079f5a994f170b3c010d08d62907885735544a4bae5984"
     },
     {
       "id": "D1-system-context",
       "summary": "D1 — how a visitor reaches the site",
-      "mmd_sha256": "330f7508d78f4d4f856d367e9a891dfb33ba67c93ec73684059685435fd22264"
+      "mmd_sha256": "5db73a5063cc44a5466855e4ab61d98137cf1c0d0e2c3386356fe5b9179b1210"
     },
     {
       "id": "D2-render-path",
       "summary": "D2 — a content module to a rendered page",
-      "mmd_sha256": "a4307b9987682e20a1cd69c7aece6334471f5b9117eb38ab0c7eff1027369757"
+      "mmd_sha256": "13ea26981298241cd6b007c7752df25257ed0421985a12e2b2129894b8273dc2"
     },
     {
       "id": "D3-lead-lifecycle",
       "summary": "D3 — a form submission, click to CRM",
-      "mmd_sha256": "b5ec04d303cad2fc7461879758ca228fbf92a4de4c5e6fea0fb0898de9f55720"
+      "mmd_sha256": "4bb505a492cf0fecb56fa06cb9e9a6e0a41acac9b51e6d82d653e0739a12c7aa"
     },
     {
       "id": "D4-compliance-data",
       "summary": "D4 — the four regulated tables",
-      "mmd_sha256": "3a054a8b602c41fce8ab1099b6efc7f0bd13a32cbf70cbb480fc97a9780b3053"
+      "mmd_sha256": "26de6b97e76858e46ad98ef033cf013d68befe2e471414a21e925f9c0a54eab7"
     },
     {
       "id": "D5-module-map",
@@ -33,12 +33,12 @@
     {
       "id": "D7-pipeline",
       "summary": "D7 — push to serving release",
-      "mmd_sha256": "95e039a36aaa1604c770dab97d56a8ff6a235cf043bc6602ce8b1789411e31fa"
+      "mmd_sha256": "66aa2fc3d8d60f029c74d59562ff9cda9b346a7d4d817e2ac44f4de2e92e752f"
     },
     {
       "id": "D8-dnc-suppression",
       "summary": "D8 — a stop request, taken and enforced",
-      "mmd_sha256": "8aa06d8b0ef2ec64e1be676389371b830f1e43259cd527b41b8cf72c3c2605f2"
+      "mmd_sha256": "1417638d47b4cb7ac4c779df1575f060bc6f2a6739aa1a7b3b4668aa759fe719"
     }
   ]
 }

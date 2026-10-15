@@ -1,59 +1,59 @@
-variable "name" {
+variable "NAME" {
   type = string
 
   validation {
-    condition     = can(regex("^[a-z][a-z0-9-]*$", var.name)) && length(var.name) <= 32
-    error_message = "name must be lowercase alphanumeric with hyphens, 32 chars max."
+    condition     = can(regex("^[a-z][a-z0-9-]*$", var.NAME)) && length(var.NAME) <= 32
+    error_message = "NAME must be lowercase alphanumeric with hyphens, 32 chars max."
   }
 }
 
-variable "region" {
+variable "REGION" {
   type = string
 }
 
-variable "lambda_memory_mb" {
+variable "LAMBDA_MEMORY_MB" {
   type = number
 
   validation {
-    condition     = var.lambda_memory_mb >= 1024
+    condition     = var.LAMBDA_MEMORY_MB >= 1024
     error_message = "Lambda scales CPU with memory; Next.js SSR under 1024 MB is CPU-starved."
   }
 }
 
-variable "db_max_acu" {
+variable "DB_MAX_ACU" {
   type = number
 
   validation {
-    condition     = var.db_max_acu >= 1 && var.db_max_acu <= 256
-    error_message = "db_max_acu must be between 1 and 256."
+    condition     = var.DB_MAX_ACU >= 1 && var.DB_MAX_ACU <= 256
+    error_message = "DB_MAX_ACU must be between 1 and 256."
   }
 }
 
-variable "db_seconds_until_auto_pause" {
+variable "DB_SECONDS_UNTIL_AUTO_PAUSE" {
   type = number
 
   validation {
-    condition     = var.db_seconds_until_auto_pause >= 300 && var.db_seconds_until_auto_pause <= 86400
-    error_message = "db_seconds_until_auto_pause must be 300-86400."
+    condition     = var.DB_SECONDS_UNTIL_AUTO_PAUSE >= 300 && var.DB_SECONDS_UNTIL_AUTO_PAUSE <= 86400
+    error_message = "DB_SECONDS_UNTIL_AUTO_PAUSE must be 300-86400."
   }
 }
 
-variable "github_subject_prefix" {
+variable "GITHUB_SUBJECT_PREFIX" {
   type = string
 
   validation {
-    condition     = can(regex("^repo:[^/]+@[0-9]+/[^/]+@[0-9]+$", var.github_subject_prefix))
-    error_message = "github_subject_prefix must look like repo:<owner>@<owner_id>/<repo>@<repo_id>."
+    condition     = can(regex("^repo:[^/]+@[0-9]+/[^/]+@[0-9]+$", var.GITHUB_SUBJECT_PREFIX))
+    error_message = "GITHUB_SUBJECT_PREFIX must look like repo:<owner>@<owner_id>/<repo>@<repo_id>."
   }
 }
 
-variable "domain_name" {
+variable "DOMAIN_NAME" {
   type    = string
   default = ""
 }
 
-variable "dns_extra_records" {
-  description = "Records carried over from the previous DNS host, keyed by any unique label. name is relative to domain_name, \"\" for the apex."
+variable "DNS_EXTRA_RECORDS" {
+  description = "Records carried over from the previous DNS host, keyed by any unique label. name is relative to DOMAIN_NAME, \"\" for the apex."
   type = map(object({
     name    = string
     type    = string
@@ -64,60 +64,60 @@ variable "dns_extra_records" {
 
   validation {
     condition = alltrue([
-      for r in values(var.dns_extra_records) : !(contains(["A", "AAAA", "CNAME"], r.type) && contains(["", "www"], r.name))
+      for r in values(var.DNS_EXTRA_RECORDS) : !(contains(["A", "AAAA", "CNAME"], r.type) && contains(["", "www"], r.name))
     ])
     error_message = "Apex and www A, AAAA and CNAME records point at CloudFront and cannot be carried over."
   }
 }
 
-variable "business_name" {
+variable "BUSINESS_NAME" {
   type = string
 }
 
-variable "business_phone" {
+variable "BUSINESS_PHONE" {
   type = string
 }
 
-variable "business_email" {
+variable "BUSINESS_EMAIL" {
   type = string
 }
 
-variable "business_address" {
+variable "BUSINESS_ADDRESS" {
   type = string
 }
 
-variable "media_host" {
+variable "MEDIA_HOST" {
   type = string
 }
 
-variable "turnstile_site_key" {
+variable "TURNSTILE_SITE_KEY" {
   type = string
 }
 
-variable "turnstile_secret" {
+variable "TURNSTILE_SECRET" {
   type      = string
   sensitive = true
 }
 
-variable "gtm_id" {
+variable "GTM_ID" {
   type = string
 }
 
-variable "calendly_url" {
+variable "CALENDLY_URL" {
   type = string
 }
 
-variable "lead_notification_email" {
+variable "LEAD_NOTIFICATION_EMAIL" {
   type = string
 }
 
-variable "ses_from_address" {
-  description = "From address for lead emails sent through SES. Must be on domain_name; empty turns SES off. Use a real Google Workspace mailbox so replies are delivered."
+variable "SES_FROM_ADDRESS" {
+  description = "From address for lead emails sent through SES. Must be on DOMAIN_NAME; empty turns SES off. Use a real Google Workspace mailbox so replies are delivered."
   type        = string
   default     = ""
 
   validation {
-    condition     = var.ses_from_address == "" || var.domain_name == "" || (endswith(lower(var.ses_from_address), "@${lower(var.domain_name)}") && can(regex("^[^@\\s]+@[^@\\s]+$", var.ses_from_address)))
-    error_message = "ses_from_address must be empty or one address on domain_name, e.g. nbest@<domain_name>. It is ignored while domain_name is empty."
+    condition     = var.SES_FROM_ADDRESS == "" || var.DOMAIN_NAME == "" || (endswith(lower(var.SES_FROM_ADDRESS), "@${lower(var.DOMAIN_NAME)}") && can(regex("^[^@\\s]+@[^@\\s]+$", var.SES_FROM_ADDRESS)))
+    error_message = "SES_FROM_ADDRESS must be empty or one address on DOMAIN_NAME, e.g. nbest@<DOMAIN_NAME>. It is ignored while DOMAIN_NAME is empty."
   }
 }

@@ -1,13 +1,13 @@
 output "name" {
-  value = var.name
+  value = var.NAME
 }
 
 output "business_name" {
-  value = var.business_name
+  value = var.BUSINESS_NAME
 }
 
 output "region" {
-  value = var.region
+  value = var.REGION
 }
 
 output "site_url" {

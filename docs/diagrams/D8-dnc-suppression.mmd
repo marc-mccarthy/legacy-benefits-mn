@@ -7,17 +7,21 @@ accDescr {
   TCPA a revocation must be honoured through any reasonable means, and friction on
   a stop request is itself the risk. The request is validated, the email is
   lowercased and the phone is reduced to its last ten digits, and the row is
-  written with a hashed address. That reduction is the one canonical form, shared
-  with the validation schemas, because storage and lookup once had separate
-  versions of it and a number written differently stayed contactable. On the
+  written with a hashed address. That reduction is the one canonical form, in
+  lib/compliance/phone.ts and shared by the validation schema, the write and the
+  lookup, because storage and lookup once had separate versions of it and a number
+  written differently stayed contactable; a data migration rewrote the older rows
+  into that form. The request reaches the Lambda through CloudFront like any other
+  API call. On the
   right, a later contact form submission is captured. Before anything is queued,
   the suppression check matches the submitted email or the submitted digits
   against that table. A match does not discard the submission: the person did fill
   in the form, so the lead is still stored as a record. What a match stops is the
-  outbox row, so nothing is delivered to the CRM or the dialer, and it stops the
-  acknowledgement email. The visitor still receives a success response, because
-  telling them they are suppressed would leak that someone else's record exists.
-  Releasing a suppressed lead is a human decision. A suppression row carries no
+  outbox row, so nothing is delivered to the CRM, and it stops the acknowledgement
+  email; the agency notification is still sent. The visitor still receives a 201
+  and the form shows the same success message either way. The JSON body does carry
+  a suppressed flag, which the form ignores. No code releases a suppressed lead or
+  sets handled_at on a request: both are done by hand. A suppression row carries no
   retention date, because it has to outlive the lead it suppresses.
 }
 
@@ -28,7 +32,7 @@ noTurnstile{{"No Turnstile, no identity check, by design"}}
 validateDnc{{"Validate the request"}}
 canonical["Lowercase the email, keep the last ten digits"]
 dncTable[("dnc_requests")]
-handled["A human actions it in the CRM and the dialer"]
+handled["A human actions it in the CRM and sets handled_at"]
 
 visitor([A later visitor])
 leadForm["Contact form"]
@@ -38,9 +42,9 @@ suppressionCheck{{"isSuppressed: match email or digits"}}
 leadsTable[("leads")]
 outboxTable[("crm_outbox")]
 confirmEmail["Acknowledgement email"]
-response["201, success either way"]
+response["201 either way, the form shows the same message"]
 drain["Outbox drain"]
-crm[MedicarePRO CRM and dialer]
+crm[MedicarePRO CRM]
 release["Release by hand, a human decision"]
 
 person --> optOutForm

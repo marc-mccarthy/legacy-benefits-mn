@@ -64,7 +64,7 @@ jobs:
       - name: Diagrams match their sources
         run: pnpm diagrams:check
 
-      - name: Docs reference only real paths and scripts
+      - name: Docs reference real paths and generated sections are current
         run: pnpm docs:check
 
       - run: bash scripts/app-env.test.sh

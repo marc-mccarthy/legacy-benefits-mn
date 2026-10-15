@@ -5,6 +5,45 @@ pre-commit:
       group:
         piped: true
         jobs:
+          - name: docs-generate
+            run: |
+              set -eu
+              dirty=$(git diff --name-only -- README.md CLAUDE.md AGENTS.md)
+              rewritten=$(pnpm --silent docs:generate)
+              [ -n "$rewritten" ] || exit 0
+              if ! git diff --quiet -- package.json app.env; then
+                echo "package.json or app.env has unstaged edits that the regenerated docs would describe. Stage or stash them." >&2
+                exit 1
+              fi
+              for file in $rewritten; do
+                if printf '%s\n' "$dirty" | grep -qxF "$file"; then
+                  echo "$file has unstaged edits and a stale generated block. Stage or stash them." >&2
+                  exit 1
+                fi
+              done
+              printf '%s\n' "$rewritten" | xargs git add --
+            fail_text: "Generated doc sections could not be refreshed and staged (see output above). Fix: stage or stash the unstaged file it names, or repair the marker error, then pnpm docs:generate. Bypass: git commit --no-verify"
+
+          - name: diagrams-build
+            glob:
+              - "src/lib/**"
+              - "src/api/**"
+              - "docs/diagrams/*.mmd"
+              - "docs/diagrams/SOURCES.md"
+              - "docs/diagrams/diagrams.manifest.json"
+              - "scripts/generate-diagrams.mjs"
+              - "scripts/generate-derived-diagrams.mjs"
+            exclude: "**/*.test.{ts,tsx}"
+            run: |
+              set -eu
+              if ! git diff --quiet -- src/lib src/api 'docs/diagrams/*.mmd' ':(exclude)docs/diagrams/D5-module-map.mmd' ':(exclude,glob)**/*.test.ts' ':(exclude,glob)**/*.test.tsx'; then
+                echo "Unstaged edits in diagram inputs (src/lib, src/api or a docs/diagrams .mmd). Stage or stash them." >&2
+                exit 1
+              fi
+              pnpm --silent diagrams:build
+              git add -- docs/diagrams/D5-module-map.mmd docs/diagrams/SOURCES.md docs/diagrams/diagrams.manifest.json
+            fail_text: "Diagram atlas could not be rebuilt and staged (see output above). Fix: stage or stash the unstaged input it names; for a new or removed src/lib or src/api module, edit GROUPS in scripts/generate-derived-diagrams.mjs; then pnpm diagrams:build. Bypass: git commit --no-verify"
+
           - name: prettier
             glob: "*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}"
             run: pnpm exec prettier --write {staged_files}
@@ -36,8 +75,22 @@ pre-commit:
           - name: drizzle
             run: pnpm exec drizzle-kit check
 
-          - name: docs
-            run: pnpm docs:check && pnpm diagrams:check
+          - name: docs-check
+            run: pnpm docs:check
+            fail_text: "A doc reference or generated section is stale. Fix: pnpm docs:generate, then repair any reference listed above. Bypass: git commit --no-verify"
+
+          - name: diagrams-check
+            glob:
+              - "src/lib/**"
+              - "src/api/**"
+              - "docs/diagrams/*.mmd"
+              - "docs/diagrams/SOURCES.md"
+              - "docs/diagrams/diagrams.manifest.json"
+              - "scripts/generate-diagrams.mjs"
+              - "scripts/generate-derived-diagrams.mjs"
+            exclude: "**/*.test.{ts,tsx}"
+            run: pnpm diagrams:check
+            fail_text: "A diagram no longer matches its sources or the modules it maps. Fix: pnpm diagrams:build. Bypass: git commit --no-verify"
 
           - name: terraform-fmt-check
             glob: "*.tf"
@@ -62,8 +115,12 @@ pre-push:
       run: pnpm format:check
     - name: drizzle
       run: pnpm exec drizzle-kit check
-    - name: docs
-      run: pnpm docs:check && pnpm diagrams:check
+    - name: docs-check
+      run: pnpm docs:check
+      fail_text: "A doc reference or generated section is stale. Fix: pnpm docs:generate, then repair any reference listed above. Bypass: git push --no-verify"
+    - name: diagrams-check
+      run: pnpm diagrams:check
+      fail_text: "A diagram no longer matches its sources or the modules it maps. Fix: pnpm diagrams:build. Bypass: git push --no-verify"
     - name: terraform-fmt-check
       run: terraform fmt -check -recursive infra/
     - name: terraform-validate
@@ -84,8 +141,12 @@ verify-all:
       run: pnpm format:check
     - name: drizzle
       run: pnpm exec drizzle-kit check
-    - name: docs
-      run: pnpm docs:check && pnpm diagrams:check
+    - name: docs-check
+      run: pnpm docs:check
+      fail_text: "A doc reference or generated section is stale. Fix: pnpm docs:generate, then repair any reference listed above. Re-run: pnpm check"
+    - name: diagrams-check
+      run: pnpm diagrams:check
+      fail_text: "A diagram no longer matches its sources or the modules it maps. Fix: pnpm diagrams:build. Re-run: pnpm check"
     - name: terraform-fmt-check
       run: terraform fmt -check -recursive infra/
     - name: terraform-validate

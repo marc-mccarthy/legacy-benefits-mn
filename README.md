@@ -77,28 +77,32 @@ stored, never queued, and receive the same response.
 to be here and is still read by `src/lib/leads/service.ts`; rotating it severs
 every existing hash, and nothing reports that.
 
-## The deployed Lambda has no route to the public internet
+## The deployed Lambda reaches the internet over IPv6 only
 
-Observed in `infra/`: the Lambda runs in private subnets whose route table
-carries no `0.0.0.0/0` route, and there is no NAT gateway, internet gateway or
-VPC endpoint. Three things in the application therefore cannot succeed in the
-deployed environment:
+Observed in `infra/main.tf` and `infra/compute.tf`: the API Lambda runs in
+private subnets whose route table carries one internet route, `::/0` through an
+egress-only internet gateway, plus an S3 gateway endpoint. There is no NAT
+gateway and no `0.0.0.0/0` route. Outbound calls therefore succeed only to hosts
+that answer over IPv6. The application uses default endpoints with no dual-stack
+configuration, so these calls are unverified in the deployed environment:
 
 - **SES** — lead notification and confirmation email
 - **Cloudflare Turnstile** — token verification at
   `challenges.cloudflare.com`
 - **CRM webhook delivery** — any transport that posts outward
 
-A deployed form submission stores the lead and then fails to notify anyone. Lead
-data is not lost; the notification is. Adding a network path is an infrastructure
-change nobody has made.
+Lead data is stored before any of them runs. Adding IPv4 egress is an
+infrastructure change nobody has made.
 
 ## Deployment
 
-`.github/workflows/deploy.yml` builds the site, uploads `out/` to S3, packs
-`api-bundle/` as the API function, and invalidates CloudFront. `infra/` holds the
-Terraform. Nothing in this repository applies it.
+`.github/workflows/deploy.yml` runs on every push to `main`. It builds the site
+and packs `api-bundle/`, applies `infra/` with Terraform (S3 state, plan guard
+against unlisted destroys), uploads the API and migration packages, runs the
+migration function, syncs `out/`, `public/media` and `public/video` to S3, and
+invalidates CloudFront. `.github/workflows/terraform.yml` validates `infra/` on
+pull requests.
 
 CloudFront serves the static site from S3 by default and routes `/api/*` to the
 Lambda. A CloudFront Function rewrites extensionless paths onto the `.html` files
-the export writes, and `403` and `404` from S3 both map to `/404.html`.
+the export writes, and a `404` from S3 maps to `/404.html`.

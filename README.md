@@ -34,10 +34,14 @@ redeploying.
 ## Getting started
 
 ```bash
-cp .env.example .env
+op signin
 pnpm install
 pnpm dev
 ```
+
+Env comes only from the committed `app.env`, which holds `op://` references.
+`scripts/with-env.sh` resolves them with `op run` and refuses to start if any
+`.env*` file exists. `infra/tf.sh` runs `terraform plan` from the same file.
 
 No database is needed to run or build the site. One is needed only to submit a
 form locally:

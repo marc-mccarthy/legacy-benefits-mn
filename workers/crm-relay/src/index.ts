@@ -1,3 +1,5 @@
+import { handleLeadBody } from "./lead";
+
 export interface Env {
   RELAY_SECRET: string;
   MEDICAREPRO_API_TOKEN: string;
@@ -52,7 +54,12 @@ async function handleLead(request: Request, env: Env): Promise<Response> {
   if (!(await isAuthorized(request, env.RELAY_SECRET))) {
     return json({ error: "Unauthorized" }, 401);
   }
-  return json({ error: "Not implemented" }, 501);
+  const body: unknown = await request.json().catch(() => undefined);
+  const { status, body: reply } = await handleLeadBody(
+    body,
+    env.MEDICAREPRO_API_TOKEN,
+  );
+  return json(reply, status);
 }
 
 const relay = {

@@ -93,7 +93,8 @@
       ],
       "brief": "Implement the 5-step /lead flow from docs/plans/medicarepro-crm-leads.md in workers/crm-relay/src/ to pass the locked tests.",
       "token_estimate": 45000,
-      "status": "planned"
+      "status": "committed",
+      "checks": "pass"
     },
     {
       "id": "T4",

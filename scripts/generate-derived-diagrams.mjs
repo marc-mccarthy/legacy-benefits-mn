@@ -63,6 +63,7 @@ const GROUPS = [
       ["lib/leads/service.ts", "leadService", "ours"],
       ["lib/leads/schema.ts", "leadSchema", "ours"],
       ["lib/leads/outbox.ts", "outbox", "ours"],
+      ["lib/leads/interest-labels.ts", "interestLabels", "ours"],
       ["lib/phone-format.ts", "phoneFormat", "ours"],
     ],
   },

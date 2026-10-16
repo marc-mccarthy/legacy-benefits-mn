@@ -72,7 +72,8 @@
       ],
       "brief": "Create workers/crm-relay/src/map.ts; move INTEREST_LABELS to src/lib/leads/interest-labels.ts and import it from src/lib/email/index.ts and map.ts.",
       "token_estimate": 20000,
-      "status": "planned"
+      "status": "committed",
+      "checks": "pass"
     },
     {
       "id": "T3",

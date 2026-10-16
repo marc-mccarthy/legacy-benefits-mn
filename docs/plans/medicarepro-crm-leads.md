@@ -23,8 +23,13 @@ Out of scope: the Scope of Appointment form, and changes to the MCP server.
   `externalId`, and **drops `indNoteBody` silently**.
 - `POST /individuals/{id}/notes` `{"indNoteType":"note","indNoteBody":"..."}` adds a note.
 - `GET /individuals/by-externalid?externalId=<key>` finds a contact by our key.
-- `DELETE /individuals/{id}` is a soft delete. It is unknown whether the duplicate check matches
-  soft-deleted contacts.
+- `DELETE /individuals/{id}` is a soft delete. The duplicate check ignores soft-deleted contacts:
+  after the 2026-10-15 TEST contact was deleted, the same person created a new one (verified
+  2026-10-16).
+- Relay live, 2026-10-16: `https://legacy-benefits-crm-relay.nbest-fab.workers.dev` (URL and
+  secret in `op://Secrets/legacybenefitsmn`, fields `CRM_RELAY_URL`, `CRM_RELAY_SECRET`). The fixed
+  TEST person is contact 3787559: created once, a same-key resend added no note, and a new
+  submission added the "filled out again" note.
 - MedicarePRO has no IPv6 address. The website Lambda has IPv6-only egress
   (`infra/main.tf:71-80`, no NAT), so it cannot call MedicarePRO directly. Cloudflare Workers
   are reachable over IPv6 (`*.workers.dev` has AAAA records) and can reach MedicarePRO; the MCP
@@ -127,11 +132,11 @@ Ref: <idempotencyKey>
 | ----------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
 | `MEDICAREPRO_API_TOKEN`                         | `op://Secrets/MedicarePRO CRM MCP Server Nate/MEDICAREPRO_API_TOKEN` | relay Worker secret only                              |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | same item                                                            | relay deploy only (has Workers Scripts Write)         |
-| `CRM_RELAY_SECRET`                              | new field in `op://Development/legacy-benefits-mn`                   | relay Worker secret and Lambda env (TF sensitive var) |
-| `CRM_RELAY_URL`                                 | new field in `op://Development/legacy-benefits-mn`                   | Lambda env                                            |
+| `CRM_RELAY_SECRET`                              | field in `op://Secrets/legacybenefitsmn`                             | relay Worker secret and Lambda env (TF sensitive var) |
+| `CRM_RELAY_URL`                                 | field in `op://Secrets/legacybenefitsmn`                             | Lambda env                                            |
 
-The 1Password service account reads the Secrets vault today. The relay deploy runs locally
-through `op run` and is not part of `deploy.yml`.
+The relay deploy runs locally with `bash workers/crm-relay/deploy.sh`,
+which reads 1Password by item ID and is not part of `deploy.yml`.
 
 ## Tasks (in order, one commit each)
 
@@ -193,9 +198,5 @@ through `op run` and is not part of `deploy.yml`.
 
 - Task 2 is unproven until it runs. The NAT fallback costs about $33/mo.
 - The 5-minute drain keeps Aurora from pausing, up to about $44/mo. The owner accepted it.
-- The duplicate check against soft-deleted contacts is untested. Check it in task 4 if the
-  TEST record is ever deleted.
-- `POST /individuals/{id}/lead` is untested live. Task 4 covers it.
-- `medicarepro-crm-mcp-server/.env.nate` points at an archived 1Password item
-  (`op://Development/nrgktz22l6zz2mjurdownzeoki/…`). It is out of scope here; the owner should
-  repoint it at the Secrets vault item.
+- `app.env` must point at `op://Secrets/legacybenefitsmn` (the item moved vaults), and the CI
+  service account needs read access to the Secrets vault. Owner to confirm before task 2.

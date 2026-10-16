@@ -25,7 +25,7 @@
         },
         {
           "id": "S2",
-          "validations": ["sh workers/crm-relay/smoke.sh"]
+          "validations": ["bash workers/crm-relay/smoke.sh"]
         }
       ],
       "gate": "pass"
@@ -107,12 +107,13 @@
       "paths": [
         "workers/crm-relay/deploy.sh",
         "workers/crm-relay/smoke.sh",
-        "workers/crm-relay/relay.env"
+        "docs/plans/medicarepro-crm-leads.md"
       ],
-      "accept": ["sh workers/crm-relay/smoke.sh"],
+      "accept": ["bash workers/crm-relay/smoke.sh"],
       "brief": "Inline in the main session: deploy script through op run and pnpm dlx wrangler, Worker secrets, smoke script for /health and auth, one live /lead call with the fixed TEST person checked by Marc in the CRM.",
       "token_estimate": 20000,
-      "status": "planned"
+      "status": "committed",
+      "checks": "pass"
     }
   ]
 }

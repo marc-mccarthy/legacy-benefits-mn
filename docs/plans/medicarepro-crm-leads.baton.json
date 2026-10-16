@@ -1,0 +1,116 @@
+{
+  "slug": "medicarepro-crm-leads",
+  "milestones": [
+    {
+      "id": "M1",
+      "goal": "crm-relay Worker deployed in Nate's Cloudflare account: authenticated POST /lead creates a MedicarePRO contact and lead, or adds a dated repeat note to an existing contact, with safe retries",
+      "inventory": [
+        "relay health route",
+        "relay bearer auth",
+        "field mapping",
+        "shared interest labels",
+        "create flow",
+        "repeat note flow",
+        "retry lookup",
+        "error classification",
+        "deploy",
+        "live test"
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "validations": [
+            "pnpm exec vitest run --project unit tests/workers/crm-relay"
+          ]
+        },
+        {
+          "id": "S2",
+          "validations": ["sh workers/crm-relay/smoke.sh"]
+        }
+      ],
+      "gate": "pass"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone": "M1",
+      "title": "Relay scaffold: relay health route and relay bearer auth",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "api-backend",
+      "route": "claude",
+      "paths": ["workers/crm-relay/"],
+      "locked_tests": ["tests/workers/crm-relay/index.test.ts"],
+      "accept": [
+        "pnpm exec vitest run --project unit tests/workers/crm-relay/index.test.ts",
+        "pnpm exec eslint workers tests/workers/crm-relay/index.test.ts"
+      ],
+      "brief": "Create workers/crm-relay/src/index.ts and workers/crm-relay/wrangler.jsonc to pass the locked tests.",
+      "token_estimate": 15000,
+      "status": "committed",
+      "checks": "pass"
+    },
+    {
+      "id": "T2",
+      "milestone": "M1",
+      "title": "Field mapping and shared interest labels",
+      "kind": "edit",
+      "difficulty": "medium",
+      "persona": "api-backend",
+      "route": "claude",
+      "deps": ["T1"],
+      "paths": [
+        "workers/crm-relay/src/map.ts",
+        "src/lib/leads/interest-labels.ts",
+        "src/lib/email/index.ts"
+      ],
+      "locked_tests": ["tests/workers/crm-relay/map.test.ts"],
+      "accept": [
+        "pnpm exec vitest run --project unit tests/workers/crm-relay/map.test.ts tests/lib/email",
+        "pnpm exec eslint workers src/lib/leads/interest-labels.ts src/lib/email/index.ts"
+      ],
+      "brief": "Create workers/crm-relay/src/map.ts; move INTEREST_LABELS to src/lib/leads/interest-labels.ts and import it from src/lib/email/index.ts and map.ts.",
+      "token_estimate": 20000,
+      "status": "planned"
+    },
+    {
+      "id": "T3",
+      "milestone": "M1",
+      "title": "POST /lead: create flow, repeat note flow, retry lookup, error classification",
+      "kind": "edit",
+      "difficulty": "hard",
+      "persona": "api-backend",
+      "route": "claude",
+      "deps": ["T2"],
+      "paths": ["workers/crm-relay/src/"],
+      "locked_tests": ["tests/workers/crm-relay/lead.test.ts"],
+      "accept": [
+        "pnpm exec vitest run --project unit tests/workers/crm-relay",
+        "pnpm exec eslint workers tests/workers",
+        "pnpm exec tsc --noEmit"
+      ],
+      "brief": "Implement the 5-step /lead flow from docs/plans/medicarepro-crm-leads.md in workers/crm-relay/src/ to pass the locked tests.",
+      "token_estimate": 45000,
+      "status": "planned"
+    },
+    {
+      "id": "T4",
+      "milestone": "M1",
+      "title": "Relay deploy and live test with the fixed TEST person",
+      "kind": "edit",
+      "difficulty": "hard",
+      "route": "claude",
+      "deps": ["T3"],
+      "paths": [
+        "workers/crm-relay/deploy.sh",
+        "workers/crm-relay/smoke.sh",
+        "workers/crm-relay/relay.env"
+      ],
+      "accept": ["sh workers/crm-relay/smoke.sh"],
+      "brief": "Inline in the main session: deploy script through op run and pnpm dlx wrangler, Worker secrets, smoke script for /health and auth, one live /lead call with the fixed TEST person checked by Marc in the CRM.",
+      "token_estimate": 20000,
+      "status": "planned"
+    }
+  ]
+}

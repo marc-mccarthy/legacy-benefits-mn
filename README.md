@@ -39,6 +39,7 @@ src/
 ├── content/
 └── lib/
 tests/
+workers/
 ```
 
 <!-- /generated:layout -->

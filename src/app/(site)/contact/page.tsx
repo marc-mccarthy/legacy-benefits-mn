@@ -75,6 +75,7 @@ export default async function ContactPage() {
         <div>
           <ContactForm
             consentText={tcpaConsentText(brand, phone ?? undefined)}
+            turnstileSiteKey={process.env["NEXT_PUBLIC_TURNSTILE_SITE_KEY"]}
           />
         </div>
       </Container>

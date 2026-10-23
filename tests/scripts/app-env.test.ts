@@ -64,7 +64,9 @@ describe("app.env", () => {
       expect(ref(a), a).toBeDefined();
       expect(ref(a), `${a} vs ${b}`).toBe(ref(b));
     }
-    expect(ref("AWS_REGION")).toBe('"op://Secrets/AWS Credentials/AWS_REGION"');
+    expect(ref("AWS_REGION")).toBe(
+      '"op://Legacy Benefits Group/AWS Credentials/AWS_REGION"',
+    );
   });
 
   it("selects exactly the ten build keys with the deploy build filter", () => {

@@ -2,6 +2,7 @@ import "server-only";
 
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { CMIP_DESIGNATION_NOTICE } from "@/lib/compliance/disclosures";
+import { INTEREST_LABELS } from "@/lib/leads/interest-labels";
 
 let client: SESv2Client | undefined;
 
@@ -69,14 +70,6 @@ type LeadSummary = {
   interest?: string;
   message?: string;
   consent?: boolean;
-};
-
-const INTEREST_LABELS: Record<string, string> = {
-  "medicare-advantage": "Medicare Advantage (Part C)",
-  supplement: "Medicare Supplement (Medigap)",
-  "part-d": "Prescription drug coverage (Part D)",
-  life: "Life insurance",
-  other: "Something else",
 };
 
 const HTML_ESCAPES: Record<string, string> = {

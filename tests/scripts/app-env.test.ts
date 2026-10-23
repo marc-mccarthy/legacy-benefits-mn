@@ -65,7 +65,7 @@ describe("app.env", () => {
       expect(ref(a), `${a} vs ${b}`).toBe(ref(b));
     }
     expect(ref("AWS_REGION")).toBe(
-      '"op://Legacy Benefits Group/AWS Credentials/AWS_REGION"',
+      '"op://Legacy Benefits Group/Legacy Benefits Group/AWS_REGION"',
     );
   });
 

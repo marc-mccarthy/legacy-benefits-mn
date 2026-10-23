@@ -27,6 +27,7 @@ export default defineConfig({
         test: {
           name: "unit",
           environment: "node",
+          setupFiles: ["tests/setup/git-env.ts"],
           include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
           exclude: ["**/*.int.test.ts", "**/node_modules/**", ...domTests],
         },
@@ -36,6 +37,7 @@ export default defineConfig({
         test: {
           name: "unit-dom",
           environment: "jsdom",
+          setupFiles: ["tests/setup/git-env.ts"],
           include: domTests,
         },
       },
@@ -44,6 +46,7 @@ export default defineConfig({
         test: {
           name: "integration",
           environment: "node",
+          setupFiles: ["tests/setup/git-env.ts"],
           include: ["tests/**/*.int.test.ts"],
           fileParallelism: false,
         },

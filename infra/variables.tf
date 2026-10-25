@@ -121,3 +121,78 @@ variable "SES_FROM_ADDRESS" {
     error_message = "SES_FROM_ADDRESS must be empty or one address on DOMAIN_NAME, e.g. nbest@<DOMAIN_NAME>. It is ignored while DOMAIN_NAME is empty."
   }
 }
+
+variable "GITHUB_BRANCH" {
+  description = "Branch the GitHub OIDC deploy and terraform roles trust."
+  type        = string
+
+  validation {
+    condition     = contains(["main", "develop"], var.GITHUB_BRANCH)
+    error_message = "GITHUB_BRANCH must be main or develop."
+  }
+}
+
+variable "ROUTE53_ZONE_NAME" {
+  description = "Existing Route 53 zone that holds this stack's records. Empty, or equal to DOMAIN_NAME, makes this stack create its own zone."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.ROUTE53_ZONE_NAME == "" || var.DOMAIN_NAME == var.ROUTE53_ZONE_NAME || endswith(var.DOMAIN_NAME, ".${var.ROUTE53_ZONE_NAME}")
+    error_message = "ROUTE53_ZONE_NAME must be empty, equal to DOMAIN_NAME, or a parent domain of it."
+  }
+}
+
+variable "CRM_TRANSPORT" {
+  description = "How leads reach the CRM: relay posts to CRM_RELAY_URL, mock only logs."
+  type        = string
+
+  validation {
+    condition     = contains(["relay", "mock"], var.CRM_TRANSPORT)
+    error_message = "CRM_TRANSPORT must be relay or mock."
+  }
+}
+
+variable "CRM_RELAY_URL" {
+  type    = string
+  default = ""
+
+  validation {
+    condition     = var.CRM_TRANSPORT != "relay" || startswith(var.CRM_RELAY_URL, "https://")
+    error_message = "CRM_RELAY_URL must start with https:// when CRM_TRANSPORT is relay."
+  }
+}
+
+variable "CRM_RELAY_SECRET" {
+  type      = string
+  default   = ""
+  sensitive = true
+
+  validation {
+    condition     = var.CRM_TRANSPORT != "relay" || length(var.CRM_RELAY_SECRET) >= 16
+    error_message = "CRM_RELAY_SECRET must be at least 16 characters when CRM_TRANSPORT is relay."
+  }
+}
+
+variable "CRM_INBOX_ENABLED" {
+  description = "Turns on the dev-only CRM inbox route that stands in for the relay."
+  type        = bool
+  default     = false
+}
+
+variable "BASIC_AUTH_USER" {
+  type    = string
+  default = ""
+}
+
+variable "BASIC_AUTH_PASSWORD" {
+  description = "With BASIC_AUTH_USER, puts HTTP basic auth and noindex on the site pages. Both empty turns it off."
+  type        = string
+  default     = ""
+  sensitive   = true
+
+  validation {
+    condition     = (var.BASIC_AUTH_USER == "") == (var.BASIC_AUTH_PASSWORD == "") && (var.BASIC_AUTH_PASSWORD == "" || length(var.BASIC_AUTH_PASSWORD) >= 12)
+    error_message = "BASIC_AUTH_USER and BASIC_AUTH_PASSWORD must be both empty or both set, and the password at least 12 characters."
+  }
+}

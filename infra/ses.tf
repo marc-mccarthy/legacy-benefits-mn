@@ -16,7 +16,7 @@ resource "aws_sesv2_email_identity" "sender" {
 resource "aws_route53_record" "ses_dkim" {
   count = local.use_ses ? 3 : 0
 
-  zone_id = aws_route53_zone.this[0].zone_id
+  zone_id = local.zone_id
   name    = "${aws_sesv2_email_identity.sender[0].dkim_signing_attributes[0].tokens[count.index]}._domainkey.${var.DOMAIN_NAME}"
   type    = "CNAME"
   ttl     = 1800

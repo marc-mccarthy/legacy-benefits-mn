@@ -33,6 +33,11 @@ locals {
   db_name    = replace(var.NAME, "-", "_")
   use_domain = var.DOMAIN_NAME != ""
   site_url   = local.use_domain ? "https://${var.DOMAIN_NAME}" : "https://${aws_cloudfront_distribution.this.domain_name}"
+
+  zone_name   = var.ROUTE53_ZONE_NAME != "" ? var.ROUTE53_ZONE_NAME : var.DOMAIN_NAME
+  create_zone = local.use_domain && local.zone_name == var.DOMAIN_NAME
+  with_www    = local.create_zone
+  basic_auth  = var.BASIC_AUTH_USER != "" ? base64encode("${var.BASIC_AUTH_USER}:${var.BASIC_AUTH_PASSWORD}") : ""
 }
 
 resource "aws_vpc" "this" {

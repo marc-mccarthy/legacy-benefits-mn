@@ -53,3 +53,7 @@ output "acm_validation_records" {
     for dvo in flatten(aws_acm_certificate.this[*].domain_validation_options) : dvo.resource_record_name => dvo.resource_record_value
   }
 }
+
+output "route53_zone_id" {
+  value = local.use_domain ? local.zone_id : null
+}

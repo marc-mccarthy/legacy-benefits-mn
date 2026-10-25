@@ -27,7 +27,7 @@ describe("app.env", () => {
     const tfVarKeys = keys
       .filter((k) => k.startsWith("TF_VAR_"))
       .map((k) => k.slice("TF_VAR_".length));
-    expect(tfVariables).toHaveLength(19);
+    expect(tfVariables).toHaveLength(27);
     expect([...tfVarKeys].sort()).toEqual([...tfVariables].sort());
   });
 
@@ -59,6 +59,9 @@ describe("app.env", () => {
         (k): [string, string] => [`NEXT_PUBLIC_${k}`, `TF_VAR_${k}`],
       ),
       ["AWS_REGION", "TF_VAR_REGION"],
+      ["CRM_RELAY_SECRET", "TF_VAR_CRM_RELAY_SECRET"],
+      ["CRM_RELAY_URL", "TF_VAR_CRM_RELAY_URL"],
+      ["CRM_TRANSPORT", "TF_VAR_CRM_TRANSPORT"],
     ];
     for (const [a, b] of pairs) {
       expect(ref(a), a).toBeDefined();

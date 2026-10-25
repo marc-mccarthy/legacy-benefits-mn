@@ -97,6 +97,23 @@ describe("when CRM_INBOX_ENABLED is not true", () => {
     },
   );
 
+  it("POST answers 404 before checking the bearer", async () => {
+    vi.stubEnv("CRM_INBOX_ENABLED", undefined);
+
+    const wrong = await POST(post(validBody(), "Bearer wrong"));
+    const missing = await POST(post(validBody()));
+
+    expect(wrong.status).toBe(404);
+    expect(missing.status).toBe(404);
+  });
+
+  it("GET answers 404 before checking the bearer", async () => {
+    vi.stubEnv("CRM_INBOX_ENABLED", undefined);
+
+    expect((await GET(get("Bearer wrong"))).status).toBe(404);
+    expect((await GET(get())).status).toBe(404);
+  });
+
   it("GET answers 404", async () => {
     vi.stubEnv("CRM_INBOX_ENABLED", undefined);
 
@@ -126,15 +143,16 @@ describe("POST /api/crm-inbox/lead", () => {
     expect(db.insert).not.toHaveBeenCalled();
   });
 
-  it.each([["Bearer sec"], ["Bearer secret-x"], ["Basic relay-secret"]])(
-    "answers 401 for %s",
-    async (header) => {
-      const res = await POST(post(validBody(), header));
+  it.each([
+    ["Bearer relay"],
+    ["Bearer relay-secret-x"],
+    ["Basic relay-secret"],
+  ])("answers 401 for %s", async (header) => {
+    const res = await POST(post(validBody(), header));
 
-      expect(res.status).toBe(401);
-      expect(db.insert).not.toHaveBeenCalled();
-    },
-  );
+    expect(res.status).toBe(401);
+    expect(db.insert).not.toHaveBeenCalled();
+  });
 
   it.each([
     ["a body without a lead", { idempotencyKey: "k", attempt: 1 }],

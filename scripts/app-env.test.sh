@@ -89,6 +89,17 @@ fresh
 assert "APP_ENV=staging refused" "$(APP_ENV=staging with_env true)" 1
 
 fresh
+set +e
+err=$(cd "$tmp/w" && env -u CI APP_ENV=staging PATH="$tmp/bin:$PATH" sh "$repo/scripts/with-env.sh" true 2>&1 >/dev/null)
+set -e
+assert "APP_ENV=staging error text" "$err" "with-env: APP_ENV must be prod or dev"
+
+fresh
+rm -f "$tmp/captured"
+assert "empty APP_ENV selects prod" "$(APP_ENV='' with_env true)" 0
+assert "empty APP_ENV passes no Dev item to op" "$(grep -c 'Legacy Benefits Group Dev' "$tmp/captured" || true)" 0
+
+fresh
 touch "$tmp/w/.env"
 set +e
 (cd "$tmp/w" && CI=true PATH="$tmp/bin:$PATH" sh "$repo/scripts/with-env.sh" true) >/dev/null 2>&1

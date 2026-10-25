@@ -2,9 +2,7 @@
 
 Created 2026-10-25. Last update 2026-10-25.
 
-This document lists improvements found while adding the develop environment that were deliberately not made. Nothing in it is implemented, and each item is for the owner to decide later.
-
-Items are ordered by severity, highest first.
+This document lists improvements found while adding the develop environment that were deliberately not made, ordered by severity with the highest first. Nothing in it is implemented, and each item is for the owner to decide later.
 
 ## Dev Terraform role can run admin Terraform on the whole account
 
@@ -22,11 +20,11 @@ Items are ordered by severity, highest first.
 
 ## Branch protection
 
-**Evidence.** `main` has no branch protection. This was verified on 2026-10-24. The CI workflow is `.github/workflows/ci.yml` and runs on pull requests.
+**Evidence.** `main` has no branch protection. This was verified on 2026-10-24. The CI workflow is `.github/workflows/ci.yml` and runs on pull requests (`.github/workflows/ci.yml:3-4`).
 
 **What would change.** Require the CI workflow to pass on `develop`. Require a pull request from `develop` into `main`. Block force pushes and deletion on both.
 
-**Why deferred.** It is a repository setting, not a code change. It also needs the owner to decide who may push directly. It matters more once the first item is not fixed in another way.
+**Why deferred.** It is a repository setting, not a code change. It also needs the owner to decide who may push directly. It matters most if the first item stays as is.
 
 ## Outbound IPv4 from the Lambda needs a NAT gateway
 
@@ -46,7 +44,7 @@ Items are ordered by severity, highest first.
 
 ## Aurora and a VPC for a few small tables
 
-**Evidence.** The data layer is an Aurora Serverless v2 cluster (`infra/main.tf:150-166`) with a subnet group, two security groups, a VPC and a migrate Lambda (`infra/compute.tf:259`). The schema is five small tables across the three files in `drizzle/`: leads, DNC requests, SOA submissions, the CRM outbox and the CRM inbox.
+**Evidence.** The data layer is an Aurora Serverless v2 cluster (`infra/main.tf:150-166`) with a subnet group, two security groups, a VPC and a migrate Lambda (`infra/compute.tf:259`). The schema is five small tables, created in two of the three migrations in `drizzle/`: leads, DNC requests, SOA submissions, the CRM outbox and the CRM inbox.
 
 **What would change.** DynamoDB would remove the VPC, the subnets, the security groups, the egress gateway and the migrate function. It would also remove the NAT question above.
 
@@ -86,7 +84,7 @@ Items are ordered by severity, highest first.
 
 ## The CRM relay Worker is deployed by hand
 
-**Evidence.** `workers/crm-relay/deploy.sh:9-10` reads the Worker's items from the owner's personal vault named Secrets. The CI service account sees only the vault `Legacy Benefits Group`, so it cannot read them. The Worker is not part of any workflow.
+**Evidence.** `workers/crm-relay/deploy.sh:8-9` reads the Worker's items from the owner's personal vault named Secrets. The CI service account sees only the vault `Legacy Benefits Group`, so it cannot read them. The Worker is not part of any workflow.
 
 **What would change.** Deploy the Worker from CI with a Cloudflare token held in the `Legacy Benefits Group` vault. Until then, the owner must copy the Worker URL and secret into the `Legacy Benefits Group` item as `CRM_RELAY_URL` and `CRM_RELAY_SECRET` before prod switches `CRM_TRANSPORT` to `relay`. The prod env file already points at both fields (`app.env:8-10`).
 
@@ -104,7 +102,7 @@ Items are ordered by severity, highest first.
 
 ## Mismatched env and branch fails late
 
-**Evidence.** The resolve job maps `env` to a branch (`.github/workflows/deploy.yml:61-70`). The OIDC subject comes from the branch the workflow was started on. A manual run whose `env` does not match that branch is refused when the terraform job assumes its role (`.github/workflows/deploy.yml:257`). That is after the build job. The commit ancestry check in the build job (`.github/workflows/deploy.yml:104-112`) catches some mismatches, but not one where the commit is on both branches.
+**Evidence.** The resolve job maps `env` to a branch (`.github/workflows/deploy.yml:61-70`). The OIDC subject comes from the branch the workflow was started on. A manual run whose `env` does not match that branch is refused when the terraform job assumes its role (`.github/workflows/deploy.yml:257`). That is after the build job. The commit ancestry check in the build job (`.github/workflows/deploy.yml:105-112`) catches some mismatches, but not one where the commit is on both branches.
 
 **What would change.** Add a check to the resolve job that compares `github.ref_name` with the branch for the chosen env and fails at once with a clear message.
 

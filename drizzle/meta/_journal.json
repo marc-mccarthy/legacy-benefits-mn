@@ -15,6 +15,13 @@
       "when": 1788918723740,
       "tag": "0001_canonicalise_dnc_phone",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792907326834,
+      "tag": "0002_crm_inbox",
+      "breakpoints": true
     }
   ]
 }

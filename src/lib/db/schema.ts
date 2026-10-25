@@ -110,8 +110,18 @@ export const crmOutbox = pgTable(
   (t) => [index("crm_outbox_claim_idx").on(t.status, t.nextAttemptAt)],
 );
 
+export const crmInbox = pgTable("crm_inbox", {
+  id: serial("id").primaryKey(),
+  idempotencyKey: text("idempotency_key").notNull().unique(),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+  receivedAt: timestamp("received_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export type Lead = typeof leads.$inferSelect;
 export type NewLead = typeof leads.$inferInsert;
 export type OutboxRow = typeof crmOutbox.$inferSelect;
+export type InboxRow = typeof crmInbox.$inferSelect;
 export type SoaSubmission = typeof soaSubmissions.$inferSelect;
 export type DncRequest = typeof dncRequests.$inferSelect;

@@ -48,6 +48,7 @@ const GROUPS = [
       ["api/do-not-contact.ts", "dncRoute", "ours"],
       ["api/jobs-outbox.ts", "jobsRoute", "ours"],
       ["api/health.ts", "healthRoute", "ours"],
+      ["api/crm-inbox.ts", "crmInboxRoute", "ours"],
     ],
   },
   {
@@ -55,6 +56,7 @@ const GROUPS = [
     members: [
       ["lib/security/turnstile.ts", "turnstile", "guard"],
       ["lib/security/request.ts", "request", "guard"],
+      ["lib/security/bearer.ts", "bearer", "guard"],
     ],
   },
   {

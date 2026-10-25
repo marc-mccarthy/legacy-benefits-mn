@@ -1,6 +1,12 @@
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
-import { crmOutbox, dncRequests, leads, soaSubmissions } from "@/lib/db/schema";
+import {
+  crmInbox,
+  crmOutbox,
+  dncRequests,
+  leads,
+  soaSubmissions,
+} from "@/lib/db/schema";
 
 function indexNames(table: Parameters<typeof getTableConfig>[0]): string[] {
   return getTableConfig(table)
@@ -27,6 +33,7 @@ describe("table names", () => {
     expect(getTableConfig(soaSubmissions).name).toBe("soa_submissions");
     expect(getTableConfig(dncRequests).name).toBe("dnc_requests");
     expect(getTableConfig(crmOutbox).name).toBe("crm_outbox");
+    expect(getTableConfig(crmInbox).name).toBe("crm_inbox");
   });
 });
 

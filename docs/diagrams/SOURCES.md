@@ -431,7 +431,7 @@ accDescr {
   and the one that decides whether a person may be contacted are drawn as gates, because their
   job is to reject. The database schema is drawn as regulated data, because that is what it
   declares. Test files are excluded: a test importing a module says nothing about how the
-  application is wired. 41 modules and 56 imports are drawn.
+  application is wired. 43 modules and 61 imports are drawn.
 }
 
 subgraph Routehandlers ["Route handlers"]
@@ -441,11 +441,13 @@ subgraph Routehandlers ["Route handlers"]
   dncRoute["do-not-contact.ts"]
   jobsRoute["jobs-outbox.ts"]
   healthRoute["health.ts"]
+  crmInboxRoute["crm-inbox.ts"]
 end
 
 subgraph Requestsafety ["Request safety"]
   turnstile["security/turnstile.ts"]
   request["security/request.ts"]
+  bearer["security/bearer.ts"]
 end
 
 subgraph Leadpipeline ["Lead pipeline"]
@@ -496,6 +498,7 @@ subgraph Outboundandconfiguration ["Outbound and configuration"]
   utils["utils.ts"]
 end
 
+apiRouter --> crmInboxRoute
 apiRouter --> dncRoute
 apiRouter --> healthRoute
 apiRouter --> jobsRoute
@@ -506,6 +509,9 @@ crm --> crmTypes
 crm --> env
 crm --> mock
 crm --> relay
+crmInboxRoute --> bearer
+crmInboxRoute --> db
+crmInboxRoute --> env
 db --> dbSchema
 dnc --> db
 dnc --> dncSchema
@@ -519,6 +525,7 @@ dncSchema --> phone
 email --> disclosures
 email --> interestLabels
 healthRoute --> db
+jobsRoute --> bearer
 jobsRoute --> env
 jobsRoute --> outbox
 leadService --> db
@@ -561,8 +568,8 @@ classDef vendor   fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
 classDef phi      fill:#FEE2E2,stroke:#B91C1C,stroke-width:2px,color:#0F172A
 classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
-class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,leadService,leadSchema,outbox,interestLabels,phoneFormat,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,postJson,effectsPause,webglRegistry,portraitPoints,signalField,random,utils ours
-class turnstile,request,suppression guard
+class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,crmInboxRoute,leadService,leadSchema,outbox,interestLabels,phoneFormat,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,postJson,effectsPause,webglRegistry,portraitPoints,signalField,random,utils ours
+class turnstile,request,bearer,suppression guard
 class relay,mock,email vendor
 class dbSchema phi
 class db,media,imageLoader,env,siteUrl,business,announcement,motion artifact

@@ -1,13 +1,6 @@
-import { timingSafeEqual } from "crypto";
 import { env } from "@/lib/env";
 import { countFailed, drainOutbox } from "@/lib/leads/outbox";
-
-function tokenMatches(provided: string | null, expected: string): boolean {
-  if (!provided) return false;
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
+import { bearerMatches } from "@/lib/security/bearer";
 
 export async function POST(req: Request) {
   const expected = env("OUTBOX_JOB_TOKEN");
@@ -18,9 +11,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const header = req.headers.get("authorization");
-  const provided = header?.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!tokenMatches(provided, expected)) {
+  if (!bearerMatches(req, expected)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

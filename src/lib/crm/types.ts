@@ -15,5 +15,9 @@ export type CrmSendResult =
 
 export interface CrmTransport {
   readonly name: string;
-  send(lead: CrmLead, idempotencyKey: string): Promise<CrmSendResult>;
+  send(
+    lead: CrmLead,
+    idempotencyKey: string,
+    attempt: number,
+  ): Promise<CrmSendResult>;
 }

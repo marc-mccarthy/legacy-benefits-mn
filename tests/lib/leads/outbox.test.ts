@@ -113,13 +113,13 @@ describe("drainOutbox claim statement", () => {
 });
 
 describe("drainOutbox delivery", () => {
-  it("hands the stored payload and key to the transport", async () => {
+  it("hands the stored payload, key and attempt count to the transport", async () => {
     const payload = { name: "Jane Doe", email: "jane@example.com" };
-    claims(row({ payload, idempotency_key: "key-abc" }));
+    claims(row({ payload, idempotency_key: "key-abc", attempts: 3 }));
 
     await drainOutbox();
 
-    expect(send).toHaveBeenCalledWith(payload, "key-abc");
+    expect(send).toHaveBeenCalledWith(payload, "key-abc", 3);
   });
 
   it("marks a delivered row sent and clears the last error", async () => {

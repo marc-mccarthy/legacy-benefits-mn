@@ -105,9 +105,9 @@ accDescr {
   dependencies sit to the side: Cloudflare Turnstile verifies that a form submitter
   is human, and SES sends the acknowledgement and the agency notification when a
   sender address is configured. The MedicarePRO CRM is never called during the
-  visitor's request. The job route that would deliver to it needs a bearer token,
-  nothing in infra/ schedules a caller, and the deployed function sets
-  CRM_TRANSPORT to mock, so nothing is sent. The Lambda's environment, including
+  visitor's request. The job route that would deliver to it needs a bearer token
+  and nothing in infra/ schedules a caller. It reaches the CRM through the relay
+  only when CRM_TRANSPORT=relay, and otherwise sends nothing. The Lambda's environment, including
   the database password, the PAYLOAD_SECRET salt and the job token, is generated and
   set by Terraform and never reaches the browser.
 }
@@ -145,7 +145,7 @@ api -->|acknowledgement and notification| ses
 api -->|routes by path| jobRoute
 trigger --x|no schedule exists| jobRoute
 jobRoute -->|claims due rows| db
-jobRoute --x|deployed transport is mock| crm
+jobRoute --x|relay called only when CRM_TRANSPORT=relay| crm
 lambdaEnv -.->|set at deploy| api
 lambdaEnv --x|never reaches the browser| browser
 
@@ -431,7 +431,7 @@ accDescr {
   and the one that decides whether a person may be contacted are drawn as gates, because their
   job is to reject. The database schema is drawn as regulated data, because that is what it
   declares. Test files are excluded: a test importing a module says nothing about how the
-  application is wired. 42 modules and 58 imports are drawn.
+  application is wired. 41 modules and 56 imports are drawn.
 }
 
 subgraph Routehandlers ["Route handlers"]
@@ -469,8 +469,7 @@ end
 subgraph CRMdelivery ["CRM delivery"]
   crm["crm/index.ts"]
   crmTypes["crm/types.ts"]
-  webhook["crm/transports/webhook.ts"]
-  zapier["crm/transports/zapier.ts"]
+  relay["crm/transports/relay.ts"]
   mock["crm/transports/mock.ts"]
 end
 
@@ -506,8 +505,7 @@ business --> env
 crm --> crmTypes
 crm --> env
 crm --> mock
-crm --> webhook
-crm --> zapier
+crm --> relay
 db --> dbSchema
 dnc --> db
 dnc --> dncSchema
@@ -537,6 +535,7 @@ mock --> crmTypes
 outbox --> crm
 outbox --> db
 portraitPoints --> random
+relay --> crmTypes
 signalField --> motion
 signalField --> random
 siteUrl --> env
@@ -553,8 +552,6 @@ soaSchema --> disclosures
 suppression --> db
 suppression --> phone
 turnstile --> env
-webhook --> crmTypes
-zapier --> crmTypes
 
 classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
 classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
@@ -566,7 +563,7 @@ classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
 class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,leadService,leadSchema,outbox,interestLabels,phoneFormat,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,postJson,effectsPause,webglRegistry,portraitPoints,signalField,random,utils ours
 class turnstile,request,suppression guard
-class webhook,zapier,mock,email vendor
+class relay,mock,email vendor
 class dbSchema phi
 class db,media,imageLoader,env,siteUrl,business,announcement,motion artifact
 ```

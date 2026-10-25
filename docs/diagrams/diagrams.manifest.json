@@ -8,7 +8,7 @@
     {
       "id": "D1-system-context",
       "summary": "D1 — how a visitor reaches the site",
-      "mmd_sha256": "5db73a5063cc44a5466855e4ab61d98137cf1c0d0e2c3386356fe5b9179b1210"
+      "mmd_sha256": "cb28457e0e6e98ab6a47a83c91761409f4bbcef170dd5dcfc9e0cff8795c8508"
     },
     {
       "id": "D2-render-path",
@@ -28,7 +28,7 @@
     {
       "id": "D5-module-map",
       "summary": "D5 — every server module and its imports",
-      "mmd_sha256": "0b921b7253e88459b1380a575f854e84daaf82e6c2a229b014dab377e3c39ab7"
+      "mmd_sha256": "94e542bc07cf1ea42bf79336507cdb0a0c0e7d2fc1b1df895570660b524d2d93"
     },
     {
       "id": "D7-pipeline",

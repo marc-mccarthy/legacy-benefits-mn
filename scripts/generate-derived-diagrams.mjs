@@ -84,8 +84,7 @@ const GROUPS = [
     members: [
       ["lib/crm/index.ts", "crm", "ours"],
       ["lib/crm/types.ts", "crmTypes", "ours"],
-      ["lib/crm/transports/webhook.ts", "webhook", "vendor"],
-      ["lib/crm/transports/zapier.ts", "zapier", "vendor"],
+      ["lib/crm/transports/relay.ts", "relay", "vendor"],
       ["lib/crm/transports/mock.ts", "mock", "vendor"],
     ],
   },

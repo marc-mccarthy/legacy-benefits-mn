@@ -1,37 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { constructed, WebhookTransport, ZapierTransport, MockTransport } =
-  vi.hoisted(() => {
-    const constructed: Array<{ kind: string; args: unknown[] }> = [];
+const { constructed, RelayTransport, MockTransport } = vi.hoisted(() => {
+  const constructed: Array<{ kind: string; args: unknown[] }> = [];
 
-    class WebhookTransport {
-      readonly name = "webhook";
-      constructor(...args: unknown[]) {
-        constructed.push({ kind: "webhook", args });
-      }
+  class RelayTransport {
+    readonly name = "relay";
+    constructor(...args: unknown[]) {
+      constructed.push({ kind: "relay", args });
     }
-    class ZapierTransport {
-      readonly name = "zapier";
-      constructor(...args: unknown[]) {
-        constructed.push({ kind: "zapier", args });
-      }
+  }
+  class MockTransport {
+    readonly name = "mock";
+    constructor(...args: unknown[]) {
+      constructed.push({ kind: "mock", args });
     }
-    class MockTransport {
-      readonly name = "mock";
-      constructor(...args: unknown[]) {
-        constructed.push({ kind: "mock", args });
-      }
-    }
+  }
 
-    return { constructed, WebhookTransport, ZapierTransport, MockTransport };
-  });
+  return { constructed, RelayTransport, MockTransport };
+});
 
-vi.mock("@/lib/crm/transports/webhook", () => ({ WebhookTransport }));
-vi.mock("@/lib/crm/transports/zapier", () => ({ ZapierTransport }));
+vi.mock("@/lib/crm/transports/relay", () => ({ RelayTransport }));
 vi.mock("@/lib/crm/transports/mock", () => ({ MockTransport }));
 
-const WEBHOOK_URL = "https://crm.example.com/inbound/abc123";
-const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/1/xyz";
+const RELAY_URL = "https://relay.example.com";
+const RELAY_SECRET = "relay-secret";
 
 async function load() {
   vi.resetModules();
@@ -41,75 +33,57 @@ async function load() {
 
 beforeEach(() => {
   vi.stubEnv("CRM_TRANSPORT", undefined);
-  vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", undefined);
-  vi.stubEnv("MEDICAREPRO_ZAPIER_HOOK_URL", undefined);
+  vi.stubEnv("CRM_RELAY_URL", undefined);
+  vi.stubEnv("CRM_RELAY_SECRET", undefined);
 });
 
 afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("webhook mode", () => {
-  it("builds the webhook transport from the configured URL", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webhook");
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", WEBHOOK_URL);
+describe("relay mode", () => {
+  it("builds the relay transport from the configured URL and secret", async () => {
+    vi.stubEnv("CRM_TRANSPORT", "relay");
+    vi.stubEnv("CRM_RELAY_URL", RELAY_URL);
+    vi.stubEnv("CRM_RELAY_SECRET", RELAY_SECRET);
     const { getCrmTransport } = await load();
 
-    expect(getCrmTransport().name).toBe("webhook");
-    expect(constructed).toEqual([{ kind: "webhook", args: [WEBHOOK_URL] }]);
+    expect(getCrmTransport().name).toBe("relay");
+    expect(constructed).toEqual([
+      { kind: "relay", args: [RELAY_URL, RELAY_SECRET] },
+    ]);
   });
 
   it("refuses to start without the URL", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webhook");
+    vi.stubEnv("CRM_TRANSPORT", "relay");
+    vi.stubEnv("CRM_RELAY_SECRET", RELAY_SECRET);
     const { getCrmTransport } = await load();
 
     expect(() => getCrmTransport()).toThrow(
-      "CRM_TRANSPORT=webhook but MEDICAREPRO_WEBHOOK_URL is not set",
+      "CRM_TRANSPORT=relay but CRM_RELAY_URL is not set",
     );
   });
 
-  it("treats a blank URL as missing", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webhook");
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", "");
-    const { getCrmTransport } = await load();
-
-    expect(() => getCrmTransport()).toThrow("is not set");
-  });
-});
-
-describe("zapier mode", () => {
-  it("builds the zapier transport from the configured hook URL", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "zapier");
-    vi.stubEnv("MEDICAREPRO_ZAPIER_HOOK_URL", ZAPIER_URL);
-    const { getCrmTransport } = await load();
-
-    expect(getCrmTransport().name).toBe("zapier");
-    expect(constructed).toEqual([{ kind: "zapier", args: [ZAPIER_URL] }]);
-  });
-
-  it("refuses to start without the hook URL", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "zapier");
+  it("refuses to start without the secret", async () => {
+    vi.stubEnv("CRM_TRANSPORT", "relay");
+    vi.stubEnv("CRM_RELAY_URL", RELAY_URL);
     const { getCrmTransport } = await load();
 
     expect(() => getCrmTransport()).toThrow(
-      "CRM_TRANSPORT=zapier but MEDICAREPRO_ZAPIER_HOOK_URL is not set",
+      "CRM_TRANSPORT=relay but CRM_RELAY_SECRET is not set",
     );
   });
 
-  it("treats a blank hook URL as missing", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "zapier");
-    vi.stubEnv("MEDICAREPRO_ZAPIER_HOOK_URL", "");
+  it("treats blank values as missing", async () => {
+    vi.stubEnv("CRM_TRANSPORT", "relay");
+    vi.stubEnv("CRM_RELAY_URL", "");
+    vi.stubEnv("CRM_RELAY_SECRET", "   ");
     const { getCrmTransport } = await load();
 
-    expect(() => getCrmTransport()).toThrow("is not set");
-  });
+    expect(() => getCrmTransport()).toThrow("CRM_RELAY_URL is not set");
 
-  it("ignores the webhook URL when zapier is selected", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "zapier");
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", WEBHOOK_URL);
-    const { getCrmTransport } = await load();
-
-    expect(() => getCrmTransport()).toThrow("MEDICAREPRO_ZAPIER_HOOK_URL");
+    vi.stubEnv("CRM_RELAY_URL", RELAY_URL);
+    expect(() => getCrmTransport()).toThrow("CRM_RELAY_SECRET is not set");
   });
 });
 
@@ -131,12 +105,13 @@ describe("mock mode", () => {
 
 describe("unrecognised configuration", () => {
   it.each([
-    ["a typo", "webook"],
-    ["the wrong case", "Webhook"],
+    ["a typo", "relai"],
+    ["the wrong case", "Relay"],
     ["an unrelated value", "salesforce"],
   ])("%s throws rather than silently discarding leads", async (_l, value) => {
     vi.stubEnv("CRM_TRANSPORT", value);
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", WEBHOOK_URL);
+    vi.stubEnv("CRM_RELAY_URL", RELAY_URL);
+    vi.stubEnv("CRM_RELAY_SECRET", RELAY_SECRET);
     const { getCrmTransport } = await load();
 
     expect(() => getCrmTransport()).toThrow(
@@ -148,13 +123,11 @@ describe("unrecognised configuration", () => {
     vi.stubEnv("CRM_TRANSPORT", "salesforce");
     const { getCrmTransport } = await load();
 
-    expect(() => getCrmTransport()).toThrow(
-      "Expected one of: webhook, zapier, mock.",
-    );
+    expect(() => getCrmTransport()).toThrow("Expected one of: relay, mock.");
   });
 
   it("never builds a transport it could not identify", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webook");
+    vi.stubEnv("CRM_TRANSPORT", "relai");
     const { getCrmTransport } = await load();
 
     expect(() => getCrmTransport()).toThrow();
@@ -164,11 +137,12 @@ describe("unrecognised configuration", () => {
 
 describe("padded and blank configuration", () => {
   it("tolerates surrounding whitespace on a real mode", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webhook\n");
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", WEBHOOK_URL);
+    vi.stubEnv("CRM_TRANSPORT", "relay\n");
+    vi.stubEnv("CRM_RELAY_URL", RELAY_URL);
+    vi.stubEnv("CRM_RELAY_SECRET", RELAY_SECRET);
     const { getCrmTransport } = await load();
 
-    expect(getCrmTransport().name).toBe("webhook");
+    expect(getCrmTransport().name).toBe("relay");
   });
 
   it("treats a blank CRM_TRANSPORT as unset, not as an unknown mode", async () => {
@@ -185,21 +159,16 @@ describe("padded and blank configuration", () => {
     expect(getCrmTransport().name).toBe("mock");
   });
 
-  it("trims a padded webhook URL", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webhook");
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", ` ${WEBHOOK_URL}\n`);
+  it("trims a padded URL and secret", async () => {
+    vi.stubEnv("CRM_TRANSPORT", "relay");
+    vi.stubEnv("CRM_RELAY_URL", ` ${RELAY_URL}\n`);
+    vi.stubEnv("CRM_RELAY_SECRET", ` ${RELAY_SECRET}\n`);
     const { getCrmTransport } = await load();
 
-    expect(getCrmTransport().name).toBe("webhook");
-    expect(constructed).toEqual([{ kind: "webhook", args: [WEBHOOK_URL] }]);
-  });
-
-  it("treats a whitespace-only webhook URL as missing", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webhook");
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", "   ");
-    const { getCrmTransport } = await load();
-
-    expect(() => getCrmTransport()).toThrow("is not set");
+    expect(getCrmTransport().name).toBe("relay");
+    expect(constructed).toEqual([
+      { kind: "relay", args: [RELAY_URL, RELAY_SECRET] },
+    ]);
   });
 });
 
@@ -215,26 +184,28 @@ describe("memoisation", () => {
     const { getCrmTransport } = await load();
     expect(getCrmTransport().name).toBe("mock");
 
-    vi.stubEnv("CRM_TRANSPORT", "webhook");
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", WEBHOOK_URL);
+    vi.stubEnv("CRM_TRANSPORT", "relay");
+    vi.stubEnv("CRM_RELAY_URL", RELAY_URL);
+    vi.stubEnv("CRM_RELAY_SECRET", RELAY_SECRET);
 
     expect(getCrmTransport().name).toBe("mock");
   });
 
   it("does not cache a failed resolution", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webhook");
+    vi.stubEnv("CRM_TRANSPORT", "relay");
     const { getCrmTransport } = await load();
     expect(() => getCrmTransport()).toThrow();
 
-    vi.stubEnv("MEDICAREPRO_WEBHOOK_URL", WEBHOOK_URL);
+    vi.stubEnv("CRM_RELAY_URL", RELAY_URL);
+    vi.stubEnv("CRM_RELAY_SECRET", RELAY_SECRET);
 
-    expect(getCrmTransport().name).toBe("webhook");
+    expect(getCrmTransport().name).toBe("relay");
   });
 });
 
 describe("setCrmTransport", () => {
   it("installs a transport without touching the environment", async () => {
-    vi.stubEnv("CRM_TRANSPORT", "webhook");
+    vi.stubEnv("CRM_TRANSPORT", "relay");
     const { getCrmTransport, setCrmTransport } = await load();
     const stub = { name: "stub", send: vi.fn() };
 
@@ -267,9 +238,10 @@ describe("setCrmTransport", () => {
     const { getCrmTransport, setCrmTransport } = await load();
     setCrmTransport(undefined);
 
-    vi.stubEnv("CRM_TRANSPORT", "zapier");
-    vi.stubEnv("MEDICAREPRO_ZAPIER_HOOK_URL", ZAPIER_URL);
+    vi.stubEnv("CRM_TRANSPORT", "relay");
+    vi.stubEnv("CRM_RELAY_URL", RELAY_URL);
+    vi.stubEnv("CRM_RELAY_SECRET", RELAY_SECRET);
 
-    expect(getCrmTransport().name).toBe("zapier");
+    expect(getCrmTransport().name).toBe("relay");
   });
 });

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { CrmLead, CrmSendResult, CrmTransport } from "../types";
 
 type RelayReply = { ok?: unknown; indId?: unknown; error?: unknown };
@@ -30,6 +31,7 @@ export class RelayTransport implements CrmTransport {
     idempotencyKey: string,
     attempt: number,
   ): Promise<CrmSendResult> {
+    const body = JSON.stringify({ lead, idempotencyKey, attempt });
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
@@ -39,8 +41,12 @@ export class RelayTransport implements CrmTransport {
         headers: {
           "content-type": "application/json",
           authorization: `Bearer ${this.secret}`,
+          "x-relay-secret": this.secret,
+          "x-amz-content-sha256": createHash("sha256")
+            .update(body)
+            .digest("hex"),
         },
-        body: JSON.stringify({ lead, idempotencyKey, attempt }),
+        body,
         signal: controller.signal,
       });
       const text = await res.text();

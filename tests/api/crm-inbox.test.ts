@@ -41,10 +41,14 @@ const lead = {
   phone: "6125550100",
 };
 
-function post(body: unknown, authorization?: string) {
+function post(
+  body: unknown,
+  authorization?: string,
+  extra: Record<string, string> = {},
+) {
   return new Request(`${URL_BASE}/lead`, {
     method: "POST",
-    headers: authorization ? { authorization } : {},
+    headers: { ...(authorization ? { authorization } : {}), ...extra },
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
 }
@@ -53,10 +57,10 @@ function validBody(overrides: Record<string, unknown> = {}) {
   return { lead, idempotencyKey: "key-1", attempt: 1, ...overrides };
 }
 
-function get(authorization?: string) {
+function get(authorization?: string, extra: Record<string, string> = {}) {
   return new Request(URL_BASE, {
     method: "GET",
-    headers: authorization ? { authorization } : {},
+    headers: { ...(authorization ? { authorization } : {}), ...extra },
   });
 }
 
@@ -154,6 +158,23 @@ describe("POST /api/crm-inbox/lead", () => {
     expect(db.insert).not.toHaveBeenCalled();
   });
 
+  it("accepts the secret from x-relay-secret alone", async () => {
+    const res = await POST(
+      post(validBody(), undefined, { "x-relay-secret": SECRET }),
+    );
+
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects a wrong x-relay-secret even with a correct bearer", async () => {
+    const res = await POST(
+      post(validBody(), `Bearer ${SECRET}`, { "x-relay-secret": "wrong" }),
+    );
+
+    expect(res.status).toBe(401);
+    expect(db.insert).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["a body without a lead", { idempotencyKey: "k", attempt: 1 }],
     ["a blank lead name", validBody({ lead: { ...lead, name: "  " } })],
@@ -245,6 +266,12 @@ describe("GET /api/crm-inbox", () => {
       expect(db.select).not.toHaveBeenCalled();
     },
   );
+
+  it("accepts the job token from x-job-token alone", async () => {
+    const res = await GET(get(undefined, { "x-job-token": JOB_TOKEN }));
+
+    expect(res.status).toBe(200);
+  });
 
   it("lists the newest 50 rows", async () => {
     const rows = [{ id: 9 }, { id: 8 }];

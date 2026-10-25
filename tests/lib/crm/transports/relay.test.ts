@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CrmLead } from "@/lib/crm/types";
 import { RelayTransport } from "@/lib/crm/transports/relay";
@@ -48,7 +49,7 @@ describe("RelayTransport", () => {
     expect(new RelayTransport(BASE_URL, SECRET).name).toBe("relay");
   });
 
-  it("posts the relay contract with the bearer secret", async () => {
+  it("posts the relay contract with the secret and payload hash headers", async () => {
     await send();
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
@@ -57,6 +58,7 @@ describe("RelayTransport", () => {
     expect(init.headers).toMatchObject({
       "content-type": "application/json",
       authorization: `Bearer ${SECRET}`,
+      "x-relay-secret": SECRET,
     });
     expect(JSON.parse(init.body as string)).toEqual({
       lead,
@@ -64,6 +66,16 @@ describe("RelayTransport", () => {
       attempt: 2,
     });
     expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("sends the hex SHA-256 of the exact body as x-amz-content-sha256", async () => {
+    await send();
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const expected = createHash("sha256")
+      .update(init.body as string)
+      .digest("hex");
+    expect(init.headers).toMatchObject({ "x-amz-content-sha256": expected });
   });
 
   it("strips a trailing slash from the base url", async () => {

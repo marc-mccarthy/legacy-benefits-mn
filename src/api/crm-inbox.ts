@@ -1,7 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { env } from "@/lib/env";
-import { bearerMatches } from "@/lib/security/bearer";
+import { headerOrBearerMatches } from "@/lib/security/bearer";
 
 const LIST_LIMIT = 50;
 
@@ -86,7 +86,10 @@ export async function POST(req: Request) {
       { status: 503 },
     );
   }
-  if (!bearerMatches(req, secret)) return unauthorized();
+  // CloudFront's OAC replaces Authorization, so the relay secret also travels in x-relay-secret.
+  if (!headerOrBearerMatches(req, "x-relay-secret", secret)) {
+    return unauthorized();
+  }
 
   const parsed = parseRequest(await readJson(req));
   if (!parsed) return invalid();
@@ -105,7 +108,7 @@ export async function GET(req: Request) {
       { status: 503 },
     );
   }
-  if (!bearerMatches(req, token)) return unauthorized();
+  if (!headerOrBearerMatches(req, "x-job-token", token)) return unauthorized();
 
   const { crmInbox } = schema;
   const items = await db

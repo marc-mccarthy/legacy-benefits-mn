@@ -209,7 +209,7 @@ export function env(name: string): string | undefined {
 }
 ```
 
-Empty and missing are the same thing, so an optional feature turns off by leaving the 1Password field blank. Call sites read `BUSINESS_*`, `LEAD_NOTIFICATION_EMAIL` (`src/lib/business.ts:12-28`), `CRM_TRANSPORT`, `CRM_RELAY_URL`, `CRM_RELAY_SECRET`, `OUTBOX_JOB_TOKEN`, `TURNSTILE_SECRET`, `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_CALENDLY_URL`, `NEXT_PUBLIC_SITE_URL`. `BUSINESS_NAME` is the one mandatory key; a missing value throws at build time (`src/lib/business.ts:13-17`).
+For string keys, empty and missing are the same thing, so an optional feature turns off by leaving the 1Password field blank. Bool keys are the exception (section 11). Call sites read `BUSINESS_*`, `LEAD_NOTIFICATION_EMAIL` (`src/lib/business.ts:12-28`), `CRM_TRANSPORT`, `CRM_RELAY_URL`, `CRM_RELAY_SECRET`, `OUTBOX_JOB_TOKEN`, `TURNSTILE_SECRET`, `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_CALENDLY_URL`, `NEXT_PUBLIC_SITE_URL`. `BUSINESS_NAME` is the one mandatory key; a missing value throws at build time (`src/lib/business.ts:13-17`).
 
 `NEXT_PUBLIC_*` keys are inlined into the static export at build time by Next.js, so they must be present when `pnpm build` runs, locally through `with-env.sh` and in CI through the build job's `op run`. The two direct `process.env[...]` reads (`src/app/(site)/scope-of-appointment/page.tsx:37`, `src/components/seo/json-ld.tsx:13`) exist because Next.js only inlines a literal `process.env.NEXT_PUBLIC_X` access.
 
@@ -355,6 +355,7 @@ The same code deploys a second, independent stack from the `develop` branch. Eve
 - Four keys keep a field on the shared prod item in both files, because the AWS account and region are shared: `AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY` and `TF_VAR_REGION`. Do not repoint them at the Dev item.
 - Dev sets `TF_VAR_BASIC_AUTH_USER` and `TF_VAR_BASIC_AUTH_PASSWORD`, so CloudFront asks for a login on page requests. `/api/*` stays open. Prod leaves both empty.
 - Dev's relay URL is the site's own CloudFront, so the transport sends `x-relay-secret` and `x-amz-content-sha256` besides the bearer: CloudFront's origin access control replaces `Authorization` and requires the payload hash.
+- `TF_VAR_CRM_INBOX_ENABLED` must be the literal `true` or `false`, never blank, because Terraform types it as a bool (`infra/variables.tf:177`). `TF_VAR_BASIC_AUTH_USER` and `TF_VAR_BASIC_AUTH_PASSWORD` are both set or both blank; a validation rejects one without the other (`infra/variables.tf:195`).
 - Locally, `APP_ENV=prod|dev` selects the file for `scripts/with-env.sh` (`scripts/with-env.sh:4-11`). The default is `prod`, any other value exits 1. Example: `APP_ENV=dev pnpm dev`.
 - Local Terraform against dev needs the dev env file and the dev state key. `-reconfigure` makes Terraform drop the cached prod backend settings:
 

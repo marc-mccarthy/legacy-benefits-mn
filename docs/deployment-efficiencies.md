@@ -107,3 +107,13 @@ This document lists improvements found while adding the develop environment that
 **What would change.** Add a check to the resolve job that compares `github.ref_name` with the branch for the chosen env and fails at once with a clear message.
 
 **Why deferred.** It only saves time on an operator error, and the failure is safe.
+
+## The outbox drain wakes Aurora every 15 minutes
+
+**Evidence.** The EventBridge schedule runs every 15 minutes (`infra/scheduler.tf:42`) and invokes the Lambda, which opens a database connection. The cluster has a minimum capacity of 0 and pauses after `DB_SECONDS_UNTIL_AUTO_PAUSE` of idle time (`infra/main.tf:165-167`), which Terraform validates to at least 300 seconds (`infra/variables.tf:36`).
+
+**Effect.** With a pause delay near the minimum, the cluster pauses for roughly 9 of every 15 minutes. A faster drain shortens that gap and costs more, because the cluster is billed at its minimum capacity while awake. A rate of 5 minutes would never let it pause.
+
+**What would change.** Make the rate a variable, so dev can drain less often than prod.
+
+**Why deferred.** Not implemented: variable rate. The rate stays a fixed value for now.

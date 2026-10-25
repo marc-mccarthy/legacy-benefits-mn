@@ -39,7 +39,7 @@ resource "aws_scheduler_schedule" "outbox" {
   count = local.run_outbox ? 1 : 0
 
   name                = "${var.NAME}-outbox"
-  schedule_expression = "rate(5 minutes)"
+  schedule_expression = "rate(15 minutes)"
 
   flexible_time_window {
     mode = "OFF"

@@ -3,6 +3,7 @@ set -euo pipefail
 
 # CONFIGURATION
 repo="$(cd "$(dirname "$0")/.." && pwd)"
+unset APP_ENV
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
@@ -30,7 +31,7 @@ EOF
 fresh() {
   rm -rf "$tmp/w"
   mkdir -p "$tmp/w"
-  cp "$repo/app.env" "$tmp/w/app.env"
+  cp "$repo/app.env" "$repo/app.dev.env" "$tmp/w/"
 }
 
 with_env() {
@@ -67,7 +68,25 @@ assert "op run succeeds" "$(with_env true)" 0
 assert "no TF_VAR_ passed to op" "$(grep -c '^TF_VAR_' "$tmp/captured" || true)" 0
 assert "no AWS credentials passed to op" "$(grep -cE '^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY)=' "$tmp/captured" || true)" 0
 assert "AWS_REGION passed to op" "$(grep -c '^AWS_REGION=' "$tmp/captured")" 1
+assert "prod default uses the prod item" "$(grep -c 'Legacy Benefits Group Dev' "$tmp/captured" || true)" 0
 assert "temp env file removed" "$(find "$tmp/t" -type f | wc -l | tr -d ' ')" 0
+
+fresh
+rm "$tmp/w/app.dev.env"
+assert "missing app.dev.env refused for dev" "$(APP_ENV=dev with_env true)" 1
+
+fresh
+rm -f "$tmp/captured"
+assert "APP_ENV=dev succeeds" "$(APP_ENV=dev with_env true)" 0
+assert "APP_ENV=dev passes the Dev item to op" "$([ "$(grep -c 'Legacy Benefits Group Dev' "$tmp/captured")" -gt 0 ] && echo yes || echo no)" yes
+assert "APP_ENV=dev passes AWS_REGION to op" "$(grep -c '^AWS_REGION=' "$tmp/captured")" 1
+assert "APP_ENV=dev passes no TF_VAR_ to op" "$(grep -c '^TF_VAR_' "$tmp/captured" || true)" 0
+
+fresh
+assert "APP_ENV=prod succeeds" "$(APP_ENV=prod with_env true)" 0
+
+fresh
+assert "APP_ENV=staging refused" "$(APP_ENV=staging with_env true)" 1
 
 fresh
 touch "$tmp/w/.env"

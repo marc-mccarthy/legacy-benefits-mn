@@ -3,15 +3,18 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = resolve(__dirname, "../..");
-const lines = readFileSync(resolve(root, "app.env"), "utf8")
-  .split("\n")
-  .filter(Boolean);
-const entries = lines.map((line) => {
-  const at = line.indexOf("=");
-  return { key: line.slice(0, at), value: line.slice(at + 1), line };
-});
-const keys = entries.map((e) => e.key);
-const ref = (key: string) => entries.find((e) => e.key === key)?.value;
+const load = (file: string) => {
+  const lines = readFileSync(resolve(root, file), "utf8")
+    .split("\n")
+    .filter(Boolean);
+  const entries = lines.map((line) => {
+    const at = line.indexOf("=");
+    return { key: line.slice(0, at), value: line.slice(at + 1), line };
+  });
+  const keys = entries.map((e) => e.key);
+  const ref = (key: string) => entries.find((e) => e.key === key)?.value;
+  return { lines, entries, keys, ref };
+};
 
 const variablesTf = readFileSync(resolve(root, "infra/variables.tf"), "utf8");
 const tfVariables = [...variablesTf.matchAll(/^variable "([^"]+)"/gm)].map(
@@ -22,7 +25,9 @@ const tfVariables = [...variablesTf.matchAll(/^variable "([^"]+)"/gm)].map(
 const buildFilter = /^(BUSINESS_|DOMAIN_NAME=|NEXT_PUBLIC_)/;
 const localDenyFilter = /^(TF_VAR_|AWS_ACCESS_KEY_ID=|AWS_SECRET_ACCESS_KEY=)/;
 
-describe("app.env", () => {
+describe.each([["app.env"], ["app.dev.env"]])("%s", (file) => {
+  const { lines, entries, keys, ref } = load(file);
+
   it("has a TF_VAR_ key for every Terraform variable and no others", () => {
     const tfVarKeys = keys
       .filter((k) => k.startsWith("TF_VAR_"))
@@ -94,5 +99,39 @@ describe("app.env", () => {
       .map((l) => l.slice(0, l.indexOf("=")));
     expect(kept.filter((k) => k.startsWith("TF_VAR_"))).toEqual([]);
     expect(kept.filter((k) => k.startsWith("AWS_"))).toEqual(["AWS_REGION"]);
+  });
+});
+
+describe("app.dev.env against app.env", () => {
+  const prod = load("app.env");
+  const dev = load("app.dev.env");
+
+  it("app.dev.env has the same keys as app.env in the same order", () => {
+    expect(dev.keys).toEqual(prod.keys);
+  });
+
+  const awsField = /\/AWS_[A-Z_]*"$/;
+
+  it("app.dev.env points every key outside the AWS fields at the Dev item", () => {
+    for (const { key, value } of dev.entries.filter(
+      (e) => !awsField.test(e.value),
+    )) {
+      expect(value, key).toContain("/Legacy Benefits Group Dev/");
+    }
+  });
+
+  it("app.dev.env keeps the AWS-field keys on the shared item", () => {
+    const awsKeys = dev.entries
+      .filter((e) => awsField.test(e.value))
+      .map((e) => e.key);
+    expect(awsKeys).toEqual([
+      "AWS_ACCESS_KEY_ID",
+      "AWS_REGION",
+      "AWS_SECRET_ACCESS_KEY",
+      "TF_VAR_REGION",
+    ]);
+    for (const key of awsKeys) {
+      expect(dev.ref(key), key).toBe(prod.ref(key));
+    }
   });
 });

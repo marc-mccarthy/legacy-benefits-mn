@@ -172,19 +172,39 @@ configuration, so these calls are unverified in the deployed environment:
 - **SES** — lead notification and confirmation email
 - **Cloudflare Turnstile** — token verification at
   `challenges.cloudflare.com`
-- **CRM webhook delivery** — any transport that posts outward
+- **CRM delivery** — the `relay` transport posts to the Cloudflare Worker in
+  `workers/crm-relay`, which is dual-stack and so reachable over IPv6; the
+  `mock` transport posts nowhere
 
 Lead data is stored before any of them runs. Adding IPv4 egress is an
 infrastructure change nobody has made.
 
 ## Deployment
 
-`.github/workflows/deploy.yml` runs on every push to `main`. It builds the site
-and packs `api-bundle/`, applies `infra/` with Terraform (S3 state, plan guard
-against unlisted destroys), uploads the API and migration packages, runs the
-migration function, syncs `out/`, `public/media` and `public/video` to S3, and
-invalidates CloudFront. `.github/workflows/terraform.yml` validates `infra/` on
-pull requests.
+`.github/workflows/deploy.yml` runs on every push to `main` or `develop`, and
+on manual dispatch with an `env` choice of `prod` or `dev`. A `resolve` job maps
+the branch to the environment and fails for any other branch:
+
+| Branch    | Env    | Env file      | Site                       | Terraform state key     |
+| --------- | ------ | ------------- | -------------------------- | ----------------------- |
+| `main`    | `prod` | `app.env`     | `legacybenefitsmn.com`     | `terraform.tfstate`     |
+| `develop` | `dev`  | `app.dev.env` | `dev.legacybenefitsmn.com` | `dev/terraform.tfstate` |
+
+The deploy builds the site and packs `api-bundle/`, applies `infra/` with
+Terraform (S3 state, plan guard against unlisted destroys), uploads the API and
+migration packages, runs the migration function, syncs `out/`, `public/media`
+and `public/video` to S3, and invalidates CloudFront. Dev pages sit behind HTTP
+basic auth; `/api/*` stays open. `.github/workflows/terraform.yml` validates
+`infra/` on pull requests.
+
+Locally, `APP_ENV=dev pnpm dev` reads `app.dev.env` instead of `app.env`.
+Terraform against dev needs the dev env file and the dev state key:
+
+```bash
+op run --env-file=app.dev.env -- terraform -chdir=infra init -reconfigure -backend-config="key=dev/terraform.tfstate"
+```
+
+The environment is described in `docs/app-env-single-env-file.md`, section 11.
 
 CloudFront serves the static site from S3 by default and routes `/api/*` to the
 Lambda. A CloudFront Function rewrites extensionless paths onto the `.html` files

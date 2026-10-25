@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     paths-ignore:
       - "**.md"
       - "docs/**"
@@ -12,9 +12,14 @@ on:
         description: Full 40-character commit SHA to redeploy
         type: string
         default: ""
+      env:
+        description: Environment to deploy
+        type: choice
+        options: [prod, dev]
+        required: true
 
 concurrency:
-  group: ${{ github.workflow }}-deploy
+  group: deploy-${{ inputs.env || (github.ref_name == 'main' && 'prod' || 'dev') }}
   cancel-in-progress: false
 
 permissions:
@@ -25,7 +30,65 @@ env:
   MAX_PACKAGE_BYTES: 209715200
 
 jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      env: ${{ steps.r.outputs.env }}
+      branch: ${{ steps.r.outputs.branch }}
+      env_file: ${{ steps.r.outputs.env_file }}
+      state_key: ${{ steps.r.outputs.state_key }}
+      tf_role_arn: ${{ steps.r.outputs.tf_role_arn }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50
+
+      - name: Resolve environment
+        id: r
+        env:
+          INPUT_ENV: ${{ inputs.env }}
+          REF_NAME: ${{ github.ref_name }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          set -euo pipefail
+          sel="$INPUT_ENV"
+          if [ -z "$sel" ]; then
+            case "$REF_NAME" in
+              main) sel=prod ;;
+              develop) sel=dev ;;
+              *) echo "::error::$REF_NAME is neither main nor develop and no env input was given" >&2; exit 1 ;;
+            esac
+          fi
+          case "$sel" in
+            prod) branch=main; env_file=app.env; state_key=terraform.tfstate ;;
+            dev) branch=develop; env_file=app.dev.env; state_key=dev/terraform.tfstate ;;
+            *) echo "::error::unknown env $sel" >&2; exit 1 ;;
+          esac
+          ref=$(grep '^TF_VAR_NAME=' "$env_file" | cut -d= -f2- | tr -d '"')
+          case "$ref" in
+            op://*) ;;
+            *) echo "::error::TF_VAR_NAME in $env_file is not an op:// reference" >&2; exit 1 ;;
+          esac
+          name=$(op read "$ref")
+          if [[ ! "$name" =~ ^[a-z][a-z0-9-]*$ ]]; then
+            echo "::error::TF_VAR_NAME from $env_file is not a valid role name prefix" >&2
+            exit 1
+          fi
+          {
+            echo "env=$sel"
+            echo "branch=$branch"
+            echo "env_file=$env_file"
+            echo "state_key=$state_key"
+            echo "tf_role_arn=arn:aws:iam::150701180133:role/$name-github-terraform"
+          } >>"$GITHUB_OUTPUT"
+
   build:
+    needs: resolve
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
@@ -39,12 +102,12 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
           fetch-depth: 0
 
-      - name: Require commit on main
+      - name: Require commit on the deploy branch
         run: |
           set -euo pipefail
-          git fetch --no-tags origin main
+          git fetch --no-tags origin ${{ needs.resolve.outputs.branch }}
           if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
-            echo "::error::$(git rev-parse HEAD) is not an ancestor of main; refusing to deploy" >&2
+            echo "::error::$(git rev-parse HEAD) is not an ancestor of ${{ needs.resolve.outputs.branch }}; refusing to deploy" >&2
             exit 1
           fi
 
@@ -66,8 +129,8 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           set -euo pipefail
-          if grep -Evq '^[A-Z][A-Z0-9_]*="op://[^"]+"$' app.env; then echo "::error::app.env must hold only op:// references" >&2; exit 1; fi
-          grep -E '^(BUSINESS_|DOMAIN_NAME=|NEXT_PUBLIC_)' app.env >"$RUNNER_TEMP/build.env"
+          if grep -Evq '^[A-Z][A-Z0-9_]*="op://[^"]+"$' ${{ needs.resolve.outputs.env_file }}; then echo "::error::${{ needs.resolve.outputs.env_file }} must hold only op:// references" >&2; exit 1; fi
+          grep -E '^(BUSINESS_|DOMAIN_NAME=|NEXT_PUBLIC_)' ${{ needs.resolve.outputs.env_file }} >"$RUNNER_TEMP/build.env"
           op run --no-masking --env-file="$RUNNER_TEMP/build.env" -- env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '
             set -euo pipefail
             test -n "$DOMAIN_NAME"
@@ -161,7 +224,7 @@ jobs:
           retention-days: 1
 
   terraform:
-    needs: build
+    needs: [resolve, build]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -191,19 +254,19 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
-          role-to-assume: arn:aws:iam::150701180133:role/legacybenefitsgroup-github-terraform
+          role-to-assume: ${{ needs.resolve.outputs.tf_role_arn }}
           aws-region: ${{ env.AWS_REGION }}
           role-duration-seconds: 7200
 
-      - run: terraform -chdir=infra init
+      - run: terraform -chdir=infra init -backend-config="key=${{ needs.resolve.outputs.state_key }}"
 
       - name: Plan
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           set -euo pipefail
-          if grep -Evq '^[A-Z][A-Z0-9_]*="op://[^"]+"$' app.env; then echo "::error::app.env must hold only op:// references" >&2; exit 1; fi
-          grep '^TF_VAR_' app.env >"$RUNNER_TEMP/tf.env"
+          if grep -Evq '^[A-Z][A-Z0-9_]*="op://[^"]+"$' ${{ needs.resolve.outputs.env_file }}; then echo "::error::${{ needs.resolve.outputs.env_file }} must hold only op:// references" >&2; exit 1; fi
+          grep '^TF_VAR_' ${{ needs.resolve.outputs.env_file }} >"$RUNNER_TEMP/tf.env"
           op run --no-masking --env-file="$RUNNER_TEMP/tf.env" -- env -u OP_SERVICE_ACCOUNT_TOKEN \
             terraform -chdir=infra plan -lock-timeout=10m -out="$RUNNER_TEMP/tfplan"
 
@@ -235,7 +298,7 @@ jobs:
           done
 
   deploy:
-    needs: [build, terraform]
+    needs: [resolve, build, terraform]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     permissions:
@@ -250,6 +313,16 @@ jobs:
           BUILT: ${{ needs.build.outputs.site_url }}
           APPLIED: ${{ needs.terraform.outputs.site_url }}
         run: test "$BUILT" = "$APPLIED"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          sparse-checkout: |
+            app.env
+            app.dev.env
+          sparse-checkout-cone-mode: false
+
+      - uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50
 
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
@@ -319,6 +392,7 @@ jobs:
         env:
           SITE: ${{ needs.terraform.outputs.site_url }}
           BUSINESS_NAME: ${{ needs.terraform.outputs.business_name }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -334,17 +408,24 @@ jobs:
             exit 1
           fi
 
-          code=$(curl -sS -o home.html -w '%{http_code}' --max-time 20 "$SITE/" || echo 000)
-          if [ "$code" != "200" ]; then
-            echo "::error::$SITE/ returned $code"
-            exit 1
-          fi
-          if ! grep -qF "$BUSINESS_NAME" home.html; then
-            echo "::error::$SITE/ returned 200 but the body does not contain $BUSINESS_NAME"
-            exit 1
-          fi
-
-          echo "serving: $SITE"
+          if grep -Evq '^[A-Z][A-Z0-9_]*="op://[^"]+"$' ${{ needs.resolve.outputs.env_file }}; then echo "::error::${{ needs.resolve.outputs.env_file }} must hold only op:// references" >&2; exit 1; fi
+          grep '^TF_VAR_BASIC_AUTH_' ${{ needs.resolve.outputs.env_file }} >"$RUNNER_TEMP/auth.env"
+          op run --no-masking --env-file="$RUNNER_TEMP/auth.env" -- env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '
+            set -euo pipefail
+            auth=()
+            if [ -n "${TF_VAR_BASIC_AUTH_USER:-}" ] && [ -n "${TF_VAR_BASIC_AUTH_PASSWORD:-}" ]; then
+              auth=(-u "$TF_VAR_BASIC_AUTH_USER:$TF_VAR_BASIC_AUTH_PASSWORD")
+            fi
+            code=$(curl -sS -o home.html -w "%{http_code}" --max-time 20 "${auth[@]}" "$SITE/" || echo 000)
+            if [ "$code" != "200" ]; then
+              echo "::error::$SITE/ returned $code"
+              exit 1
+            fi
+            if ! grep -qF "$BUSINESS_NAME" home.html; then
+              echo "::error::$SITE/ returned 200 but the body does not contain $BUSINESS_NAME"
+              exit 1
+            fi
+            echo "serving: $SITE"'
 
       - name: Verify signed POST
         env:

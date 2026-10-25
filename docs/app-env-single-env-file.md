@@ -2,18 +2,18 @@
 
 Created: 2026-10-18 · Updated: 2026-10-25
 
-One committed file, `app.env`, lists every environment key the app and the infrastructure need. Each value is a 1Password secret reference (`op://`), never a real value. Every consumer, local scripts, Terraform, and GitHub Actions, reads a filtered copy of that file and lets the 1Password CLI (`op`) resolve the references at run time. Every claim below cites `file:line` from this repo and was verified on 2026-10-18.
+One committed file, `app.env`, lists every environment key the app and the infrastructure need. Each value is a 1Password secret reference (`op://`), never a real value. Every consumer, local scripts, Terraform, and GitHub Actions, reads a filtered copy of that file and lets the 1Password CLI (`op`) resolve the references at run time. Every claim below cites `file:line` from this repo and was verified on 2026-10-25.
 
 ## 1. What it does
 
-- Keys and their 1Password locations live in exactly one place: `app.env` (42 lines, one `KEY="op://Vault/Item/FIELD"` per line, ASCII sorted).
+- Keys and their 1Password locations live in exactly one place: `app.env` (50 lines, one `KEY="op://Vault/Item/FIELD"` per line, ASCII sorted).
 - Real values live only in 1Password. Nothing on disk, nothing in git, nothing in GitHub secrets except one service-account token.
 - Each runner takes only the lines it needs, so a job never resolves secrets it does not use.
 - Tests fail when the file drifts from the Terraform variable set, when a value is not an `op://` reference, or when the wrapper script leaks a key it should strip.
 
 ## 2. The file
 
-`app.env` at the repo root. Shape of every line (`app.env:1-42`):
+`app.env` at the repo root. Shape of every line (`app.env:1-50`):
 
 ```sh
 BUSINESS_NAME="op://Legacy Benefits Group/Legacy Benefits Group/BUSINESS_NAME"
@@ -31,9 +31,9 @@ An `op://` reference is `op://<vault>/<item>/<field>`. Two 1Password items are u
 
 Naming rules the tests enforce (section 6):
 
-- Key = the name the consumer reads. The 1Password field label = key minus its `TF_VAR_` or `NEXT_PUBLIC_` prefix. `NEXT_PUBLIC_GTM_ID` and `TF_VAR_GTM_ID` both point at field `GTM_ID` (`app.env:15,33`).
+- Key = the name the consumer reads. The 1Password field label = key minus its `TF_VAR_` or `NEXT_PUBLIC_` prefix. `NEXT_PUBLIC_GTM_ID` and `TF_VAR_GTM_ID` both point at field `GTM_ID` (`app.env:15,40`).
 - A value needed under two names appears twice, pointing at the same field. That is how the app and Terraform cannot disagree.
-- Every Terraform variable in `infra/variables.tf` has exactly one `TF_VAR_<NAME>` line (19 of them, `app.env:23-41`).
+- Every Terraform variable in `infra/variables.tf` has exactly one `TF_VAR_<NAME>` line (27 of them, `app.env:23-49`).
 - No comments, no blank lines, no literals. The deploy workflow refuses the file otherwise (section 5).
 
 Key groups in the file:
@@ -76,20 +76,28 @@ Every package script that needs env is wrapped (`package.json:7,8,14,16,19,21`):
 
 `pnpm test:unit`, `pnpm test:coverage`, `pnpm start` and `pnpm lint` are not wrapped because they need no env.
 
-The wrapper, in full (`scripts/with-env.sh:1-22`):
+The wrapper, in full (`scripts/with-env.sh:1-30`):
 
 ```sh
 #!/bin/sh
 set -eu
 if [ -n "${CI:-}" ]; then exec "$@"; fi
+case "${APP_ENV:-prod}" in
+  prod) file=app.env ;;
+  dev) file=app.dev.env ;;
+  *)
+    echo "with-env: APP_ENV must be prod or dev" >&2
+    exit 1
+    ;;
+esac
 for f in .env .env.*; do
   if [ -e "$f" ]; then
-    echo "with-env: $f exists; env comes only from app.env" >&2
+    echo "with-env: $f exists; env comes only from $file" >&2
     exit 1
   fi
 done
-if [ ! -f app.env ]; then
-  echo "with-env: app.env not found" >&2
+if [ ! -f "$file" ]; then
+  echo "with-env: $file not found" >&2
   exit 1
 fi
 if ! command -v op >/dev/null 2>&1; then
@@ -99,27 +107,22 @@ fi
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
 trap 'exit 130' INT TERM
-grep -Ev '^(TF_VAR_|AWS_ACCESS_KEY_ID=|AWS_SECRET_ACCESS_KEY=)' app.env >"$tmp"
+grep -Ev '^(TF_VAR_|AWS_ACCESS_KEY_ID=|AWS_SECRET_ACCESS_KEY=)' "$file" >"$tmp"
 op run --env-file="$tmp" -- "$@"
 ```
 
 What each part does:
 
 - Line 3: under `CI` it runs the command untouched. CI supplies env as workflow literals (section 5).
-- Lines 4-9: any `.env` or `.env.*` file aborts. Next.js would load those files on its own and silently override or add values, so the pattern forbids them.
-- Lines 10-17: a missing `app.env` or a missing `op` fails loudly instead of running without env.
-- Line 21: the deny filter. `TF_VAR_*` and the two AWS credential keys never reach the app, so `next build`, tests and e2e cannot touch AWS. `AWS_REGION` passes through because the SES client needs it.
-- Line 22: `op run` on the filtered temp file. The temp file holds only references and is removed on exit (line 19).
+- Lines 4-11: `APP_ENV` picks the file. `prod` (the default, also when `APP_ENV` is empty) reads `app.env`, `dev` reads `app.dev.env`, anything else exits 1 (section 11).
+- Lines 12-17: any `.env` or `.env.*` file aborts. Next.js would load those files on its own and silently override or add values, so the pattern forbids them.
+- Lines 18-25: a missing env file or a missing `op` fails loudly instead of running without env.
+- Line 29: the deny filter. `TF_VAR_*` and the two AWS credential keys never reach the app, so `next build`, tests and e2e cannot touch AWS. `AWS_REGION` passes through because the SES client needs it.
+- Line 30: `op run` on the filtered temp file. The temp file holds only references and is removed on exit (line 27).
 
-Verified on this machine:
+These behaviours are checked with a stub `op` by `scripts/app-env.test.sh` (section 7). A run against the real vault was not repeated on 2026-10-25.
 
-```text
-$ sh scripts/with-env.sh sh -c 'env | grep -c "^BUSINESS_"; env | grep -c "^TF_VAR_"'
-4
-0
-```
-
-Manual override for one developer: none is supported. `.env.local` would be refused like any other `.env*` file (`with-env.sh:4`). Change the 1Password field instead.
+Manual override for one developer: none is supported. `.env.local` would be refused like any other `.env*` file (`with-env.sh:12-17`). Change the 1Password field instead.
 
 ## 5. GitHub Actions
 
@@ -131,7 +134,7 @@ No 1Password, no `app.env` values. `with-env.sh` sees `CI` and execs straight th
 
 ### `terraform.yml` (pull requests touching `infra/**`)
 
-`terraform fmt -check`, `terraform init -backend=false`, `terraform validate`, `tflint`, `trivy config` (`terraform.yml:31-60`). No variables are supplied and none are needed for validate, so `app.env` is not read.
+`terraform fmt -check`, `terraform init -backend=false`, `terraform validate`, `tflint`, `trivy config` (`terraform.yml:31-59`). No variables are supplied and none are needed for validate, so `app.env` is not read.
 
 ### `deploy.yml` (push to `main` or `develop`, or manual dispatch)
 
@@ -189,7 +192,7 @@ op run --no-masking --env-file="$RUNNER_TEMP/tf.env" -- env -u OP_SERVICE_ACCOUN
 
 ### How the running app gets its env
 
-Terraform writes the Lambda environment from `var.*` plus generated secrets (`infra/compute.tf:29-48`). `DATABASE_URL`, `PAYLOAD_SECRET` and `OUTBOX_JOB_TOKEN` are `random_password` resources, never in 1Password. That is why those keys exist in `app.env` for local use only (section 2).
+Terraform writes the Lambda environment from `var.*` plus generated secrets (`infra/compute.tf:29-50`). `DATABASE_URL`, `PAYLOAD_SECRET` and `OUTBOX_JOB_TOKEN` are `random_password` resources, never in 1Password. That is why those keys exist in `app.env` for local use only (section 2).
 
 ## 6. Where the variables are used
 
@@ -212,7 +215,7 @@ Empty and missing are the same thing, so an optional feature turns off by leavin
 
 ### Terraform
 
-`infra/variables.tf` declares 19 variables with uppercase names matching the `TF_VAR_` keys, for example `variable "NAME"` (`variables.tf:1`), `variable "DNS_EXTRA_RECORDS"` as `map(object)` (`variables.tf:55-71`). Terraform parses the string value of `TF_VAR_DNS_EXTRA_RECORDS` as HCL, so the 1Password field holds `{}` or a map literal. Resources reference them as `var.NAME`, `var.LAMBDA_MEMORY_MB`, `var.TURNSTILE_SECRET` (`infra/compute.tf:12,17,36`). Validation blocks reject bad values at plan time (`variables.tf:4-7,17-20,44-47`).
+`infra/variables.tf` declares 27 variables with uppercase names matching the `TF_VAR_` keys, for example `variable "NAME"` (`variables.tf:1`), `variable "DNS_EXTRA_RECORDS"` as `map(object)` (`variables.tf:55-71`). Terraform parses the string value of `TF_VAR_DNS_EXTRA_RECORDS` as HCL, so the 1Password field holds `{}` or a map literal. Resources reference them as `var.NAME`, `var.LAMBDA_MEMORY_MB`, `var.TURNSTILE_SECRET` (`infra/compute.tf:12,17,36`). Validation blocks reject bad values at plan time (`variables.tf:4-8,17-21,44-48`).
 
 Local plan, straight from the README (`README.md:71`):
 
@@ -226,27 +229,37 @@ This resolves the whole file, including `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCE
 
 ### `tests/scripts/app-env.test.ts` (Vitest, project `unit`)
 
-Six assertions on `app.env` against `infra/variables.tf` (`tests/scripts/app-env.test.ts:25-95`):
+Fifteen assertions. Six run once per file, for `app.env` and then `app.dev.env` (`tests/scripts/app-env.test.ts:28-103`), and three compare the two files (`:105-137`). Each per-file assertion checks the file against `infra/variables.tf`:
 
-1. The `TF_VAR_` set equals the `variable "X"` set, and there are 19.
+1. The `TF_VAR_` set equals the `variable "X"` set, and there are 27.
 2. Keys are unique and in ASCII order.
 3. Every line matches `^[A-Z][A-Z0-9_]*="op:\/\/[^"]+"$`.
 4. Each duplicated pair (`BUSINESS_NAME` vs `TF_VAR_BUSINESS_NAME`, `NEXT_PUBLIC_GTM_ID` vs `TF_VAR_GTM_ID`, `AWS_REGION` vs `TF_VAR_REGION`, and so on) points at the same reference.
 5. The deploy build regex selects exactly the 10 build keys.
 6. The local deny regex strips every `TF_VAR_` and leaves only `AWS_REGION` of the `AWS_*` keys.
 
+The three cross-file assertions:
+
+7. `app.dev.env` has the same keys as `app.env` in the same order.
+8. Every `app.dev.env` key outside the AWS fields points at the Dev item.
+9. The four keys whose field is `AWS_*` (`AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY`, `TF_VAR_REGION`) keep the same reference as in `app.env`.
+
 Run: `pnpm exec vitest run tests/scripts/app-env.test.ts`. Also part of `pnpm test:unit`, the pre-commit and pre-push hooks (`lefthook.yml:68-69,112-113`) and CI (`ci.yml:73`).
 
-Known limit, stated in the test itself (`app-env.test.ts:21`): the two regexes are copied from `deploy.yml` and `with-env.sh`. If someone edits a regex in one place and not the other, this test does not notice.
+Known limit, stated in the test itself (`app-env.test.ts:24`): the two regexes are copied from `deploy.yml` and `with-env.sh`. If someone edits a regex in one place and not the other, this test does not notice.
 
 ### `scripts/app-env.test.sh` (shell)
 
-Runs `with-env.sh` in a temp directory with a stub `op` on `PATH` that captures the env file it was given and execs the command (`app-env.test.sh:16-28`). Cases (`:52-78`):
+Runs `with-env.sh` in a temp directory with a stub `op` on `PATH` that captures the env file it was given and execs the command (`app-env.test.sh:17-29`). Cases (`:53-108`):
 
 - stray `.env` refused (exit 1)
 - stray `.env.local` refused (exit 1)
 - missing `app.env` refused (exit 1)
-- `op run` succeeds, no `TF_VAR_` line, no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` line, exactly one `AWS_REGION` line in the captured file, and the temp file is gone afterwards
+- `op run` succeeds, no `TF_VAR_` line, no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` line, exactly one `AWS_REGION` line in the captured file, no Dev item reference, and the temp file is gone afterwards
+- missing `app.dev.env` refused for `APP_ENV=dev` (exit 1)
+- `APP_ENV=dev` succeeds, passes the Dev item, exactly one `AWS_REGION` line and no `TF_VAR_` line
+- `APP_ENV=prod` succeeds, and an empty `APP_ENV` selects prod with no Dev item
+- `APP_ENV=staging` exits 1 with `with-env: APP_ENV must be prod or dev`
 - with `CI=true` and a stray `.env`, the script execs the command and exits 0
 
 Run: `bash scripts/app-env.test.sh`. Runs in CI (`ci.yml:70`). It is not in the lefthook hooks.
@@ -265,24 +278,24 @@ $ bash scripts/app-env.test.sh
 ℹ️ app-env.test.sh passed
 $ pnpm exec vitest run tests/scripts/app-env.test.ts
  Test Files  1 passed (1)
-      Tests  6 passed (6)
+      Tests  15 passed (15)
 ```
 
 To prove they are not vacuous, one expectation in each was changed, the tests were run, and the change was reverted. Working tree is clean afterwards.
 
-Mutation 1: `tests/scripts/app-env.test.ts:30`, `toHaveLength(19)` to `toHaveLength(20)`:
+Mutation 1: `tests/scripts/app-env.test.ts:35`, `toHaveLength(27)` to `toHaveLength(28)`:
 
 ```text
  FAIL  |unit| tests/scripts/app-env.test.ts > app.env > has a TF_VAR_ key for every Terraform variable and no others
-AssertionError: expected [ 'NAME', 'REGION', …(17) ] to have a length of 20 but got 19
-      Tests  1 failed | 5 passed (6)
+ FAIL  |unit| tests/scripts/app-env.test.ts > app.dev.env > has a TF_VAR_ key for every Terraform variable and no others
+AssertionError: expected [ 'NAME', 'REGION', …(25) ] to have a length of 28 but got 27
+      Tests  2 failed | 13 passed (15)
 ```
 
-Mutation 2: `scripts/app-env.test.sh:54`, expected exit code `1` to `0` for the stray `.env` case:
+Mutation 2: `scripts/app-env.test.sh:55`, expected exit code `1` to `0` for the stray `.env` case:
 
 ```text
 ❌ stray .env refused: expected 0, got 1
-sh exit=1
 ```
 
 `shellcheck scripts/with-env.sh scripts/app-env.test.sh` exits 0.

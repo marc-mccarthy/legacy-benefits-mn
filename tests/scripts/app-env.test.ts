@@ -25,8 +25,17 @@ const tfVariables = [...variablesTf.matchAll(/^variable "([^"]+)"/gm)].map(
 const buildFilter = /^(BUSINESS_|DOMAIN_NAME=|NEXT_PUBLIC_)/;
 const localDenyFilter = /^(TF_VAR_|AWS_ACCESS_KEY_ID=|AWS_SECRET_ACCESS_KEY=)/;
 
-describe.each([["app.env"], ["app.dev.env"]])("%s", (file) => {
+const ITEMS = { "app.prod.env": "Prod", "app.dev.env": "Dev" } as const;
+
+describe.each(Object.keys(ITEMS) as (keyof typeof ITEMS)[])("%s", (file) => {
   const { lines, entries, keys, ref } = load(file);
+  const item = `/Legacy Benefits Group/Legacy Benefits Group ${ITEMS[file]}/`;
+
+  it(`points every key at the ${ITEMS[file]} item`, () => {
+    for (const { key, value } of entries) {
+      expect(value, key).toContain(item);
+    }
+  });
 
   it("has a TF_VAR_ key for every Terraform variable and no others", () => {
     const tfVarKeys = keys
@@ -72,9 +81,7 @@ describe.each([["app.env"], ["app.dev.env"]])("%s", (file) => {
       expect(ref(a), a).toBeDefined();
       expect(ref(a), `${a} vs ${b}`).toBe(ref(b));
     }
-    expect(ref("AWS_REGION")).toBe(
-      '"op://Legacy Benefits Group/Legacy Benefits Group/AWS_REGION"',
-    );
+    expect(ref("AWS_REGION")).toBe(`"op:/${item}AWS_REGION"`);
   });
 
   it("selects exactly the ten build keys with the deploy build filter", () => {
@@ -102,36 +109,20 @@ describe.each([["app.env"], ["app.dev.env"]])("%s", (file) => {
   });
 });
 
-describe("app.dev.env against app.env", () => {
-  const prod = load("app.env");
+describe("app.dev.env against app.prod.env", () => {
+  const prod = load("app.prod.env");
   const dev = load("app.dev.env");
 
-  it("app.dev.env has the same keys as app.env in the same order", () => {
+  it("has the same keys in the same order", () => {
     expect(dev.keys).toEqual(prod.keys);
   });
 
-  const awsField = /\/AWS_[A-Z_]*"$/;
-
-  it("app.dev.env points every key outside the AWS fields at the Dev item", () => {
-    for (const { key, value } of dev.entries.filter(
-      (e) => !awsField.test(e.value),
-    )) {
-      expect(value, key).toContain("/Legacy Benefits Group Dev/");
-    }
-  });
-
-  it("app.dev.env keeps the AWS-field keys on the shared item", () => {
-    const awsKeys = dev.entries
-      .filter((e) => awsField.test(e.value))
-      .map((e) => e.key);
-    expect(awsKeys).toEqual([
-      "AWS_ACCESS_KEY_ID",
-      "AWS_REGION",
-      "AWS_SECRET_ACCESS_KEY",
-      "TF_VAR_REGION",
-    ]);
-    for (const key of awsKeys) {
-      expect(dev.ref(key), key).toBe(prod.ref(key));
-    }
+  it("differs from app.prod.env only in the item segment", () => {
+    const toDev = (line: string) =>
+      line.replace(
+        "/Legacy Benefits Group Prod/",
+        "/Legacy Benefits Group Dev/",
+      );
+    expect(dev.lines).toEqual(prod.lines.map(toDev));
   });
 });

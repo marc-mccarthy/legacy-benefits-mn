@@ -6,7 +6,7 @@ accDescr {
   modules under src/content. At build time the route's server component imports
   the modules it needs, resolves the business identity from the environment, and
   gathers the collections into a single data bundle. The environment at build time
-  comes from app.env through op run. The home page's block list comes from home.ts.
+  comes from app.prod.env through op run. The home page's block list comes from home.ts.
   The renderer switches on each block's type and returns the matching section
   component; twelve block types are handled and the home page uses eleven of them.
   An unknown type renders nothing. Because next.config sets output export, every
@@ -18,7 +18,7 @@ accDescr {
 author([Author])
 contentModules[("src/content/*.ts")]
 homeBlocks[("home.ts, the block list")]
-env[/"BUSINESS_NAME and friends, from app.env at build"/]
+env[/"BUSINESS_NAME and friends, from app.prod.env at build"/]
 build["next build, output: export"]
 route["Server component for the route"]
 identity["getBusinessIdentity"]

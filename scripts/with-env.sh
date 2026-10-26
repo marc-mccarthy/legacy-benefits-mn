@@ -2,7 +2,7 @@
 set -eu
 if [ -n "${CI:-}" ]; then exec "$@"; fi
 case "${APP_ENV:-prod}" in
-  prod) file=app.env ;;
+  prod) file=app.prod.env ;;
   dev) file=app.dev.env ;;
   *)
     echo "with-env: APP_ENV must be prod or dev" >&2

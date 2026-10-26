@@ -13,7 +13,7 @@
     {
       "id": "D2-render-path",
       "summary": "D2 — a content module to a rendered page",
-      "mmd_sha256": "13ea26981298241cd6b007c7752df25257ed0421985a12e2b2129894b8273dc2"
+      "mmd_sha256": "2f8b7245c2b2c8ef8d179a45514158ed4cf27e756ff8758eb6dad1926abe0792"
     },
     {
       "id": "D3-lead-lifecycle",
@@ -33,7 +33,7 @@
     {
       "id": "D7-pipeline",
       "summary": "D7 — push to serving release",
-      "mmd_sha256": "66aa2fc3d8d60f029c74d59562ff9cda9b346a7d4d817e2ac44f4de2e92e752f"
+      "mmd_sha256": "180b40c109de475e0234789e37ee343c52a9ef180ade31d060aaafc2c0cc8706"
     },
     {
       "id": "D8-dnc-suppression",

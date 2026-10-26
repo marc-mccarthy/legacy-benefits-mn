@@ -40,7 +40,7 @@ function envGroup(key, firstSegments) {
 }
 
 function envBlock() {
-  const keys = readFileSync(resolve(root, "app.env"), "utf8")
+  const keys = readFileSync(resolve(root, "app.prod.env"), "utf8")
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith("#") && line.includes("="))

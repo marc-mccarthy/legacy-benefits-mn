@@ -65,12 +65,12 @@ pnpm install
 pnpm dev
 ```
 
-Env comes only from the committed `app.env`, which holds `op://` references.
+Env comes only from the committed `app.prod.env`, which holds `op://` references.
 `scripts/with-env.sh` resolves them with `op run` and refuses to start if any
 `.env*` file exists. Terraform reads the same file:
-`op run --env-file=app.env -- terraform -chdir=infra plan`.
+`op run --env-file=app.prod.env -- terraform -chdir=infra plan`.
 
-Keys declared in `app.env` (names only):
+Keys declared in `app.prod.env` (names only):
 
 <!-- generated:env -->
 
@@ -98,7 +98,7 @@ runs every Vitest project.
 
 ## Keeping docs correct
 
-The pre-commit fix step runs `docs-generate` on every commit (`pnpm docs:generate`, then it stages exactly the files it rewrote) and `diagrams-build` when `src/lib`, `src/api`, the `docs/diagrams` sources or the diagram scripts change (`pnpm diagrams:build`, which stages `D5-module-map.mmd`, `SOURCES.md` and `diagrams.manifest.json`). Both run before prettier and eslint. The commit is blocked if `package.json`, `app.env` or a rewritten file has unstaged edits.
+The pre-commit fix step runs `docs-generate` on every commit (`pnpm docs:generate`, then it stages exactly the files it rewrote) and `diagrams-build` when `src/lib`, `src/api`, the `docs/diagrams` sources or the diagram scripts change (`pnpm diagrams:build`, which stages `D5-module-map.mmd`, `SOURCES.md` and `diagrams.manifest.json`). Both run before prettier and eslint. The commit is blocked if `package.json`, `app.prod.env` or a rewritten file has unstaged edits.
 
 The verify step runs `pnpm docs:check` (references, plus generated blocks compared byte for byte) and `pnpm diagrams:check`. Pre-push and CI run both.
 
@@ -185,10 +185,10 @@ infrastructure change nobody has made.
 on manual dispatch with an `env` choice of `prod` or `dev`. A `resolve` job maps
 the branch to the environment and fails for any other branch:
 
-| Branch    | Env    | Env file      | Site                       | Terraform state key     |
-| --------- | ------ | ------------- | -------------------------- | ----------------------- |
-| `main`    | `prod` | `app.env`     | `legacybenefitsmn.com`     | `terraform.tfstate`     |
-| `develop` | `dev`  | `app.dev.env` | `dev.legacybenefitsmn.com` | `dev/terraform.tfstate` |
+| Branch    | Env    | Env file       | Site                       | Terraform state key     |
+| --------- | ------ | -------------- | -------------------------- | ----------------------- |
+| `main`    | `prod` | `app.prod.env` | `legacybenefitsmn.com`     | `terraform.tfstate`     |
+| `develop` | `dev`  | `app.dev.env`  | `dev.legacybenefitsmn.com` | `dev/terraform.tfstate` |
 
 The deploy builds the site and packs `api-bundle/`, applies `infra/` with
 Terraform (S3 state, plan guard against unlisted destroys), uploads the API and
@@ -197,7 +197,7 @@ and `public/video` to S3, and invalidates CloudFront. Dev pages sit behind HTTP
 basic auth; `/api/*` stays open. `.github/workflows/terraform.yml` validates
 `infra/` on pull requests.
 
-Locally, `APP_ENV=dev pnpm dev` reads `app.dev.env` instead of `app.env`.
+Locally, `APP_ENV=dev pnpm dev` reads `app.dev.env` instead of `app.prod.env`.
 Terraform against dev needs the dev env file and the dev state key:
 
 ```bash

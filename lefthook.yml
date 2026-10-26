@@ -11,8 +11,8 @@ pre-commit:
               dirty=$(git diff --name-only -- README.md CLAUDE.md AGENTS.md)
               rewritten=$(pnpm --silent docs:generate)
               [ -n "$rewritten" ] || exit 0
-              if ! git diff --quiet -- package.json app.env; then
-                echo "package.json or app.env has unstaged edits that the regenerated docs would describe. Stage or stash them." >&2
+              if ! git diff --quiet -- package.json app.prod.env; then
+                echo "package.json or app.prod.env has unstaged edits that the regenerated docs would describe. Stage or stash them." >&2
                 exit 1
               fi
               for file in $rewritten; do

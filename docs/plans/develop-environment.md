@@ -40,7 +40,7 @@ production. Feature PRs target `develop`; a push to `develop` deploys dev; mergi
 
 ## Findings that shape the design
 
-- Domain is never hardcoded. It flows from 1Password fields through `app.env` and `TF_VAR_*`.
+- Domain is never hardcoded. It flows from 1Password fields through `app.prod.env` and `TF_VAR_*`.
 - Terraform has no env concept. `var.NAME` prefixes every resource name, so a different `NAME`
   with a different state key yields a parallel stack (`infra/main.tf:32-36`).
 - Both GitHub OIDC roles trust only `refs/heads/main` (`infra/iam.tf:83-85`). The terraform role
@@ -98,7 +98,7 @@ CloudFront, Lambda or bucket between envs (complexity for pennies); per-PR previ
 | -------------- | ----------------------------------------------- | --------------------------------------------------- |
 | Branch         | `main`                                          | `develop`                                           |
 | Env id         | `prod`                                          | `dev`                                               |
-| Env file       | `app.env`                                       | app.dev.env                                         |
+| Env file       | `app.prod.env`                                  | app.dev.env                                         |
 | 1Password item | `Legacy Benefits Group`                         | `Legacy Benefits Group Dev`                         |
 | `NAME`         | `legacybenefitsgroup`                           | `legacybenefitsgroup-dev`                           |
 | `DOMAIN_NAME`  | `legacybenefitsmn.com`                          | `dev.legacybenefitsmn.com`                          |
@@ -109,7 +109,7 @@ Prod names do not change. No prod resource is renamed, moved or recreated.
 
 ### Env files and 1Password
 
-- `app.env` stays as is for prod. A new file app.dev.env sits next to it with the same keys in the
+- `app.prod.env` stays as is for prod. A new file app.dev.env sits next to it with the same keys in the
   same order and the same `op://` format, every reference pointing at the item
   `Legacy Benefits Group Dev` in the vault `Legacy Benefits Group`. The `AWS Credentials` item is
   shared. Both files are tracked; they hold references, never values.
@@ -118,9 +118,9 @@ Prod names do not change. No prod resource is renamed, moved or recreated.
   `CRM_RELAY_SECRET`. Added to both: `TF_VAR_CRM_TRANSPORT`,
   `TF_VAR_CRM_RELAY_URL`, `TF_VAR_CRM_RELAY_SECRET`, `TF_VAR_ROUTE53_ZONE_NAME`, `TF_VAR_BASIC_AUTH_USER`,
   `TF_VAR_BASIC_AUTH_PASSWORD`, `TF_VAR_CRM_INBOX_ENABLED`.
-- The existing app.env tests (`tests/scripts/app-env.test.ts`, `scripts/app-env.test.sh`) run
+- The existing app.prod.env tests (`tests/scripts/app-env.test.ts`, `scripts/app-env.test.sh`) run
   against both files and additionally assert the two files have identical key sets.
-- `scripts/with-env.sh` reads `APP_ENV`, default `prod`. `prod` selects `app.env`, `dev` selects
+- `scripts/with-env.sh` reads `APP_ENV`, default `prod`. `prod` selects `app.prod.env`, `dev` selects
   app.dev.env, anything else aborts. Package scripts stay unchanged, so `APP_ENV=dev pnpm dev`
   runs the site locally against dev's 1Password values.
 - The 1Password item `Legacy Benefits Group Dev` is created by the owner, by hand, before the
@@ -204,7 +204,7 @@ Outputs gain `route53_zone_id`, which `infra/scripts/preflight-cutover.sh:62` al
 - No job declares `environment:` (see Findings, OIDC subject). The token stays a repo secret.
 - Concurrency group includes the env, so dev and prod deploys never block each other but two dev
   deploys still serialize.
-- Build and Terraform steps read the resolved env file instead of `app.env`.
+- Build and Terraform steps read the resolved env file instead of `app.prod.env`.
 - `.github/workflows/ci.yml` and `.github/workflows/terraform.yml` are unchanged except that
   `terraform.yml` also validates on PRs whose base is `develop`, which it already does since it has
   no branch filter.
@@ -296,7 +296,7 @@ export, Lambda Function URL handler in `src/api/index.ts`, Drizzle + Postgres, V
 
 - Prod resources are never renamed, replaced or destroyed. Every prod plan is read before apply.
 - No secret values in git, logs, docs or chat. Env files hold `op://` references only.
-- `app.env` and app.dev.env: identical key sets, ASCII sorted, no comments, no blank lines.
+- `app.prod.env` and app.dev.env: identical key sets, ASCII sorted, no comments, no blank lines.
 - Every `TF_VAR_<X>` has a `variable "X"` and vice versa; the count after this work is 27.
 - No code comments except a one-line why. Tests only for changed files. One commit per task,
   conventional message, no attribution lines. Never `cd <dir> &&` in commands.
@@ -315,7 +315,7 @@ the owning task:
    (Task 2).
 3. `CRM_INBOX_ENABLED` set to anything but `true` keeps the route 404 (Task 2).
 4. `ROUTE53_ZONE_NAME` equal to `DOMAIN_NAME` must produce zero prod diff (Task 3 plan check).
-5. `APP_ENV=staging` must abort `with-env.sh`, never fall back to `app.env` (Task 4).
+5. `APP_ENV=staging` must abort `with-env.sh`, never fall back to `app.prod.env` (Task 4).
 
 ---
 
@@ -328,7 +328,7 @@ the owning task:
   `tests/lib/crm/transports/webhook.test.ts`, `tests/lib/crm/transports/zapier.test.ts`
 - Modify: `src/lib/crm/types.ts`, `src/lib/crm/index.ts`, `src/lib/crm/transports/mock.ts`,
   `src/lib/leads/outbox.ts`, `tests/lib/crm/index.test.ts`, `tests/lib/crm/transports/mock.test.ts`,
-  `tests/lib/leads/outbox.test.ts`, `app.env` (lines 12-13), `scripts/generate-derived-diagrams.mjs:87-89`,
+  `tests/lib/leads/outbox.test.ts`, `app.prod.env` (lines 12-13), `scripts/generate-derived-diagrams.mjs:87-89`,
   `docs/diagrams/D1-system-context.mmd:18-21,59`, `tests/scripts/app-env.test.ts` (build filter test
   unchanged; key list only)
 
@@ -380,11 +380,11 @@ unrecognised, padding, memoisation and `setCrmTransport` blocks with `relay` in 
 
 - [ ] **Step 6: Pass `row.attempts` to `transport.send` in `src/lib/leads/outbox.ts:46-49`; assert it in `tests/lib/leads/outbox.test.ts` where `send` is spied**
 
-- [ ] **Step 7: Delete webhook and zapier source and tests. In `app.env` replace lines 12-13 with**
+- [ ] **Step 7: Delete webhook and zapier source and tests. In `app.prod.env` replace lines 12-13 with**
 
 ```
-CRM_RELAY_SECRET="op://Legacy Benefits Group/Legacy Benefits Group/CRM_RELAY_SECRET"
-CRM_RELAY_URL="op://Legacy Benefits Group/Legacy Benefits Group/CRM_RELAY_URL"
+CRM_RELAY_SECRET="op://Legacy Benefits Group/Legacy Benefits Group Prod/CRM_RELAY_SECRET"
+CRM_RELAY_URL="op://Legacy Benefits Group/Legacy Benefits Group Prod/CRM_RELAY_URL"
 ```
 
 Keep ASCII order (both sort after `BUSINESS_PHONE`, before `CRM_TRANSPORT`). Update
@@ -401,7 +401,7 @@ Expected: all PASS; `pnpm diagrams:build` rewrites `docs/diagrams/D5-module-map.
 - [ ] **Step 9: Commit**
 
 ```bash
-git add src/lib/crm src/lib/leads/outbox.ts tests/lib/crm tests/lib/leads/outbox.test.ts app.env scripts/generate-derived-diagrams.mjs docs/diagrams README.md
+git add src/lib/crm src/lib/leads/outbox.ts tests/lib/crm tests/lib/leads/outbox.test.ts app.prod.env scripts/generate-derived-diagrams.mjs docs/diagrams README.md
 git commit -m "feat(crm): relay transport replaces webhook and zapier"
 ```
 
@@ -501,7 +501,7 @@ git commit -m "feat(api): crm-inbox route mimics the relay for dev"
 
 - Create: `infra/rewrite.js.tftpl`, `infra/scheduler.tf`
 - Modify: `infra/variables.tf`, `infra/main.tf:32-36`, `infra/dns.tf`, `infra/ses.tf:14-23`,
-  `infra/compute.tf:29-48,80-118,136-170,177`, `infra/iam.tf:66-87`, `infra/outputs.tf`, `app.env`
+  `infra/compute.tf:29-48,80-118,136-170,177`, `infra/iam.tf:66-87`, `infra/outputs.tf`, `app.prod.env`
   (8 new `TF_VAR_` lines), `tests/scripts/app-env.test.ts:30,45-60`, `.trivyignore.yaml` if trivy
   flags the scheduler role
 
@@ -526,7 +526,7 @@ git commit -m "feat(api): crm-inbox route mimics the relay for dev"
   `basic_auth = var.BASIC_AUTH_USER != "" ? base64encode("${var.BASIC_AUTH_USER}:${var.BASIC_AUTH_PASSWORD}") : ""`.
 - Produces output `route53_zone_id`.
 
-- [ ] **Step 1: Add the eight variables to `infra/variables.tf` and the eight `TF_VAR_` lines to `app.env`, ASCII sorted, each `op://Legacy Benefits Group/Legacy Benefits Group/<FIELD>`**
+- [ ] **Step 1: Add the eight variables to `infra/variables.tf` and the eight `TF_VAR_` lines to `app.prod.env`, ASCII sorted, each `op://Legacy Benefits Group/Legacy Benefits Group Prod/<FIELD>`**
 
 Also add the pairs `["CRM_RELAY_SECRET","TF_VAR_CRM_RELAY_SECRET"]`,
 `["CRM_RELAY_URL","TF_VAR_CRM_RELAY_URL"]`, `["CRM_TRANSPORT","TF_VAR_CRM_TRANSPORT"]` to the pairs
@@ -618,7 +618,7 @@ The owner adds the eight new fields to the 1Password item `Legacy Benefits Group
 `CRM_RELAY_URL` empty, `CRM_RELAY_SECRET` empty, `CRM_INBOX_ENABLED=false`, `BASIC_AUTH_USER`
 empty, `BASIC_AUTH_PASSWORD` empty.
 
-Run: `op run --env-file=app.env -- terraform -chdir=infra init -reconfigure && op run --env-file=app.env -- terraform -chdir=infra plan -lock-timeout=10m -out=/tmp/prod.tfplan && terraform -chdir=infra show -json /tmp/prod.tfplan | scripts/plan-guard.sh infra/destroy-allowlist.txt`
+Run: `op run --env-file=app.prod.env -- terraform -chdir=infra init -reconfigure && op run --env-file=app.prod.env -- terraform -chdir=infra plan -lock-timeout=10m -out=/tmp/prod.tfplan && terraform -chdir=infra show -json /tmp/prod.tfplan | scripts/plan-guard.sh infra/destroy-allowlist.txt`
 Expected: plan lists `aws_lambda_function.app` (environment), `aws_cloudfront_function.rewrite`
 (code, whitespace only; if the diff is empty, better), `aws_iam_role.deploy` and
 `aws_iam_role.terraform` (assume policy, same effective value, may show no change) as update in
@@ -628,7 +628,7 @@ Delete `/tmp/prod.tfplan`.
 - [ ] **Step 11: Commit**
 
 ```bash
-git add infra app.env tests/scripts/app-env.test.ts .trivyignore.yaml
+git add infra app.prod.env tests/scripts/app-env.test.ts .trivyignore.yaml
 git commit -m "feat(infra): per-environment inputs, basic auth, outbox schedule"
 ```
 
@@ -640,24 +640,24 @@ git commit -m "feat(infra): per-environment inputs, basic auth, outbox schedule"
 
 - Create: app.dev.env (repo root)
 - Modify: `scripts/with-env.sh`, `scripts/app-env.test.sh`, `tests/scripts/app-env.test.ts`,
-  `scripts/generate-doc-sections.mjs:43-48` (env block still reads `app.env` only; unchanged)
+  `scripts/generate-doc-sections.mjs:43-48` (env block still reads `app.prod.env` only; unchanged)
 
 **Interfaces:**
 
-- Produces `APP_ENV` with values `prod` (default) and `dev`, selecting `app.env` or app.dev.env.
+- Produces `APP_ENV` with values `prod` (default) and `dev`, selecting `app.prod.env` or app.dev.env.
   Any other value: `with-env: APP_ENV must be prod or dev` on stderr, exit 1.
-- Produces app.dev.env: every line of `app.env` with the item segment
-  `/Legacy Benefits Group/Legacy Benefits Group/` replaced by
+- Produces app.dev.env: every line of `app.prod.env` with the item segment
+  `/Legacy Benefits Group/Legacy Benefits Group Prod/` replaced by
   `/Legacy Benefits Group/Legacy Benefits Group Dev/`. The three `AWS_` lines keep the prod item,
   since the AWS keys are shared.
 
 - [ ] **Step 1: Extend `tests/scripts/app-env.test.ts`**
 
-Wrap the existing suite in `describe.each([["app.env"], ["app.dev.env"]])` so every current
+Wrap the existing suite in `describe.each([["app.prod.env"], ["app.dev.env"]])` so every current
 assertion runs on both files. Add:
 
 ```ts
-it("app.dev.env has the same keys as app.env in the same order", ...)
+it("app.dev.env has the same keys as app.prod.env in the same order", ...)
 it("app.dev.env points every non-AWS key at the Dev item", ...)   // value includes "/Legacy Benefits Group Dev/"
 it("app.dev.env keeps the AWS keys on the shared item", ...)
 ```
@@ -666,14 +666,14 @@ it("app.dev.env keeps the AWS keys on the shared item", ...)
 
 Run: `pnpm vitest run tests/scripts/app-env.test.ts`
 
-- [ ] **Step 3: Generate app.dev.env from `app.env`**
+- [ ] **Step 3: Generate app.dev.env from `app.prod.env`**
 
-Run: `sed -E '/^AWS_/!s#/Legacy Benefits Group/Legacy Benefits Group/#/Legacy Benefits Group/Legacy Benefits Group Dev/#' app.env > app.dev.env`
+Run: `sed -E '/^AWS_/!s#/Legacy Benefits Group/Legacy Benefits Group Prod/#/Legacy Benefits Group/Legacy Benefits Group Dev/#' app.prod.env > app.dev.env`
 Then re-run Step 2, expect PASS.
 
 - [ ] **Step 4: `scripts/with-env.sh`**
 
-After the `CI` short-circuit: `case "${APP_ENV:-prod}" in prod) file=app.env ;; dev) file=app.dev.env ;; *) echo "with-env: APP_ENV must be prod or dev" >&2; exit 1 ;; esac` and use `$file`
+After the `CI` short-circuit: `case "${APP_ENV:-prod}" in prod) file=app.prod.env ;; dev) file=app.dev.env ;; *) echo "with-env: APP_ENV must be prod or dev" >&2; exit 1 ;; esac` and use `$file`
 in the existence check, the error text and the `grep`.
 
 - [ ] **Step 5: Extend `scripts/app-env.test.sh`**
@@ -691,7 +691,7 @@ Expected: `ℹ️ app-env.test.sh passed`, vitest PASS.
 
 ```bash
 git add app.dev.env scripts/with-env.sh scripts/app-env.test.sh tests/scripts/app-env.test.ts
-git commit -m "feat(env): APP_ENV selects app.env or app.dev.env"
+git commit -m "feat(env): APP_ENV selects app.prod.env or app.dev.env"
 ```
 
 ---
@@ -708,7 +708,7 @@ git commit -m "feat(env): APP_ENV selects app.env or app.dev.env"
 
 - Produces job `resolve` with outputs `env`, `branch`, `env_file`, `state_key`, `tf_role_arn`.
 - `env` = `inputs.env` if dispatched, else `prod` for `refs/heads/main`, `dev` for
-  `refs/heads/develop`. `branch` = `main` | `develop`. `env_file` = `app.env` | `app.dev.env`.
+  `refs/heads/develop`. `branch` = `main` | `develop`. `env_file` = `app.prod.env` | `app.dev.env`.
   `state_key` = `terraform.tfstate` | `dev/terraform.tfstate`.
 - `tf_role_arn` = `arn:aws:iam::150701180133:role/<NAME>-github-terraform`, where `<NAME>` is
   `op read` of the `TF_VAR_NAME` reference found in `env_file`.
@@ -720,7 +720,7 @@ git commit -m "feat(env): APP_ENV selects app.env or app.dev.env"
 - `concurrency.group: deploy-${{ inputs.env || (github.ref_name == 'main' && 'prod' || 'dev') }}`.
 - New first job `resolve` (ubuntu-latest, `op` installed, `OP_SERVICE_ACCOUNT_TOKEN` on the one
   step that runs `op read`). It fails when `github.ref_name` is neither branch and no input given.
-- `build`, `terraform`, `deploy` take `needs: resolve`; every `app.env` becomes
+- `build`, `terraform`, `deploy` take `needs: resolve`; every `app.prod.env` becomes
   `${{ needs.resolve.outputs.env_file }}`; "Require commit on main" fetches
   `origin ${{ needs.resolve.outputs.branch }}`; `role-to-assume: ${{ needs.resolve.outputs.tf_role_arn }}`;
   `terraform -chdir=infra init -backend-config="key=${{ needs.resolve.outputs.state_key }}"`.

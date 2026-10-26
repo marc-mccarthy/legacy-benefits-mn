@@ -181,7 +181,7 @@ accDescr {
   modules under src/content. At build time the route's server component imports
   the modules it needs, resolves the business identity from the environment, and
   gathers the collections into a single data bundle. The environment at build time
-  comes from app.env through op run. The home page's block list comes from home.ts.
+  comes from app.prod.env through op run. The home page's block list comes from home.ts.
   The renderer switches on each block's type and returns the matching section
   component; twelve block types are handled and the home page uses eleven of them.
   An unknown type renders nothing. Because next.config sets output export, every
@@ -193,7 +193,7 @@ accDescr {
 author([Author])
 contentModules[("src/content/*.ts")]
 homeBlocks[("home.ts, the block list")]
-env[/"BUSINESS_NAME and friends, from app.env at build"/]
+env[/"BUSINESS_NAME and friends, from app.prod.env at build"/]
 build["next build, output: export"]
 route["Server component for the route"]
 identity["getBusinessIdentity"]
@@ -588,7 +588,7 @@ accDescr {
   Two things happen at different times. On a pull request the CI workflow runs two
   jobs, each against a throwaway Postgres 17 service. Quality applies the migrations
   with drizzle-kit migrate and then lints, checks formatting, type checks, checks
-  that the diagrams match their sources, tests the app.env guard script and runs the
+  that the diagrams match their sources, tests the app.prod.env guard script and runs the
   unit tests with coverage and the integration tests. The end-to-end job applies the
   migrations, builds the site and the API bundle and runs the Playwright suite, which
   includes the accessibility and compliance specs. When a pull request touches
@@ -598,9 +598,9 @@ accDescr {
   workflow, which does not wait for those checks and does not repeat them. Its build
   job runs on an arm64 runner, matching the Lambda architecture. It refuses a commit
   that is not an ancestor of main, builds the static site with the environment read
-  from app.env through op run, bundles src/api with esbuild into the API package, and
+  from app.prod.env through op run, bundles src/api with esbuild into the API package, and
   packs a second package for the migrate function. The terraform job assumes a role
-  over OIDC rather than using stored keys, plans with the variables from app.env, and
+  over OIDC rather than using stored keys, plans with the variables from app.prod.env, and
   a plan guard fails the run if the plan deletes or replaces anything outside the
   allowlist; only then does it apply. The deploy job first checks that the site URL
   it built with equals the one Terraform applied, assumes a second OIDC role, and
@@ -628,14 +628,14 @@ end
 
 subgraph build ["Deploy workflow, build job, arm64 runner"]
   ancestor{{"Commit must be an ancestor of main"}}
-  siteBuild["Build the static site, environment from app.env through op run"]
+  siteBuild["Build the static site, environment from app.prod.env through op run"]
   packApi["Bundle src/api with esbuild, size guard, zip"]
   packMigrate["Pack the migrate function: drizzle-orm, pg, migrations"]
 end
 
 subgraph tf ["Deploy workflow, terraform job"]
   oidcTf{{"Assume the terraform role over OIDC"}}
-  plan["terraform plan, variables from app.env"]
+  plan["terraform plan, variables from app.prod.env"]
   planGuard{{"Plan guard: deletes only from the allowlist"}}
   apply["terraform apply"]
 end

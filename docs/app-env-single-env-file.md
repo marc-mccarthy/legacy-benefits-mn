@@ -1,24 +1,24 @@
-# Single app.env for source code and Terraform
+# Single app.prod.env for source code and Terraform
 
-Created: 2026-10-18 · Updated: 2026-10-25
+Created: 2026-10-18 · Updated: 2026-10-26
 
-One committed file, `app.env`, lists every environment key the app and the infrastructure need. Each value is a 1Password secret reference (`op://`), never a real value. Every consumer, local scripts, Terraform, and GitHub Actions, reads a filtered copy of that file and lets the 1Password CLI (`op`) resolve the references at run time. Every claim below cites `file:line` from this repo and was verified on 2026-10-25.
+One committed file, `app.prod.env`, lists every environment key the app and the infrastructure need. Each value is a 1Password secret reference (`op://`), never a real value. Every consumer, local scripts, Terraform, and GitHub Actions, reads a filtered copy of that file and lets the 1Password CLI (`op`) resolve the references at run time. Every claim below cites `file:line` from this repo and was verified on 2026-10-25.
 
 ## 1. What it does
 
-- Keys and their 1Password locations live in exactly one place: `app.env` (50 lines, one `KEY="op://Vault/Item/FIELD"` per line, ASCII sorted).
+- Keys and their 1Password locations live in exactly one place: `app.prod.env` (50 lines, one `KEY="op://Vault/Item/FIELD"` per line, ASCII sorted).
 - Real values live only in 1Password. Nothing on disk, nothing in git, nothing in GitHub secrets except one service-account token.
 - Each runner takes only the lines it needs, so a job never resolves secrets it does not use.
 - Tests fail when the file drifts from the Terraform variable set, when a value is not an `op://` reference, or when the wrapper script leaks a key it should strip.
 
 ## 2. The file
 
-`app.env` at the repo root. Shape of every line (`app.env:1-50`):
+`app.prod.env` at the repo root. Shape of every line (`app.prod.env:1-50`):
 
 ```sh
-BUSINESS_NAME="op://Legacy Benefits Group/Legacy Benefits Group/BUSINESS_NAME"
-NEXT_PUBLIC_GTM_ID="op://Legacy Benefits Group/Legacy Benefits Group/GTM_ID"
-TF_VAR_GTM_ID="op://Legacy Benefits Group/Legacy Benefits Group/GTM_ID"
+BUSINESS_NAME="op://Legacy Benefits Group/Legacy Benefits Group Prod/BUSINESS_NAME"
+NEXT_PUBLIC_GTM_ID="op://Legacy Benefits Group/Legacy Benefits Group Prod/GTM_ID"
+TF_VAR_GTM_ID="op://Legacy Benefits Group/Legacy Benefits Group Prod/GTM_ID"
 AWS_ACCESS_KEY_ID="op://Legacy Benefits Group/AWS Credentials/AWS_SECRET_KEY_ID"
 ```
 
@@ -31,9 +31,9 @@ An `op://` reference is `op://<vault>/<item>/<field>`. Two 1Password items are u
 
 Naming rules the tests enforce (section 6):
 
-- Key = the name the consumer reads. The 1Password field label = key minus its `TF_VAR_` or `NEXT_PUBLIC_` prefix. `NEXT_PUBLIC_GTM_ID` and `TF_VAR_GTM_ID` both point at field `GTM_ID` (`app.env:15,40`).
+- Key = the name the consumer reads. The 1Password field label = key minus its `TF_VAR_` or `NEXT_PUBLIC_` prefix. `NEXT_PUBLIC_GTM_ID` and `TF_VAR_GTM_ID` both point at field `GTM_ID` (`app.prod.env:15,40`).
 - A value needed under two names appears twice, pointing at the same field. That is how the app and Terraform cannot disagree.
-- Every Terraform variable in `infra/variables.tf` has exactly one `TF_VAR_<NAME>` line (27 of them, `app.env:23-49`).
+- Every Terraform variable in `infra/variables.tf` has exactly one `TF_VAR_<NAME>` line (27 of them, `app.prod.env:23-49`).
 - No comments, no blank lines, no literals. The deploy workflow refuses the file otherwise (section 5).
 
 Key groups in the file:
@@ -45,7 +45,7 @@ Key groups in the file:
 | `TF_VAR_*`                                                                                                                                                                                  | Terraform, local and the deploy terraform job  |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`                                                                                                                                  | local Terraform only (CI uses OIDC, section 5) |
 
-`.gitignore:47-49` ignores `.env` and `.env.*` so a file with real values can never be committed. `app.env` itself is tracked.
+`.gitignore:47-49` ignores `.env` and `.env.*` so a file with real values can never be committed. `app.prod.env` itself is tracked.
 
 ## 3. 1Password: references, auth, service account
 
@@ -83,7 +83,7 @@ The wrapper, in full (`scripts/with-env.sh:1-30`):
 set -eu
 if [ -n "${CI:-}" ]; then exec "$@"; fi
 case "${APP_ENV:-prod}" in
-  prod) file=app.env ;;
+  prod) file=app.prod.env ;;
   dev) file=app.dev.env ;;
   *)
     echo "with-env: APP_ENV must be prod or dev" >&2
@@ -114,7 +114,7 @@ op run --env-file="$tmp" -- "$@"
 What each part does:
 
 - Line 3: under `CI` it runs the command untouched. CI supplies env as workflow literals (section 5).
-- Lines 4-11: `APP_ENV` picks the file. `prod` (the default, also when `APP_ENV` is empty) reads `app.env`, `dev` reads `app.dev.env`, anything else exits 1 (section 11).
+- Lines 4-11: `APP_ENV` picks the file. `prod` (the default, also when `APP_ENV` is empty) reads `app.prod.env`, `dev` reads `app.dev.env`, anything else exits 1 (section 11).
 - Lines 12-17: any `.env` or `.env.*` file aborts. Next.js would load those files on its own and silently override or add values, so the pattern forbids them.
 - Lines 18-25: a missing env file or a missing `op` fails loudly instead of running without env.
 - Line 29: the deny filter. `TF_VAR_*` and the two AWS credential keys never reach the app, so `next build`, tests and e2e cannot touch AWS. `AWS_REGION` passes through because the SES client needs it.
@@ -126,15 +126,15 @@ Manual override for one developer: none is supported. `.env.local` would be refu
 
 ## 5. GitHub Actions
 
-Three workflows. Only `deploy.yml` touches `app.env`, `app.dev.env` and 1Password.
+Three workflows. Only `deploy.yml` touches `app.prod.env`, `app.dev.env` and 1Password.
 
 ### `ci.yml` (pull requests)
 
-No 1Password, no `app.env` values. `with-env.sh` sees `CI` and execs straight through (`with-env.sh:3`), so the values come from workflow literals (`ci.yml:39-43` and `:95-100`): `DATABASE_URL` for the Postgres service container, a throwaway `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL`, `BUSINESS_NAME`. Everything optional is left unset and the code treats that as "feature off". CI also runs both guard tests (`ci.yml:70` runs `bash scripts/app-env.test.sh`; `ci.yml:73` runs `pnpm test:coverage`, which includes `tests/scripts/app-env.test.ts`).
+No 1Password, no `app.prod.env` values. `with-env.sh` sees `CI` and execs straight through (`with-env.sh:3`), so the values come from workflow literals (`ci.yml:39-43` and `:95-100`): `DATABASE_URL` for the Postgres service container, a throwaway `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL`, `BUSINESS_NAME`. Everything optional is left unset and the code treats that as "feature off". CI also runs both guard tests (`ci.yml:70` runs `bash scripts/app-env.test.sh`; `ci.yml:73` runs `pnpm test:coverage`, which includes `tests/scripts/app-env.test.ts`).
 
 ### `terraform.yml` (pull requests touching `infra/**`)
 
-`terraform fmt -check`, `terraform init -backend=false`, `terraform validate`, `tflint`, `trivy config` (`terraform.yml:31-59`). No variables are supplied and none are needed for validate, so `app.env` is not read.
+`terraform fmt -check`, `terraform init -backend=false`, `terraform validate`, `tflint`, `trivy config` (`terraform.yml:31-59`). No variables are supplied and none are needed for validate, so `app.prod.env` is not read.
 
 ### `deploy.yml` (push to `main` or `develop`, or manual dispatch)
 
@@ -148,7 +148,7 @@ No job declares `environment:`. The OIDC subject claim then keeps the default te
 | ------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | `env`         | `prod`                                                                | `dev`                                                                     |
 | `branch`      | `main`                                                                | `develop`                                                                 |
-| `env_file`    | `app.env`                                                             | `app.dev.env`                                                             |
+| `env_file`    | `app.prod.env`                                                        | `app.dev.env`                                                             |
 | `state_key`   | `terraform.tfstate`                                                   | `dev/terraform.tfstate`                                                   |
 | `tf_role_arn` | `arn:aws:iam::150701180133:role/legacybenefitsgroup-github-terraform` | `arn:aws:iam::150701180133:role/legacybenefitsgroup-dev-github-terraform` |
 
@@ -188,11 +188,11 @@ op run --no-masking --env-file="$RUNNER_TEMP/tf.env" -- env -u OP_SERVICE_ACCOUN
 - `terraform init` passes `-backend-config="key=<state_key>"` (`deploy.yml:261`), so dev keeps its state under `dev/terraform.tfstate` in the same bucket while `infra/backend.tf:4` stays on the prod key.
 - The plan is shown in the step summary, checked by `scripts/plan-guard.sh` against `infra/destroy-allowlist.txt` (`deploy.yml:281-284`), then applied (`deploy.yml:287`).
 
-**deploy** (`deploy.yml:300-445`): uploads the artifacts and runs migrations. Everything it needs comes from Terraform outputs of the previous job, with one exception. The "Verify serving" step reads the `TF_VAR_BASIC_AUTH_USER` and `TF_VAR_BASIC_AUTH_PASSWORD` lines of `$ENV_FILE` (`deploy.yml:411-413`), so the job sparse-checks-out `app.env` and `app.dev.env` (`deploy.yml:317-323`) and installs `op`. Only the page request to `/` sends `-u user:password`, and only when both values are non-empty, which is dev. The `/api/health` and `/api/do-not-contact` checks stay unauthenticated because Terraform gates only page requests.
+**deploy** (`deploy.yml:300-445`): uploads the artifacts and runs migrations. Everything it needs comes from Terraform outputs of the previous job, with one exception. The "Verify serving" step reads the `TF_VAR_BASIC_AUTH_USER` and `TF_VAR_BASIC_AUTH_PASSWORD` lines of `$ENV_FILE` (`deploy.yml:411-413`), so the job sparse-checks-out `app.prod.env` and `app.dev.env` (`deploy.yml:317-323`) and installs `op`. Only the page request to `/` sends `-u user:password`, and only when both values are non-empty, which is dev. The `/api/health` and `/api/do-not-contact` checks stay unauthenticated because Terraform gates only page requests.
 
 ### How the running app gets its env
 
-Terraform writes the Lambda environment from `var.*` plus generated secrets (`infra/compute.tf:29-50`). `DATABASE_URL`, `PAYLOAD_SECRET` and `OUTBOX_JOB_TOKEN` are `random_password` resources, never in 1Password. That is why those keys exist in `app.env` for local use only (section 2).
+Terraform writes the Lambda environment from `var.*` plus generated secrets (`infra/compute.tf:29-50`). `DATABASE_URL`, `PAYLOAD_SECRET` and `OUTBOX_JOB_TOKEN` are `random_password` resources, never in 1Password. That is why those keys exist in `app.prod.env` for local use only (section 2).
 
 ## 6. Where the variables are used
 
@@ -220,7 +220,7 @@ For string keys, empty and missing are the same thing, so an optional feature tu
 Local plan, straight from the README (`README.md:71`):
 
 ```sh
-op run --env-file=app.env -- terraform -chdir=infra plan
+op run --env-file=app.prod.env -- terraform -chdir=infra plan
 ```
 
 This resolves the whole file, including `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, which is how local Terraform authenticates. The backend is S3 with a lockfile (`infra/backend.tf:1-9`). Not run during this write-up.
@@ -229,20 +229,20 @@ This resolves the whole file, including `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCE
 
 ### `tests/scripts/app-env.test.ts` (Vitest, project `unit`)
 
-Fifteen assertions. Six run once per file, for `app.env` and then `app.dev.env` (`tests/scripts/app-env.test.ts:28-103`), and three compare the two files (`:105-137`). Each per-file assertion checks the file against `infra/variables.tf`:
+Sixteen assertions. Seven run once per file, for `app.prod.env` and then `app.dev.env` (`tests/scripts/app-env.test.ts:28-110`), and two compare the two files (`:112-127`). Each per-file assertion checks the file against `infra/variables.tf`:
 
-1. The `TF_VAR_` set equals the `variable "X"` set, and there are 27.
-2. Keys are unique and in ASCII order.
-3. Every line matches `^[A-Z][A-Z0-9_]*="op:\/\/[^"]+"$`.
-4. Each duplicated pair (`BUSINESS_NAME` vs `TF_VAR_BUSINESS_NAME`, `NEXT_PUBLIC_GTM_ID` vs `TF_VAR_GTM_ID`, `AWS_REGION` vs `TF_VAR_REGION`, and so on) points at the same reference.
-5. The deploy build regex selects exactly the 10 build keys.
-6. The local deny regex strips every `TF_VAR_` and leaves only `AWS_REGION` of the `AWS_*` keys.
+1. Every reference points at the file's own item: `Legacy Benefits Group Prod` or `Legacy Benefits Group Dev`.
+2. The `TF_VAR_` set equals the `variable "X"` set, and there are 27.
+3. Keys are unique and in ASCII order.
+4. Every line matches `^[A-Z][A-Z0-9_]*="op:\/\/[^"]+"$`.
+5. Each duplicated pair (`BUSINESS_NAME` vs `TF_VAR_BUSINESS_NAME`, `NEXT_PUBLIC_GTM_ID` vs `TF_VAR_GTM_ID`, `AWS_REGION` vs `TF_VAR_REGION`, and so on) points at the same reference.
+6. The deploy build regex selects exactly the 10 build keys.
+7. The local deny regex strips every `TF_VAR_` and leaves only `AWS_REGION` of the `AWS_*` keys.
 
-The three cross-file assertions:
+The two cross-file assertions:
 
-7. `app.dev.env` has the same keys as `app.env` in the same order.
-8. Every `app.dev.env` key outside the AWS fields points at the Dev item.
-9. The four keys whose field is `AWS_*` (`AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY`, `TF_VAR_REGION`) keep the same reference as in `app.env`.
+8. `app.dev.env` has the same keys as `app.prod.env` in the same order.
+9. `app.dev.env` equals `app.prod.env` with the item segment `Prod` replaced by `Dev` on every line.
 
 Run: `pnpm exec vitest run tests/scripts/app-env.test.ts`. Also part of `pnpm test:unit`, the pre-commit and pre-push hooks (`lefthook.yml:68-69,112-113`) and CI (`ci.yml:73`).
 
@@ -254,7 +254,7 @@ Runs `with-env.sh` in a temp directory with a stub `op` on `PATH` that captures 
 
 - stray `.env` refused (exit 1)
 - stray `.env.local` refused (exit 1)
-- missing `app.env` refused (exit 1)
+- missing `app.prod.env` refused (exit 1)
 - `op run` succeeds, no `TF_VAR_` line, no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` line, exactly one `AWS_REGION` line in the captured file, no Dev item reference, and the temp file is gone afterwards
 - missing `app.dev.env` refused for `APP_ENV=dev` (exit 1)
 - `APP_ENV=dev` succeeds, passes the Dev item, exactly one `AWS_REGION` line and no `TF_VAR_` line
@@ -267,7 +267,7 @@ Run: `bash scripts/app-env.test.sh`. Runs in CI (`ci.yml:70`). It is not in the 
 ### Deploy-time guards
 
 - Plaintext guard before each `op run` (`deploy.yml:132,268,411`).
-- `pnpm docs:check` fails a commit when the generated key list in `README.md:75-84` no longer matches `app.env` (`scripts/generate-doc-sections.mjs:42-78`, hook at `lefthook.yml:78-80`).
+- `pnpm docs:check` fails a commit when the generated key list in `README.md:75-84` no longer matches `app.prod.env` (`scripts/generate-doc-sections.mjs:42-78`, hook at `lefthook.yml:78-80`).
 
 ## 8. Test results, including a mutation check
 
@@ -286,7 +286,7 @@ To prove they are not vacuous, one expectation in each was changed, the tests we
 Mutation 1: `tests/scripts/app-env.test.ts:35`, `toHaveLength(27)` to `toHaveLength(28)`:
 
 ```text
- FAIL  |unit| tests/scripts/app-env.test.ts > app.env > has a TF_VAR_ key for every Terraform variable and no others
+ FAIL  |unit| tests/scripts/app-env.test.ts > app.prod.env > has a TF_VAR_ key for every Terraform variable and no others
  FAIL  |unit| tests/scripts/app-env.test.ts > app.dev.env > has a TF_VAR_ key for every Terraform variable and no others
 AssertionError: expected [ 'NAME', 'REGION', …(25) ] to have a length of 28 but got 27
       Tests  2 failed | 13 passed (15)
@@ -307,7 +307,7 @@ None were changed. Listed so they are not mistaken for intent.
 - The GitHub repository still holds variables from the earlier design (`ASSETS_BUCKET`, `AWS_DEPLOY_ROLE_ARN`, `AWS_REGION`, `BUSINESS_*`, `CLOUDFRONT_ID`, `LAMBDA_FUNCTION_NAME`, `MIGRATE_FUNCTION_NAME`, all dated 2026-10-05). No workflow references `vars.` any more. They are dead and could be deleted.
 - No job in `deploy.yml` declares `environment:`, because the default OIDC subject template would then end in `environment:<name>` instead of `ref:refs/heads/<branch>` and break the branch-based trust policy (`infra/iam.tf:84`). The GitHub environment `dev` exists but is unused, and `OP_SERVICE_ACCOUNT_TOKEN` stays a repository secret that anyone with write access can read by editing a workflow on a branch.
 - `--no-masking` is passed to `op run` in the build, plan and verify-serving steps (`deploy.yml:134,270,413`), so a resolved value that the child prints would reach the job log. Why it was chosen is not recorded anywhere in the repo.
-- The app.env key `AWS_ACCESS_KEY_ID` points at a 1Password field labelled `AWS_SECRET_KEY_ID` (`app.env:1`). It works, the label is just misleading.
+- The app.prod.env key `AWS_ACCESS_KEY_ID` points at a 1Password field labelled `AWS_SECRET_KEY_ID` (`app.prod.env:1`). It works, the label is just misleading.
 - `AWS_REGION` and `TF_VAR_REGION` come from 1Password, while `deploy.yml:29` and `infra/backend.tf:5` hard-code `us-east-1`. Changing the field alone would not move the stack.
 - The regex duplication noted in section 7.
 
@@ -317,20 +317,20 @@ Order matters: the 1Password side must exist before the first deploy, because a 
 
 1. In 1Password, create one item per project in a vault the project owns. Add one field per key, label equal to the key without `TF_VAR_` or `NEXT_PUBLIC_`. Put infra sizing values (`NAME`, `REGION`, `LAMBDA_MEMORY_MB`, …) in the same item. Keep shared cloud credentials in a separate item.
 2. Create a 1Password service account with read access to that vault only. Store its token as the GitHub repository secret `OP_SERVICE_ACCOUNT_TOKEN`. Prefer an environment-scoped secret with reviewers.
-3. Copy `app.env` and rewrite every reference to the new vault and item. Keep it sorted (`LC_ALL=C sort -c app.env` must be silent), one `KEY="op://…"` per line, no comments. Add a `TF_VAR_` line for every `variable` in `infra/variables.tf` and nothing else. Add every `NEXT_PUBLIC_` key the frontend inlines.
+3. Copy `app.prod.env` and rewrite every reference to the new vault and item. Keep it sorted (`LC_ALL=C sort -c app.prod.env` must be silent), one `KEY="op://…"` per line, no comments. Add a `TF_VAR_` line for every `variable` in `infra/variables.tf` and nothing else. Add every `NEXT_PUBLIC_` key the frontend inlines.
 4. Copy `scripts/with-env.sh` unchanged. Adjust the deny regex on line 21 only if the project has credential keys with other names.
 5. Wrap every package script that needs env with `sh scripts/with-env.sh …` as in section 4. Leave pure tool scripts unwrapped.
 6. Add `.env` and `.env.*` to `.gitignore`. Delete any `.env.example`.
 7. Copy `tests/scripts/app-env.test.ts`. Update the duplicated-pair list and the expected build key list to the new project's keys. Copy `scripts/app-env.test.sh` unchanged.
 8. In the deploy workflow, copy the three-line pattern from section 5 for each job: plaintext guard, `grep` the slice, `op run --env-file=<slice> -- env -u OP_SERVICE_ACCOUNT_TOKEN <command>`. Set `OP_SERVICE_ACCOUNT_TOKEN` on the step, not the job. Install the CLI with `1password/install-cli-action` first.
-9. Give Terraform cloud credentials through OIDC in CI, never through `app.env`. Keep `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `app.env` only for the local plan, and keep them in the local deny filter.
+9. Give Terraform cloud credentials through OIDC in CI, never through `app.prod.env`. Keep `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `app.prod.env` only for the local plan, and keep them in the local deny filter.
 10. In CI for pull requests, set the few literals the tests need in the workflow `env:` block and rely on `CI` being set so `with-env.sh` execs through.
 11. Wire `bash scripts/app-env.test.sh` and the Vitest test into CI and the pre-commit hook.
 12. Before merging, confirm every field exists with labels only, no values:
 
     ```sh
     op item get "<item>" --vault "<vault>" --format json | jq -r '.fields[].label' | sort -u >/tmp/have.txt
-    grep -o 'op://<vault>/<item>/[^"]*' app.env | sed 's#.*/##' | sort -u >/tmp/want.txt
+    grep -o 'op://<vault>/<item>/[^"]*' app.prod.env | sed 's#.*/##' | sort -u >/tmp/want.txt
     comm -13 /tmp/have.txt /tmp/want.txt
     ```
 
@@ -344,15 +344,15 @@ The same code deploys a second, independent stack from the `develop` branch. Eve
 | -------------- | ----------------------------------------------- | --------------------------------------------------- |
 | Branch         | `main`                                          | `develop`                                           |
 | Env id         | `prod`                                          | `dev`                                               |
-| Env file       | `app.env`                                       | `app.dev.env`                                       |
+| Env file       | `app.prod.env`                                  | `app.dev.env`                                       |
 | 1Password item | `Legacy Benefits Group`                         | `Legacy Benefits Group Dev`                         |
 | `NAME`         | `legacybenefitsgroup`                           | `legacybenefitsgroup-dev`                           |
 | `DOMAIN_NAME`  | `legacybenefitsmn.com`                          | `dev.legacybenefitsmn.com`                          |
 | State key      | `terraform.tfstate`                             | `dev/terraform.tfstate`                             |
 | IAM roles      | `legacybenefitsgroup-github-{deploy,terraform}` | `legacybenefitsgroup-dev-github-{deploy,terraform}` |
 
-- `app.dev.env` has the same keys as `app.env`, in the same order, and the same rules apply (section 2). Only the item inside each reference changes.
-- Four keys keep a field on the shared prod item in both files, because the AWS account and region are shared: `AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY` and `TF_VAR_REGION`. Do not repoint them at the Dev item.
+- `app.dev.env` has the same keys as `app.prod.env`, in the same order, and the same rules apply (section 2). Only the item inside each reference changes.
+- The AWS keys (`AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY`, `TF_VAR_REGION`) also live on each item. The account is shared, so both items hold the same values.
 - Dev sets `TF_VAR_BASIC_AUTH_USER` and `TF_VAR_BASIC_AUTH_PASSWORD`, so CloudFront asks for a login on page requests. `/api/*` stays open. Prod leaves both empty.
 - Dev's relay URL is the site's own CloudFront, so the transport sends `x-relay-secret` and `x-amz-content-sha256` besides the bearer: CloudFront's origin access control replaces `Authorization` and requires the payload hash.
 - `TF_VAR_CRM_INBOX_ENABLED` must be the literal `true` or `false`, never blank, because Terraform types it as a bool (`infra/variables.tf:177`). `TF_VAR_BASIC_AUTH_USER` and `TF_VAR_BASIC_AUTH_PASSWORD` are both set or both blank; a validation rejects one without the other (`infra/variables.tf:195`).
@@ -364,6 +364,6 @@ The same code deploys a second, independent stack from the `develop` branch. Eve
   op run --env-file=app.dev.env -- terraform -chdir=infra plan
   ```
 
-  Run the same `init` without `-backend-config` and with `app.env` to switch back to prod.
+  Run the same `init` without `-backend-config` and with `app.prod.env` to switch back to prod.
 
 - In CI the `resolve` job derives all of this from the branch (section 5), so nothing about dev is configured in GitHub except the existing repository secret.

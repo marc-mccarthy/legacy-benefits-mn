@@ -52,7 +52,7 @@ This document lists improvements found while adding the develop environment that
 
 ## AWS region is hardcoded in two places
 
-**Evidence.** `.github/workflows/deploy.yml:29` sets the region, and `infra/backend.tf:5` sets it for the state backend. The region is also a 1Password field, referenced from `app.env:2`.
+**Evidence.** `.github/workflows/deploy.yml:29` sets the region, and `infra/backend.tf:5` sets it for the state backend. The region is also a 1Password field, referenced from `app.prod.env:2`.
 
 **What would change.** Read the region from one source. The backend block cannot use variables, so it would need a backend config argument at init time, as the state key already is (`.github/workflows/deploy.yml:261`).
 
@@ -86,7 +86,7 @@ This document lists improvements found while adding the develop environment that
 
 **Evidence.** `workers/crm-relay/deploy.sh:8-9` reads the Worker's items from the owner's personal vault named Secrets. The CI service account sees only the vault `Legacy Benefits Group`, so it cannot read them. The Worker is not part of any workflow.
 
-**What would change.** Deploy the Worker from CI with a Cloudflare token held in the `Legacy Benefits Group` vault. Until then, the owner must copy the Worker URL and secret into the `Legacy Benefits Group` item as `CRM_RELAY_URL` and `CRM_RELAY_SECRET` before prod switches `CRM_TRANSPORT` to `relay`. The prod env file already points at both fields (`app.env:8-10`).
+**What would change.** Deploy the Worker from CI with a Cloudflare token held in the `Legacy Benefits Group` vault. Until then, the owner must copy the Worker URL and secret into the `Legacy Benefits Group` item as `CRM_RELAY_URL` and `CRM_RELAY_SECRET` before prod switches `CRM_TRANSPORT` to `relay`. The prod env file already points at both fields (`app.prod.env:8-10`).
 
 **Why deferred.** It needs a new Cloudflare credential in the shared vault. The Worker also changes rarely.
 

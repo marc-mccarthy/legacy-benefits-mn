@@ -65,7 +65,7 @@ jobs:
             esac
           fi
           case "$sel" in
-            prod) branch=main; env_file=app.env; state_key=terraform.tfstate ;;
+            prod) branch=main; env_file=app.prod.env; state_key=terraform.tfstate ;;
             dev) branch=develop; env_file=app.dev.env; state_key=dev/terraform.tfstate ;;
             *) echo "::error::unknown env $sel" >&2; exit 1 ;;
           esac
@@ -318,7 +318,7 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
           sparse-checkout: |
-            app.env
+            app.prod.env
             app.dev.env
           sparse-checkout-cone-mode: false
 

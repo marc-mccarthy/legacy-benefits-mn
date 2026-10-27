@@ -66,6 +66,7 @@ describe("RelayTransport", () => {
       attempt: 2,
     });
     expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect(init.redirect).toBe("error");
   });
 
   it("sends the hex SHA-256 of the exact body as x-amz-content-sha256", async () => {

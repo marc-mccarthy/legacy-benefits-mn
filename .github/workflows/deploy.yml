@@ -69,6 +69,10 @@ jobs:
             dev) branch=develop; env_file=app.dev.env; state_key=dev/terraform.tfstate ;;
             *) echo "::error::unknown env $sel" >&2; exit 1 ;;
           esac
+          if [ "$REF_NAME" != "$branch" ]; then
+            echo "::error::env $sel deploys only from $branch, not $REF_NAME" >&2
+            exit 1
+          fi
           ref=$(grep '^TF_VAR_NAME=' "$env_file" | cut -d= -f2- | tr -d '"')
           case "$ref" in
             op://*) ;;

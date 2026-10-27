@@ -47,6 +47,7 @@ export class RelayTransport implements CrmTransport {
             .digest("hex"),
         },
         body,
+        redirect: "error",
         signal: controller.signal,
       });
       const text = await res.text();

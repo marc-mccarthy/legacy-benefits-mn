@@ -3,15 +3,18 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = resolve(__dirname, "../..");
-const lines = readFileSync(resolve(root, "app.env"), "utf8")
-  .split("\n")
-  .filter(Boolean);
-const entries = lines.map((line) => {
-  const at = line.indexOf("=");
-  return { key: line.slice(0, at), value: line.slice(at + 1), line };
-});
-const keys = entries.map((e) => e.key);
-const ref = (key: string) => entries.find((e) => e.key === key)?.value;
+const load = (file: string) => {
+  const lines = readFileSync(resolve(root, file), "utf8")
+    .split("\n")
+    .filter(Boolean);
+  const entries = lines.map((line) => {
+    const at = line.indexOf("=");
+    return { key: line.slice(0, at), value: line.slice(at + 1), line };
+  });
+  const keys = entries.map((e) => e.key);
+  const ref = (key: string) => entries.find((e) => e.key === key)?.value;
+  return { lines, entries, keys, ref };
+};
 
 const variablesTf = readFileSync(resolve(root, "infra/variables.tf"), "utf8");
 const tfVariables = [...variablesTf.matchAll(/^variable "([^"]+)"/gm)].map(
@@ -22,12 +25,23 @@ const tfVariables = [...variablesTf.matchAll(/^variable "([^"]+)"/gm)].map(
 const buildFilter = /^(BUSINESS_|DOMAIN_NAME=|NEXT_PUBLIC_)/;
 const localDenyFilter = /^(TF_VAR_|AWS_ACCESS_KEY_ID=|AWS_SECRET_ACCESS_KEY=)/;
 
-describe("app.env", () => {
+const ITEMS = { "app.prod.env": "Prod", "app.dev.env": "Dev" } as const;
+
+describe.each(Object.keys(ITEMS) as (keyof typeof ITEMS)[])("%s", (file) => {
+  const { lines, entries, keys, ref } = load(file);
+  const item = `/Legacy Benefits Group/Legacy Benefits Group ${ITEMS[file]}/`;
+
+  it(`points every key at the ${ITEMS[file]} item`, () => {
+    for (const { key, value } of entries) {
+      expect(value, key).toContain(item);
+    }
+  });
+
   it("has a TF_VAR_ key for every Terraform variable and no others", () => {
     const tfVarKeys = keys
       .filter((k) => k.startsWith("TF_VAR_"))
       .map((k) => k.slice("TF_VAR_".length));
-    expect(tfVariables).toHaveLength(19);
+    expect(tfVariables).toHaveLength(27);
     expect([...tfVarKeys].sort()).toEqual([...tfVariables].sort());
   });
 
@@ -59,14 +73,15 @@ describe("app.env", () => {
         (k): [string, string] => [`NEXT_PUBLIC_${k}`, `TF_VAR_${k}`],
       ),
       ["AWS_REGION", "TF_VAR_REGION"],
+      ["CRM_RELAY_SECRET", "TF_VAR_CRM_RELAY_SECRET"],
+      ["CRM_RELAY_URL", "TF_VAR_CRM_RELAY_URL"],
+      ["CRM_TRANSPORT", "TF_VAR_CRM_TRANSPORT"],
     ];
     for (const [a, b] of pairs) {
       expect(ref(a), a).toBeDefined();
       expect(ref(a), `${a} vs ${b}`).toBe(ref(b));
     }
-    expect(ref("AWS_REGION")).toBe(
-      '"op://Legacy Benefits Group/Legacy Benefits Group/AWS_REGION"',
-    );
+    expect(ref("AWS_REGION")).toBe(`"op:/${item}AWS_REGION"`);
   });
 
   it("selects exactly the ten build keys with the deploy build filter", () => {
@@ -91,5 +106,23 @@ describe("app.env", () => {
       .map((l) => l.slice(0, l.indexOf("=")));
     expect(kept.filter((k) => k.startsWith("TF_VAR_"))).toEqual([]);
     expect(kept.filter((k) => k.startsWith("AWS_"))).toEqual(["AWS_REGION"]);
+  });
+});
+
+describe("app.dev.env against app.prod.env", () => {
+  const prod = load("app.prod.env");
+  const dev = load("app.dev.env");
+
+  it("has the same keys in the same order", () => {
+    expect(dev.keys).toEqual(prod.keys);
+  });
+
+  it("differs from app.prod.env only in the item segment", () => {
+    const toDev = (line: string) =>
+      line.replace(
+        "/Legacy Benefits Group Prod/",
+        "/Legacy Benefits Group Dev/",
+      );
+    expect(dev.lines).toEqual(prod.lines.map(toDev));
   });
 });

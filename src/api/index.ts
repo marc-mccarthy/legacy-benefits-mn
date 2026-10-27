@@ -1,3 +1,4 @@
+import { GET as crmInboxList, POST as crmInboxLead } from "./crm-inbox";
 import { POST as doNotContact } from "./do-not-contact";
 import { GET as health } from "./health";
 import { POST as jobsOutbox } from "./jobs-outbox";
@@ -29,6 +30,8 @@ const ROUTES: Record<string, Record<string, Handler>> = {
   "/api/do-not-contact": { POST: doNotContact },
   "/api/jobs/outbox": { POST: jobsOutbox },
   "/api/health": { GET: health },
+  "/api/crm-inbox/lead": { POST: crmInboxLead },
+  "/api/crm-inbox": { GET: crmInboxList },
 };
 
 const NOT_FOUND = '{"error":"Not found"}';

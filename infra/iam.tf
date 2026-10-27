@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "github_main_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["${var.GITHUB_SUBJECT_PREFIX}:ref:refs/heads/main"]
+      values   = ["${var.GITHUB_SUBJECT_PREFIX}:ref:refs/heads/${var.GITHUB_BRANCH}"]
     }
   }
 }

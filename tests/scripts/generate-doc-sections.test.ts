@@ -40,7 +40,7 @@ const BASE_FILES: Record<string, string> = {
   "package.json": JSON.stringify({
     scripts: { build: "next build", pipe: "a | b" },
   }),
-  "app.env": APP_ENV,
+  "app.prod.env": APP_ENV,
   ".prettierrc.json": JSON.stringify({ semi: true, trailingComma: "all" }),
   "src/app/page.ts": "",
   "src/lib/util.ts": "",

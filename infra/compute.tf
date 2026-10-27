@@ -39,12 +39,14 @@ resource "aws_lambda_function" "app" {
       BUSINESS_PHONE                 = var.BUSINESS_PHONE
       BUSINESS_EMAIL                 = var.BUSINESS_EMAIL
       BUSINESS_ADDRESS               = var.BUSINESS_ADDRESS
-      CRM_TRANSPORT                  = "mock"
+      CRM_TRANSPORT                  = var.CRM_TRANSPORT
+      CRM_RELAY_URL                  = var.CRM_RELAY_URL
+      CRM_RELAY_SECRET               = var.CRM_RELAY_SECRET
       NEXT_PUBLIC_TURNSTILE_SITE_KEY = var.TURNSTILE_SITE_KEY
       NEXT_PUBLIC_GTM_ID             = var.GTM_ID
       NEXT_PUBLIC_CALENDLY_URL       = var.CALENDLY_URL
       LEAD_NOTIFICATION_EMAIL        = var.LEAD_NOTIFICATION_EMAIL
-    }, local.ses_env)
+    }, local.ses_env, var.CRM_INBOX_ENABLED ? { CRM_INBOX_ENABLED = "true" } : {})
   }
 
   lifecycle {
@@ -82,39 +84,7 @@ resource "aws_cloudfront_function" "rewrite" {
   runtime = "cloudfront-js-2.0"
   publish = true
 
-  code = <<-JS
-    function handler(event) {
-      var host = event.request.headers.host.value;
-      if (host.indexOf("www.") === 0) {
-        var qs = event.request.querystring;
-        var q = Object.keys(qs).map(function (k) {
-          return qs[k].value ? k + "=" + qs[k].value : k;
-        }).join("&");
-        return {
-          statusCode: 301,
-          statusDescription: "Moved Permanently",
-          headers: {
-            location: {
-              value: "https://" + host.slice(4) + event.request.uri + (q ? "?" + q : ""),
-            },
-          },
-        };
-      }
-
-      var uri = event.request.uri;
-
-      if (uri !== "/" && uri.endsWith("/")) {
-        uri = uri.slice(0, -1);
-      }
-      if (uri === "/") {
-        uri = "/index.html";
-      } else if (!uri.includes(".")) {
-        uri = uri + ".html";
-      }
-      event.request.uri = uri;
-      return event.request;
-    }
-  JS
+  code = templatefile("${path.module}/rewrite.js.tftpl", { basic_auth = local.basic_auth })
 }
 
 data "aws_cloudfront_cache_policy" "optimized" {
@@ -159,10 +129,20 @@ resource "aws_cloudfront_response_headers_policy" "security" {
   }
 
   custom_headers_config {
+    dynamic "items" {
+      for_each = local.basic_auth != "" ? [1] : []
+
+      content {
+        header   = "X-Robots-Tag"
+        override = true
+        value    = "noindex, nofollow"
+      }
+    }
+
     items {
       header   = "Content-Security-Policy-Report-Only"
       override = true
-      value    = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://challenges.cloudflare.com https://assets.calendly.com; style-src 'self' 'unsafe-inline' https://assets.calendly.com; img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com${local.media_origin}; media-src 'self'${local.media_origin}; font-src 'self'; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; frame-src https://challenges.cloudflare.com https://calendly.com https://www.googletagmanager.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      value    = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://challenges.cloudflare.com https://assets.calendly.com; style-src 'self' 'unsafe-inline' https://assets.calendly.com; img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com${local.media_origin}; media-src 'self'${local.media_origin}; font-src 'self'; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com; frame-src https://challenges.cloudflare.com https://calendly.com https://www.googletagmanager.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     }
   }
 }
@@ -174,7 +154,7 @@ resource "aws_cloudfront_distribution" "this" {
   price_class         = "PriceClass_100"
   default_root_object = "index.html"
 
-  aliases = local.use_domain ? [var.DOMAIN_NAME, "www.${var.DOMAIN_NAME}"] : []
+  aliases = local.site_hostnames
 
   origin {
     origin_id                = "s3"

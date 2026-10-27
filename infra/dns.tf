@@ -1,5 +1,6 @@
 locals {
-  site_hostnames = local.use_domain ? [var.DOMAIN_NAME, "www.${var.DOMAIN_NAME}"] : []
+  site_hostnames = local.use_domain ? concat([var.DOMAIN_NAME], local.with_www ? ["www.${var.DOMAIN_NAME}"] : []) : []
+  zone_id        = local.create_zone ? aws_route53_zone.this[0].zone_id : data.aws_route53_zone.parent[0].zone_id
 
   cert_validation = {
     for dvo in flatten(aws_acm_certificate.this[*].domain_validation_options) : dvo.domain_name => dvo
@@ -14,13 +15,19 @@ locals {
 }
 
 resource "aws_route53_zone" "this" {
-  count = local.use_domain ? 1 : 0
+  count = local.create_zone ? 1 : 0
 
   name = var.DOMAIN_NAME
 }
 
+data "aws_route53_zone" "parent" {
+  count = local.use_domain && !local.create_zone ? 1 : 0
+
+  name = local.zone_name
+}
+
 resource "terraform_data" "name_servers" {
-  count = local.use_domain ? 1 : 0
+  count = local.create_zone ? 1 : 0
 
   triggers_replace = aws_route53_zone.this[0].name_servers
 
@@ -34,7 +41,7 @@ resource "aws_acm_certificate" "this" {
 
   region                    = "us-east-1"
   domain_name               = var.DOMAIN_NAME
-  subject_alternative_names = ["www.${var.DOMAIN_NAME}"]
+  subject_alternative_names = local.with_www ? ["www.${var.DOMAIN_NAME}"] : []
   validation_method         = "DNS"
 
   lifecycle {
@@ -46,7 +53,7 @@ resource "aws_route53_record" "cert_validation" {
   for_each = toset(local.site_hostnames)
 
   allow_overwrite = true
-  zone_id         = aws_route53_zone.this[0].zone_id
+  zone_id         = local.zone_id
   name            = local.cert_validation[each.key].resource_record_name
   type            = local.cert_validation[each.key].resource_record_type
   ttl             = 60
@@ -68,7 +75,7 @@ resource "aws_acm_certificate_validation" "this" {
 resource "aws_route53_record" "site" {
   for_each = local.site_alias_records
 
-  zone_id = aws_route53_zone.this[0].zone_id
+  zone_id = local.zone_id
   name    = each.value.name
   type    = each.value.type
 
@@ -82,7 +89,7 @@ resource "aws_route53_record" "site" {
 resource "aws_route53_record" "extra" {
   for_each = local.use_domain ? var.DNS_EXTRA_RECORDS : {}
 
-  zone_id = aws_route53_zone.this[0].zone_id
+  zone_id = local.zone_id
   name    = each.value.name == "" ? var.DOMAIN_NAME : "${each.value.name}.${var.DOMAIN_NAME}"
   type    = each.value.type
   ttl     = each.value.ttl

@@ -1,18 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { leads, soa, dnc, outbox, health } = vi.hoisted(() => ({
-  leads: vi.fn(),
-  soa: vi.fn(),
-  dnc: vi.fn(),
-  outbox: vi.fn(),
-  health: vi.fn(),
-}));
+const { leads, soa, dnc, outbox, health, inboxPost, inboxGet } = vi.hoisted(
+  () => ({
+    leads: vi.fn(),
+    soa: vi.fn(),
+    dnc: vi.fn(),
+    outbox: vi.fn(),
+    health: vi.fn(),
+    inboxPost: vi.fn(),
+    inboxGet: vi.fn(),
+  }),
+);
 
 vi.mock("@/api/leads", () => ({ POST: leads }));
 vi.mock("@/api/soa", () => ({ POST: soa }));
 vi.mock("@/api/do-not-contact", () => ({ POST: dnc }));
 vi.mock("@/api/jobs-outbox", () => ({ POST: outbox }));
 vi.mock("@/api/health", () => ({ GET: health }));
+vi.mock("@/api/crm-inbox", () => ({ POST: inboxPost, GET: inboxGet }));
 
 const { handler, toRequest } = await import("@/api/index");
 
@@ -31,7 +36,7 @@ function event(
 }
 
 beforeEach(() => {
-  for (const fn of [leads, soa, dnc, outbox, health]) {
+  for (const fn of [leads, soa, dnc, outbox, health, inboxPost, inboxGet]) {
     fn.mockReset().mockResolvedValue(Response.json({ ok: true }));
   }
 });
@@ -43,6 +48,8 @@ describe("dispatch", () => {
     ["POST", "/api/do-not-contact", () => dnc],
     ["POST", "/api/jobs/outbox", () => outbox],
     ["GET", "/api/health", () => health],
+    ["POST", "/api/crm-inbox/lead", () => inboxPost],
+    ["GET", "/api/crm-inbox", () => inboxGet],
   ])("routes %s %s to its handler", async (method, path, target) => {
     const result = await handler(event(method, path));
 
@@ -100,7 +107,7 @@ describe("the 404 contract", () => {
   it("reaches no handler at all on an unlisted path", async () => {
     await handler(event("POST", "/api/anything"));
 
-    for (const fn of [leads, soa, dnc, outbox, health]) {
+    for (const fn of [leads, soa, dnc, outbox, health, inboxPost, inboxGet]) {
       expect(fn).not.toHaveBeenCalled();
     }
   });

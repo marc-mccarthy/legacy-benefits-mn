@@ -5,5 +5,11 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: { url: process.env.DATABASE_URL ?? "" },
-  tablesFilter: ["leads", "crm_outbox", "soa_submissions", "dnc_requests"],
+  tablesFilter: [
+    "leads",
+    "crm_outbox",
+    "crm_inbox",
+    "soa_submissions",
+    "dnc_requests",
+  ],
 });

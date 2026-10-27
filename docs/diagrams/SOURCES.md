@@ -105,9 +105,9 @@ accDescr {
   dependencies sit to the side: Cloudflare Turnstile verifies that a form submitter
   is human, and SES sends the acknowledgement and the agency notification when a
   sender address is configured. The MedicarePRO CRM is never called during the
-  visitor's request. The job route that would deliver to it needs a bearer token,
-  nothing in infra/ schedules a caller, and the deployed function sets
-  CRM_TRANSPORT to mock, so nothing is sent. The Lambda's environment, including
+  visitor's request. The job route that would deliver to it needs a bearer token
+  and nothing in infra/ schedules a caller. It reaches the CRM through the relay
+  only when CRM_TRANSPORT=relay, and otherwise sends nothing. The Lambda's environment, including
   the database password, the PAYLOAD_SECRET salt and the job token, is generated and
   set by Terraform and never reaches the browser.
 }
@@ -145,7 +145,7 @@ api -->|acknowledgement and notification| ses
 api -->|routes by path| jobRoute
 trigger --x|no schedule exists| jobRoute
 jobRoute -->|claims due rows| db
-jobRoute --x|deployed transport is mock| crm
+jobRoute --x|relay called only when CRM_TRANSPORT=relay| crm
 lambdaEnv -.->|set at deploy| api
 lambdaEnv --x|never reaches the browser| browser
 
@@ -181,7 +181,7 @@ accDescr {
   modules under src/content. At build time the route's server component imports
   the modules it needs, resolves the business identity from the environment, and
   gathers the collections into a single data bundle. The environment at build time
-  comes from app.env through op run. The home page's block list comes from home.ts.
+  comes from app.prod.env through op run. The home page's block list comes from home.ts.
   The renderer switches on each block's type and returns the matching section
   component; twelve block types are handled and the home page uses eleven of them.
   An unknown type renders nothing. Because next.config sets output export, every
@@ -193,7 +193,7 @@ accDescr {
 author([Author])
 contentModules[("src/content/*.ts")]
 homeBlocks[("home.ts, the block list")]
-env[/"BUSINESS_NAME and friends, from app.env at build"/]
+env[/"BUSINESS_NAME and friends, from app.prod.env at build"/]
 build["next build, output: export"]
 route["Server component for the route"]
 identity["getBusinessIdentity"]
@@ -431,7 +431,7 @@ accDescr {
   and the one that decides whether a person may be contacted are drawn as gates, because their
   job is to reject. The database schema is drawn as regulated data, because that is what it
   declares. Test files are excluded: a test importing a module says nothing about how the
-  application is wired. 42 modules and 58 imports are drawn.
+  application is wired. 43 modules and 61 imports are drawn.
 }
 
 subgraph Routehandlers ["Route handlers"]
@@ -441,11 +441,13 @@ subgraph Routehandlers ["Route handlers"]
   dncRoute["do-not-contact.ts"]
   jobsRoute["jobs-outbox.ts"]
   healthRoute["health.ts"]
+  crmInboxRoute["crm-inbox.ts"]
 end
 
 subgraph Requestsafety ["Request safety"]
   turnstile["security/turnstile.ts"]
   request["security/request.ts"]
+  bearer["security/bearer.ts"]
 end
 
 subgraph Leadpipeline ["Lead pipeline"]
@@ -469,8 +471,7 @@ end
 subgraph CRMdelivery ["CRM delivery"]
   crm["crm/index.ts"]
   crmTypes["crm/types.ts"]
-  webhook["crm/transports/webhook.ts"]
-  zapier["crm/transports/zapier.ts"]
+  relay["crm/transports/relay.ts"]
   mock["crm/transports/mock.ts"]
 end
 
@@ -497,6 +498,7 @@ subgraph Outboundandconfiguration ["Outbound and configuration"]
   utils["utils.ts"]
 end
 
+apiRouter --> crmInboxRoute
 apiRouter --> dncRoute
 apiRouter --> healthRoute
 apiRouter --> jobsRoute
@@ -506,8 +508,10 @@ business --> env
 crm --> crmTypes
 crm --> env
 crm --> mock
-crm --> webhook
-crm --> zapier
+crm --> relay
+crmInboxRoute --> bearer
+crmInboxRoute --> db
+crmInboxRoute --> env
 db --> dbSchema
 dnc --> db
 dnc --> dncSchema
@@ -521,6 +525,7 @@ dncSchema --> phone
 email --> disclosures
 email --> interestLabels
 healthRoute --> db
+jobsRoute --> bearer
 jobsRoute --> env
 jobsRoute --> outbox
 leadService --> db
@@ -537,6 +542,7 @@ mock --> crmTypes
 outbox --> crm
 outbox --> db
 portraitPoints --> random
+relay --> crmTypes
 signalField --> motion
 signalField --> random
 siteUrl --> env
@@ -553,8 +559,6 @@ soaSchema --> disclosures
 suppression --> db
 suppression --> phone
 turnstile --> env
-webhook --> crmTypes
-zapier --> crmTypes
 
 classDef human    fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#0F172A
 classDef client   fill:#EFF6FF,stroke:#1D4ED8,stroke-width:2px,color:#0F172A
@@ -564,9 +568,9 @@ classDef vendor   fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
 classDef phi      fill:#FEE2E2,stroke:#B91C1C,stroke-width:2px,color:#0F172A
 classDef artifact fill:#F5F3FF,stroke:#6D28D9,stroke-width:2px,color:#0F172A
 
-class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,leadService,leadSchema,outbox,interestLabels,phoneFormat,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,postJson,effectsPause,webglRegistry,portraitPoints,signalField,random,utils ours
-class turnstile,request,suppression guard
-class webhook,zapier,mock,email vendor
+class apiRouter,leadsRoute,soaRoute,dncRoute,jobsRoute,healthRoute,crmInboxRoute,leadService,leadSchema,outbox,interestLabels,phoneFormat,disclosures,phone,dnc,dncSchema,soa,soaSchema,crm,crmTypes,postJson,effectsPause,webglRegistry,portraitPoints,signalField,random,utils ours
+class turnstile,request,bearer,suppression guard
+class relay,mock,email vendor
 class dbSchema phi
 class db,media,imageLoader,env,siteUrl,business,announcement,motion artifact
 ```
@@ -584,7 +588,7 @@ accDescr {
   Two things happen at different times. On a pull request the CI workflow runs two
   jobs, each against a throwaway Postgres 17 service. Quality applies the migrations
   with drizzle-kit migrate and then lints, checks formatting, type checks, checks
-  that the diagrams match their sources, tests the app.env guard script and runs the
+  that the diagrams match their sources, tests the app.prod.env guard script and runs the
   unit tests with coverage and the integration tests. The end-to-end job applies the
   migrations, builds the site and the API bundle and runs the Playwright suite, which
   includes the accessibility and compliance specs. When a pull request touches
@@ -594,9 +598,9 @@ accDescr {
   workflow, which does not wait for those checks and does not repeat them. Its build
   job runs on an arm64 runner, matching the Lambda architecture. It refuses a commit
   that is not an ancestor of main, builds the static site with the environment read
-  from app.env through op run, bundles src/api with esbuild into the API package, and
+  from app.prod.env through op run, bundles src/api with esbuild into the API package, and
   packs a second package for the migrate function. The terraform job assumes a role
-  over OIDC rather than using stored keys, plans with the variables from app.env, and
+  over OIDC rather than using stored keys, plans with the variables from app.prod.env, and
   a plan guard fails the run if the plan deletes or replaces anything outside the
   allowlist; only then does it apply. The deploy job first checks that the site URL
   it built with equals the one Terraform applied, assumes a second OIDC role, and
@@ -624,14 +628,14 @@ end
 
 subgraph build ["Deploy workflow, build job, arm64 runner"]
   ancestor{{"Commit must be an ancestor of main"}}
-  siteBuild["Build the static site, environment from app.env through op run"]
+  siteBuild["Build the static site, environment from app.prod.env through op run"]
   packApi["Bundle src/api with esbuild, size guard, zip"]
   packMigrate["Pack the migrate function: drizzle-orm, pg, migrations"]
 end
 
 subgraph tf ["Deploy workflow, terraform job"]
   oidcTf{{"Assume the terraform role over OIDC"}}
-  plan["terraform plan, variables from app.env"]
+  plan["terraform plan, variables from app.prod.env"]
   planGuard{{"Plan guard: deletes only from the allowlist"}}
   apply["terraform apply"]
 end

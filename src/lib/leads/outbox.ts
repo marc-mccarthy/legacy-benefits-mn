@@ -48,6 +48,7 @@ export async function drainOutbox(limit = 25): Promise<DrainResult> {
     const outcome = await transport.send(
       row.payload as unknown as CrmLead,
       row.idempotency_key,
+      row.attempts,
     );
 
     if (outcome.ok) {

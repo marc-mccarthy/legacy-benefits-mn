@@ -1,34 +1,30 @@
 import { env } from "@/lib/env";
 import type { CrmTransport } from "./types";
 import { MockTransport } from "./transports/mock";
-import { WebhookTransport } from "./transports/webhook";
-import { ZapierTransport } from "./transports/zapier";
+import { RelayTransport } from "./transports/relay";
 
 export * from "./types";
 
 let cached: CrmTransport | undefined;
 
-const MODES = ["webhook", "zapier", "mock"] as const;
+const MODES = ["relay", "mock"] as const;
+
+function requireEnv(name: string): string {
+  const value = env(name);
+  if (!value) throw new Error(`CRM_TRANSPORT=relay but ${name} is not set`);
+  return value;
+}
 
 export function getCrmTransport(): CrmTransport {
   if (cached) return cached;
 
   const mode = env("CRM_TRANSPORT") ?? "mock";
 
-  if (mode === "webhook") {
-    const url = env("MEDICAREPRO_WEBHOOK_URL");
-    if (!url)
-      throw new Error(
-        "CRM_TRANSPORT=webhook but MEDICAREPRO_WEBHOOK_URL is not set",
-      );
-    cached = new WebhookTransport(url);
-  } else if (mode === "zapier") {
-    const url = env("MEDICAREPRO_ZAPIER_HOOK_URL");
-    if (!url)
-      throw new Error(
-        "CRM_TRANSPORT=zapier but MEDICAREPRO_ZAPIER_HOOK_URL is not set",
-      );
-    cached = new ZapierTransport(url);
+  if (mode === "relay") {
+    cached = new RelayTransport(
+      requireEnv("CRM_RELAY_URL"),
+      requireEnv("CRM_RELAY_SECRET"),
+    );
   } else if (mode === "mock") {
     cached = new MockTransport();
   } else {

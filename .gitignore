@@ -44,7 +44,7 @@ next-env.d.ts
 .playwright-mcp/
 .playwright/
 
-# env — app.env holds op:// references only; any other .env* file may hold real values.
+# env — app.prod.env and app.dev.env hold op:// references only; any other .env* file may hold real values.
 .env
 .env.*
 

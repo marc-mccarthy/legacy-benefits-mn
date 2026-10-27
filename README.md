@@ -65,21 +65,21 @@ pnpm install
 pnpm dev
 ```
 
-Env comes only from the committed `app.env`, which holds `op://` references.
+Env comes only from the committed `app.prod.env`, which holds `op://` references.
 `scripts/with-env.sh` resolves them with `op run` and refuses to start if any
 `.env*` file exists. Terraform reads the same file:
-`op run --env-file=app.env -- terraform -chdir=infra plan`.
+`op run --env-file=app.prod.env -- terraform -chdir=infra plan`.
 
-Keys declared in `app.env` (names only):
+Keys declared in `app.prod.env` (names only):
 
 <!-- generated:env -->
 
 - **NEXT_PUBLIC_**: `NEXT_PUBLIC_CALENDLY_URL`, `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_MEDIA_HOST`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
-- **TF_VAR_**: `TF_VAR_BUSINESS_ADDRESS`, `TF_VAR_BUSINESS_EMAIL`, `TF_VAR_BUSINESS_NAME`, `TF_VAR_BUSINESS_PHONE`, `TF_VAR_CALENDLY_URL`, `TF_VAR_DB_MAX_ACU`, `TF_VAR_DB_SECONDS_UNTIL_AUTO_PAUSE`, `TF_VAR_DNS_EXTRA_RECORDS`, `TF_VAR_DOMAIN_NAME`, `TF_VAR_GITHUB_SUBJECT_PREFIX`, `TF_VAR_GTM_ID`, `TF_VAR_LAMBDA_MEMORY_MB`, `TF_VAR_LEAD_NOTIFICATION_EMAIL`, `TF_VAR_MEDIA_HOST`, `TF_VAR_NAME`, `TF_VAR_REGION`, `TF_VAR_SES_FROM_ADDRESS`, `TF_VAR_TURNSTILE_SECRET`, `TF_VAR_TURNSTILE_SITE_KEY`
+- **TF_VAR_**: `TF_VAR_BASIC_AUTH_PASSWORD`, `TF_VAR_BASIC_AUTH_USER`, `TF_VAR_BUSINESS_ADDRESS`, `TF_VAR_BUSINESS_EMAIL`, `TF_VAR_BUSINESS_NAME`, `TF_VAR_BUSINESS_PHONE`, `TF_VAR_CALENDLY_URL`, `TF_VAR_CRM_INBOX_ENABLED`, `TF_VAR_CRM_RELAY_SECRET`, `TF_VAR_CRM_RELAY_URL`, `TF_VAR_CRM_TRANSPORT`, `TF_VAR_DB_MAX_ACU`, `TF_VAR_DB_SECONDS_UNTIL_AUTO_PAUSE`, `TF_VAR_DNS_EXTRA_RECORDS`, `TF_VAR_DOMAIN_NAME`, `TF_VAR_GITHUB_BRANCH`, `TF_VAR_GITHUB_SUBJECT_PREFIX`, `TF_VAR_GTM_ID`, `TF_VAR_LAMBDA_MEMORY_MB`, `TF_VAR_LEAD_NOTIFICATION_EMAIL`, `TF_VAR_MEDIA_HOST`, `TF_VAR_NAME`, `TF_VAR_REGION`, `TF_VAR_ROUTE53_ZONE_NAME`, `TF_VAR_SES_FROM_ADDRESS`, `TF_VAR_TURNSTILE_SECRET`, `TF_VAR_TURNSTILE_SITE_KEY`
 - **AWS**: `AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY`
 - **BUSINESS**: `BUSINESS_ADDRESS`, `BUSINESS_EMAIL`, `BUSINESS_NAME`, `BUSINESS_PHONE`
-- **MEDICAREPRO**: `MEDICAREPRO_WEBHOOK_URL`, `MEDICAREPRO_ZAPIER_HOOK_URL`
-- **Other**: `CRM_TRANSPORT`, `DATABASE_URL`, `DOMAIN_NAME`, `LEAD_NOTIFICATION_EMAIL`, `OUTBOX_JOB_TOKEN`, `PAYLOAD_SECRET`, `PGPOOL_MAX`, `SES_FROM_ADDRESS`, `TURNSTILE_SECRET`
+- **CRM**: `CRM_RELAY_SECRET`, `CRM_RELAY_URL`, `CRM_TRANSPORT`
+- **Other**: `DATABASE_URL`, `DOMAIN_NAME`, `LEAD_NOTIFICATION_EMAIL`, `OUTBOX_JOB_TOKEN`, `PAYLOAD_SECRET`, `PGPOOL_MAX`, `SES_FROM_ADDRESS`, `TURNSTILE_SECRET`
 
 <!-- /generated:env -->
 
@@ -98,7 +98,7 @@ runs every Vitest project.
 
 ## Keeping docs correct
 
-The pre-commit fix step runs `docs-generate` on every commit (`pnpm docs:generate`, then it stages exactly the files it rewrote) and `diagrams-build` when `src/lib`, `src/api`, the `docs/diagrams` sources or the diagram scripts change (`pnpm diagrams:build`, which stages `D5-module-map.mmd`, `SOURCES.md` and `diagrams.manifest.json`). Both run before prettier and eslint. The commit is blocked if `package.json`, `app.env` or a rewritten file has unstaged edits.
+The pre-commit fix step runs `docs-generate` on every commit (`pnpm docs:generate`, then it stages exactly the files it rewrote) and `diagrams-build` when `src/lib`, `src/api`, the `docs/diagrams` sources or the diagram scripts change (`pnpm diagrams:build`, which stages `D5-module-map.mmd`, `SOURCES.md` and `diagrams.manifest.json`). Both run before prettier and eslint. The commit is blocked if `package.json`, `app.prod.env` or a rewritten file has unstaged edits.
 
 The verify step runs `pnpm docs:check` (references, plus generated blocks compared byte for byte) and `pnpm diagrams:check`. Pre-push and CI run both.
 
@@ -172,19 +172,39 @@ configuration, so these calls are unverified in the deployed environment:
 - **SES** — lead notification and confirmation email
 - **Cloudflare Turnstile** — token verification at
   `challenges.cloudflare.com`
-- **CRM webhook delivery** — any transport that posts outward
+- **CRM delivery** — the `relay` transport posts to the Cloudflare Worker in
+  `workers/crm-relay`, which is dual-stack and so reachable over IPv6; the
+  `mock` transport posts nowhere
 
 Lead data is stored before any of them runs. Adding IPv4 egress is an
 infrastructure change nobody has made.
 
 ## Deployment
 
-`.github/workflows/deploy.yml` runs on every push to `main`. It builds the site
-and packs `api-bundle/`, applies `infra/` with Terraform (S3 state, plan guard
-against unlisted destroys), uploads the API and migration packages, runs the
-migration function, syncs `out/`, `public/media` and `public/video` to S3, and
-invalidates CloudFront. `.github/workflows/terraform.yml` validates `infra/` on
-pull requests.
+`.github/workflows/deploy.yml` runs on every push to `main` or `develop`, and
+on manual dispatch with an `env` choice of `prod` or `dev`. A `resolve` job maps
+the branch to the environment and fails for any other branch:
+
+| Branch    | Env    | Env file       | Site                       | Terraform state key     |
+| --------- | ------ | -------------- | -------------------------- | ----------------------- |
+| `main`    | `prod` | `app.prod.env` | `legacybenefitsmn.com`     | `terraform.tfstate`     |
+| `develop` | `dev`  | `app.dev.env`  | `dev.legacybenefitsmn.com` | `dev/terraform.tfstate` |
+
+The deploy builds the site and packs `api-bundle/`, applies `infra/` with
+Terraform (S3 state, plan guard against unlisted destroys), uploads the API and
+migration packages, runs the migration function, syncs `out/`, `public/media`
+and `public/video` to S3, and invalidates CloudFront. Dev pages sit behind HTTP
+basic auth; `/api/*` stays open. `.github/workflows/terraform.yml` validates
+`infra/` on pull requests.
+
+Locally, `APP_ENV=dev pnpm dev` reads `app.dev.env` instead of `app.prod.env`.
+Terraform against dev needs the dev env file and the dev state key:
+
+```bash
+op run --env-file=app.dev.env -- terraform -chdir=infra init -reconfigure -backend-config="key=dev/terraform.tfstate"
+```
+
+The environment is described in `docs/app-env-single-env-file.md`, section 11.
 
 CloudFront serves the static site from S3 by default and routes `/api/*` to the
 Lambda. A CloudFront Function rewrites extensionless paths onto the `.html` files

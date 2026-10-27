@@ -114,6 +114,16 @@ describe("2xx replies", () => {
 
     expect(await send()).toMatchObject({ ok: false, retryable: false });
   });
+
+  it("treats a JSON scalar on 2xx as a non-retryable failure", async () => {
+    fetchMock.mockResolvedValueOnce(response(200, "42"));
+
+    expect(await send()).toMatchObject({
+      ok: false,
+      retryable: false,
+      error: "Unreadable relay reply: 42",
+    });
+  });
 });
 
 describe("error statuses", () => {
@@ -151,6 +161,16 @@ describe("network failures", () => {
     expect(await send()).toEqual({
       ok: false,
       error: "ECONNRESET",
+      retryable: true,
+    });
+  });
+
+  it("labels a non-Error rejection as a network error", async () => {
+    fetchMock.mockRejectedValueOnce("socket closed");
+
+    expect(await send()).toEqual({
+      ok: false,
+      error: "network error",
       retryable: true,
     });
   });
